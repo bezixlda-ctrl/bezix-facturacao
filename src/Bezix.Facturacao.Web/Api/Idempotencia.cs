@@ -52,11 +52,14 @@ public sealed class Idempotencia(AppDbContext db) : IEndpointFilter
             throw;
         }
 
-        var (codigo, valor) = resultado switch
+        // Results<A, B> embrulha o resultado real.
+        var real = resultado;
+        while (real is INestedHttpResult aninhado) real = aninhado.Result;
+        var (codigo, valor) = real switch
         {
             IStatusCodeHttpResult s and IValueHttpResult v => (s.StatusCode ?? 200, v.Value),
             IStatusCodeHttpResult s => (s.StatusCode ?? 200, (object?)null),
-            _ => (200, resultado),
+            _ => (200, real),
         };
         if (codigo >= 500)
         {
@@ -76,6 +79,6 @@ public sealed class Idempotencia(AppDbContext db) : IEndpointFilter
                 detail: "Esta Idempotency-Key já foi usada com outro pedido. Use uma chave nova para uma operação nova.");
         if (p.CodigoResposta is null)
             return Results.Problem(statusCode: 409, title: "Pedido em curso", detail: "Um pedido com esta Idempotency-Key ainda está a ser processado.");
-        return Results.Content(p.Resposta ?? "", "application/json", Encoding.UTF8, p.CodigoResposta);
+        return Results.Content(p.Resposta ?? "", p.CodigoResposta >= 400 ? "application/problem+json" : "application/json", Encoding.UTF8, p.CodigoResposta);
     }
 }

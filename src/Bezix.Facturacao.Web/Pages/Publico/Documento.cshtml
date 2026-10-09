@@ -78,13 +78,20 @@
                 </div>
                 <div class="table-responsive">
                     <table class="table mb-0">
-                        <thead><tr><th>Descrição</th><th class="num">Qtd</th><th class="num">Preço</th><th class="num">IVA</th><th class="num">Total</th></tr></thead>
+                        <thead><tr><th>Descrição</th><th class="num">Qtd</th><th class="num">Preço</th><th class="num">Desc.</th><th class="num">IVA</th><th class="num">Valor</th></tr></thead>
                         <tbody>
                             @foreach (var l in d.Linhas)
                             {
-                                <tr><td>@l.Descricao</td><td class="num">@l.Quantidade.ToString("0.####", Formato.Cultura)</td><td class="num">@Formato.Numero(l.PrecoUnitario)</td><td class="num">@Formato.Percentagem(l.TaxaIvaPct)</td><td class="num">@Formato.Numero(l.TotalLinha)</td></tr>
+                                <tr><td>@l.Descricao</td><td class="num">@l.Quantidade.ToString("0.####", Formato.Cultura)</td><td class="num">@Formato.Numero(l.PrecoUnitario)</td><td class="num">@(l.DescontoPct > 0 ? Formato.Percentagem(l.DescontoPct) : "")</td><td class="num">@Formato.Percentagem(l.TaxaIvaPct)</td><td class="num">@Formato.Numero(l.TotalLinha)</td></tr>
                             }
                         </tbody>
+                        <tfoot class="totais-publico">
+                            <tr><td colspan="5" class="text-end">Subtotal</td><td class="num">@Formato.Numero(d.Subtotal)</td></tr>
+                            @if (d.DescontoGlobal > 0) { <tr><td colspan="5" class="text-end">Desconto (@Formato.Percentagem(d.DescontoGlobalPct))</td><td class="num">−@Formato.Numero(d.DescontoGlobal)</td></tr> }
+                            <tr><td colspan="5" class="text-end">Base tributável</td><td class="num">@Formato.Numero(d.BaseTributavel)</td></tr>
+                            <tr><td colspan="5" class="text-end">IVA</td><td class="num">@Formato.Numero(d.TotalIva)</td></tr>
+                            <tr class="fw-bold"><td colspan="5" class="text-end">Total (MZN)</td><td class="num">@Formato.Numero(d.Total)</td></tr>
+                        </tfoot>
                     </table>
                 </div>
             </section>

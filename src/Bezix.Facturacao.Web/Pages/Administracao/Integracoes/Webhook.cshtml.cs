@@ -14,7 +14,7 @@ public class WebhookModel(ServicoWebhooks webhooks) : PaginaBase
 {
     [BindProperty(SupportsGet = true)] public int Id { get; set; }
     [BindProperty] public string Nome { get; set; } = "";
-    [BindProperty] public string Url { get; set; } = "";
+    [BindProperty] public string Endereco { get; set; } = "";
     [BindProperty] public List<string> Eventos { get; set; } = [];
     [BindProperty] public bool Activa { get; set; }
 
@@ -27,7 +27,7 @@ public class WebhookModel(ServicoWebhooks webhooks) : PaginaBase
     {
         if (!await CarregarAsync()) return NotFound();
         Nome = Subscricao.Nome;
-        Url = Subscricao.Url;
+        Endereco = Subscricao.Url;
         Eventos = [.. Subscricao.Eventos.Split(' ', StringSplitOptions.RemoveEmptyEntries)];
         Activa = Subscricao.Activa;
         return Page();
@@ -35,7 +35,7 @@ public class WebhookModel(ServicoWebhooks webhooks) : PaginaBase
 
     public async Task<IActionResult> OnPostAsync()
     {
-        var r = await webhooks.ActualizarAsync(Id, Nome, Url, Eventos, Activa);
+        var r = await webhooks.ActualizarAsync(Id, Nome, Endereco, Eventos, Activa);
         if (r.Sucesso) return RedirecionarComSucesso("Webhook guardado.", null, new { Id });
         AdicionarErros(r);
         if (!await CarregarAsync()) return NotFound();

@@ -94,48 +94,49 @@ public sealed class ServicoRecorrencias(
         return feitas;
     }
 
-    /// <summary>Gera agora o documento desta recorrência e avança a próxima data.</summary>
+    /// <summary>
+    /// Gera agora o documento desta recorrência e avança a próxima data. A data avança e fica gravada logo a seguir a
+    /// criar o documento (antes de emitir e enviar): se algo falhar depois, o tick seguinte não gera uma segunda factura.
+    /// </summary>
     public async Task<Resultado> ExecutarAsync(int id, CancellationToken ct = default)
     {
         var r = await db.Recorrencias.SingleOrDefaultAsync(x => x.Id == id, ct);
         if (r is null || !r.Activa) return Resultado.Falha("Recorrência inexistente ou inactiva.");
 
         var (dup, docId) = await documentos.DuplicarAsync(r.ModeloDocumentoId, ct);
+        // A duplicação pode limpar o ChangeTracker: volta a ler antes de alterar.
         r = await db.Recorrencias.SingleAsync(x => x.Id == id, ct);
         r.UltimaExecucao = relogio.GetUtcNow().UtcDateTime;
-        Resultado resultado;
         if (!dup.Sucesso || docId is null)
         {
             r.UltimoErro = string.Join(" ", dup.Erros);
-            resultado = dup;
-        }
-        else
-        {
-            r.UltimoDocumentoId = docId;
-            r.UltimoErro = null;
-            resultado = Resultado.Ok();
-            if (r.EmitirAutomaticamente)
-            {
-                var e = await emissao.EmitirAsync(docId.Value, "Factura recorrente", ct);
-                r = await db.Recorrencias.SingleAsync(x => x.Id == id, ct);
-                if (e.Tipo != ResultadoEmissaoTipo.Emitido)
-                {
-                    r.UltimoErro = "Ficou em rascunho: " + string.Join(" ", e.Resultado.Erros);
-                }
-                else if (r.EnviarEmail)
-                {
-                    var (env, _) = await comunicacao.EnviarComModeloAsync(docId.Value, ModeloEmail, ct);
-                    r = await db.Recorrencias.SingleAsync(x => x.Id == id, ct);
-                    if (!env.Sucesso) r.UltimoErro = "Emitida, mas o email não saiu: " + string.Join(" ", env.Erros);
-                }
-            }
+            await db.SaveChangesAsync(ct);
+            return dup;
         }
 
+        r.UltimoDocumentoId = docId;
+        r.UltimoErro = null;
         r.ProximaData = r.Seguinte(r.ProximaData);
         if (r.DataFim is { } fim && r.ProximaData > fim) r.Activa = false;
-        auditoria.Registar(nameof(Recorrencia), id.ToString(), "Recorrencia.Executar", null, new { r.UltimoDocumentoId, r.UltimoErro, r.ProximaData });
+        var (emitir, enviar) = (r.EmitirAutomaticamente, r.EnviarEmail);
+        auditoria.Registar(nameof(Recorrencia), id.ToString(), "Recorrencia.Executar", null, new { r.UltimoDocumentoId, r.ProximaData });
         await db.SaveChangesAsync(ct);
-        return resultado;
+
+        string? aviso = null;
+        if (emitir)
+        {
+            var e = await emissao.EmitirAsync(docId.Value, "Factura recorrente", ct);
+            if (e.Tipo != ResultadoEmissaoTipo.Emitido)
+                aviso = "Ficou em rascunho: " + string.Join(" ", e.Resultado.Erros);
+            else if (enviar)
+            {
+                var (env, _) = await comunicacao.EnviarComModeloAsync(docId.Value, ModeloEmail, ct);
+                if (!env.Sucesso) aviso = "Emitida, mas o email não saiu: " + string.Join(" ", env.Erros);
+            }
+        }
+        if (aviso is not null)
+            await db.Recorrencias.Where(x => x.Id == id).ExecuteUpdateAsync(x => x.SetProperty(y => y.UltimoErro, aviso), ct);
+        return Resultado.Ok();
     }
 
     private DateOnly Hoje() => DateOnly.FromDateTime(relogio.GetUtcNow().UtcDateTime.AddHours(2));

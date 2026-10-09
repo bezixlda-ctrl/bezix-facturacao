@@ -358,10 +358,10 @@
             </section>
         }
 
-        @if (Model.Emails.Count > 0)
+        @if (Model.Emails.Count > 0 || Model.VistoEm is not null)
         {
             <section class="painel mb-4">
-                <div class="painel-cabecalho"><h2>Emails</h2>@if (Model.VistoEm is { } visto) { <span class="small text-success"><i class="bi bi-eye me-1"></i>Visto pelo cliente a @Formato.DataHora(visto)</span> }</div>
+                <div class="painel-cabecalho"><h2>Envio ao cliente</h2>@if (Model.VistoEm is { } visto) { <span class="small text-success"><i class="bi bi-eye me-1"></i>Visto pelo cliente a @Formato.DataHora(visto)</span> }</div>
                 <ul class="list-unstyled painel-corpo mb-0 small">
                     @foreach (var e in Model.Emails)
                     {

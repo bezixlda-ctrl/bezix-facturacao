@@ -149,9 +149,10 @@ public class ApiTests(AplicacaoFactory app)
     public async Task Erros_de_validacao_respondem_422_com_a_lista_de_erros()
     {
         var (cliente, serie) = await PrepararAsync();
-        var (_, chave) = await ChaveAsync(EscoposApi.DocumentosEscrever);
+        // Um rascunho vazio é válido; emitir uma factura sem linhas não.
+        var (_, chave) = await ChaveAsync(EscoposApi.DocumentosEscrever, EscoposApi.DocumentosEmitir);
         var r = await Cliente(chave).SendAsync(Post("/api/v1/documentos",
-            new { tipo = "FT", clienteId = cliente, serieId = serie, descontoGlobalPct = 0, linhas = Array.Empty<object>() }, Guid.NewGuid().ToString()));
+            new { tipo = "FT", clienteId = cliente, serieId = serie, descontoGlobalPct = 0, emitir = true, linhas = Array.Empty<object>() }, Guid.NewGuid().ToString()));
         Assert.Equal(HttpStatusCode.UnprocessableEntity, r.StatusCode);
         using var json = JsonDocument.Parse(await r.Content.ReadAsStringAsync());
         Assert.True(json.RootElement.GetProperty("erros").GetArrayLength() > 0);

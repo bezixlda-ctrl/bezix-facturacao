@@ -68,7 +68,14 @@ O Winhost não tem processos permanentes. Criar uma tarefa que chama, **a cada 1
 https://[dominio]/internal/jobs/tick?token=[Jobs:Token]
 ```
 
-Esta chamada também aquece o site depois de uma reciclagem do app pool. A partir da fase 5 corre lembretes, facturas recorrentes, webhooks e backups.
+Esta chamada também aquece o site depois de uma reciclagem do app pool. Corre os emails em fila, as facturas recorrentes, os lembretes de pagamento, os webhooks e a limpeza (decisão D18). O resultado de cada execução aparece em **Automação → Últimas execuções**.
+
+Os lembretes saem a partir da hora definida no plano (8 h por omissão, hora de Maputo). Com a tarefa de 15 em 15 minutos, saem no máximo 15 minutos depois dessa hora.
+
+### Endereço público e chaves de cifra
+
+- Em **Configurações → Empresa**, preencher o **endereço público** (ex.: `https://facturacao.empresa.co.mz`): é a base dos links que os clientes recebem por email. Sem ele, usa-se o endereço por onde chegou o pedido (nos lembretes e facturas recorrentes, o endereço configurado na tarefa agendada), o que pode não ser o que os clientes devem ver.
+- As chaves de cifra (sessões, segredos dos webhooks) ficam em `App_Data/chaves`. **Incluir esta pasta nos backups**: se se perder, as sessões terminam e os segredos dos webhooks têm de ser gerados de novo.
 
 ## 6. Monitorização
 

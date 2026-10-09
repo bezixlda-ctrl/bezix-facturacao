@@ -483,3 +483,5 @@ details > summary.painel-cabecalho h2 { font-size: 1.125rem; }
 .rejeitar > summary { list-style: none; }
 .rejeitar > summary::-webkit-details-marker { display: none; }
 .rejeitar-form { position: absolute; right: 0; z-index: 5; width: 280px; margin-top: .25rem; padding: .75rem; background: var(--bs-body-bg); border: 1px solid var(--bz-borda); border-radius: .5rem; box-shadow: 0 8px 24px rgb(0 0 0 / .12); }
+.totais-publico td { border-bottom: 0; padding-top: .25rem; padding-bottom: .25rem; }
+.totais-publico tr:first-child td { border-top: 1px solid var(--bz-borda); padding-top: .75rem; }

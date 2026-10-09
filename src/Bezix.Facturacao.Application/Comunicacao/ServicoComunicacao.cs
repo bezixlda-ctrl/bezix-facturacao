@@ -60,7 +60,7 @@ public sealed partial class ServicoComunicacao(
             ["cliente.nome"] = cliente?.Nome ?? "",
             ["cliente.contacto"] = cliente?.Contacto ?? cliente?.Nome ?? "",
             ["empresa.nome"] = empresa.Nome,
-            ["empresa.contas"] = contas.Count == 0 ? "" : string.Join("\n", contas.Select(c => $"{c.Banco}: {c.NumeroConta}" + (c.Nib is null ? "" : $" · NIB {c.Nib}"))),
+            ["empresa.contas"] = contas.Count == 0 ? "as contas bancárias indicadas no documento." : string.Join("\n", contas.Select(c => $"{c.Banco}: {c.NumeroConta}" + (c.Nib is null ? "" : $" · NIB {c.Nib}"))),
             ["utilizador.nome"] = nomeUtilizador,
             ["assinatura"] = assinaturaUtilizador ?? empresa.AssinaturaEmail ?? $"{nomeUtilizador}\n{empresa.Nome}",
             ["link.documento"] = "",

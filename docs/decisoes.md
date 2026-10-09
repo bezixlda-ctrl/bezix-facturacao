@@ -102,11 +102,38 @@ Decisão do utilizador (09/10/2026): **recibos, conta corrente, extractos e anti
 - **Anulação**: uma factura com pagamentos não se anula (anula-se primeiro o recibo ou emite-se NC).
 - **Antiguidade**: dias de atraso face ao vencimento (ou à data, se não houver vencimento), com a coluna "A vencer" para o que ainda não venceu e "Créditos" para adiantamentos e NC por aplicar, de forma que as colunas somam o saldo.
 
+## D18. Tarefas automáticas sem Hangfire — fase 5
+
+O Winhost não mantém processos permanentes (o app pool recicla e adormece), por isso não se usa Hangfire nem um agendador interno como fonte de verdade.
+
+- **`/internal/jobs/tick`** (chamado de 15 em 15 minutos pela *Scheduled Task Tool*, protegido por `Jobs:Token`) corre, por esta ordem: emails pendentes, facturas recorrentes, lembretes, eventos de vencimento, webhooks e limpeza. Cada tarefa é independente: uma falha não impede as seguintes e fica em `ExecucoesTarefas` (visível em Automação).
+- As tarefas correm **em nome do sistema** (`IContextoSistema`): têm todas as permissões e ficam registadas como "sistema" na auditoria.
+- **`ProcessadorFilas`** (BackgroundService) entrega emails e webhooks logo a seguir ao evento, enquanto o processo estiver vivo; o `tick` apanha o que ficar para trás. Não há perda: tudo está primeiro na base de dados.
+- **Idempotência**: cada lembrete fica em `LembretesEnviados` (um por tipo e documento); o evento `documento.vencido` usa `MarcasUnicas`; numa recorrência, a próxima data avança e é gravada logo depois de criar o documento, antes de emitir e enviar, para um erro a meio não gerar uma segunda factura.
+- **Limpeza**: importações CSV abandonadas (> 24 h), chaves de idempotência (> 7 dias) e histórico de execuções (> 90 dias).
+
+## D19. Histórico de interacções sem tabela própria
+
+A especificação prevê uma tabela de interacções com o cliente. Não foi criada: `EmailsFila` (cada email, estado e erro), `LinksPartilha` (primeira e última visita, n.º de visitas), `LembretesEnviados`, `PagamentosComunicados` e as actividades do cliente (fase 2) já guardam cada interacção com data e autor. Uma tabela extra duplicaria estes dados e podia ficar dessincronizada.
+
+## D20. Link seguro e pagamentos comunicados
+
+- O link do email (`/p/{token}`) usa um token aleatório de 256 bits; na base de dados fica só o **hash SHA-256**. Expira ao fim de `Empresa.DiasValidadeLink` dias (90 por omissão) e pode ser revogado. Limite de 30 pedidos por minuto por IP; páginas com `noindex` e `no-referrer`.
+- O cliente vê o documento, descarrega o PDF, vê as contas bancárias e pode **comunicar um pagamento** com comprovativo (PDF, JPG ou PNG até 5 MB, verificado pelo conteúdo e não pela extensão; no máximo 10 por validar por cliente).
+- **Um pagamento comunicado não mexe na conta corrente.** Só conta depois de a Tesouraria conferir o banco e emitir o recibo (permissão "Validar pagamentos comunicados"), ou é rejeitado com motivo. Tudo fica na auditoria.
+
+## D21. API v1 e webhooks
+
+- **Chaves** `bzx_{prefixo}_{segredo}`, mostradas uma única vez; guarda-se o hash SHA-256. Cada chave tem **escopos** que se traduzem nas mesmas permissões dos perfis: a API passa pelas mesmas regras de negócio, validações e auditoria que a interface.
+- **Erros** em `application/problem+json` (validação: 422 com a lista `erros`). **Limite**: 60 pedidos por minuto por chave (429 com `Retry-After`).
+- **`Idempotency-Key`** obrigatório nos POST que criam documentos e recibos: a repetição devolve a mesma resposta; a mesma chave com outro corpo dá 422. Guardado 7 dias.
+- **Webhooks**: POST em JSON, `X-Signature: sha256=HMAC(segredo, "{X-Timestamp}.{corpo}")`. O timestamp entra na assinatura para o destino poder recusar repetições antigas. Só endereços `https`. Repetições após 1, 5 e 30 minutos, 2 e 12 horas; depois de 5 entregas falhadas seguidas, a subscrição é desactivada e aparece um alerta no painel. O segredo é cifrado com Data Protection (chaves em `App_Data/chaves`).
+- Documentação: `/api/docs` (Swagger UI) e `/api/openapi/v1.json`; exemplos em [api.md](api.md).
+
 ## Pendentes de confirmação
 
 - ~~QuestPDF~~: confirmado em 09/10/2026 que a receita anual é inferior a 1 M USD; usa-se a licença Community. Rever se a receita passar esse valor.
 - **Motivo de isenção por omissão:** o texto "Isento nos termos do artigo 9 do Código do IVA" é provisório. Confirmar com o contabilista.
 - **NUIT de particulares:** com o limite a 0 (valor por omissão), o NUIT só é exigido a empresas. Definir o limite em Configurações → Empresa quando a AT o indicar.
 - **Limite do NUIT obrigatório**, regras da factura global e requisitos de certificação: aguardam resposta da AT ([oficio-AT.md](oficio-AT.md)).
-- **Limpeza de importações abandonadas (fase 5):** ficheiros CSV analisados mas não importados ficam em `App_Data/uploads/importacoes`. O `jobs/tick` deve apagar os que tenham mais de 24 horas.
 - **2FA obrigatório para administradores:** por agora é recomendado (lista de primeiros passos no painel). Tornar obrigatório na fase 6, depois de todos os administradores o terem activado.

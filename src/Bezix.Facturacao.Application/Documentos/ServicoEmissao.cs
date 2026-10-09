@@ -210,7 +210,7 @@ public sealed class ServicoEmissao(
     }
 
     public sealed record EventoDocumento(int id, string tipo, string? numero, string estado, DateOnly data, DateOnly? vencimento, int clienteId,
-        string clienteNome, string? clienteNuit, string moeda, decimal subtotal, decimal totalIva, decimal total, int? documentoOrigemId, string? motivoAnulacao = null);
+        string clienteNome, string? clienteNuit, string moeda, decimal baseTributavel, decimal totalIva, decimal total, int? documentoOrigemId, string? motivoAnulacao = null);
 
     /// <summary>Dados enviados nos webhooks de documentos (os mesmos campos que a API devolve).</summary>
     public static EventoDocumento DadosEvento(Documento d) => new(d.Id, d.TipoDoc.ToString(), d.NumeroFormatado, d.Estado.ToString(), d.Data, d.Vencimento,
