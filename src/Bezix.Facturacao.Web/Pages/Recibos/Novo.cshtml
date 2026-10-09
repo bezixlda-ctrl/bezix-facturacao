@@ -6,7 +6,7 @@
 }
 <div class="cabecalho-pagina">
     <div>
-        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Recibos</a>
+        <a asp-page="Index" class="small text-decoration-none"><i class="ph ph-arrow-left"></i> Recibos</a>
         <h1 class="mt-1">Registar recibo</h1>
         <p>Valores em meticais. Reparta o valor recebido pelas facturas que o cliente está a pagar; o que sobrar fica como adiantamento.</p>
     </div>
@@ -19,10 +19,10 @@
     {
         <input type="hidden" asp-for="ComunicadoId" />
         <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <span><i class="bi bi-info-circle me-1"></i>A validar o pagamento comunicado por <strong>@pc.Cliente</strong> a @Formato.Data(pc.ComunicadoEm): @Formato.Moeda(pc.Valor) de @Formato.Data(pc.Data)@(pc.Referencia is null ? "" : $", ref. {pc.Referencia}"). Confira o comprovativo com o extracto bancário antes de emitir.</span>
+            <span><i class="ph ph-info me-1"></i>A validar o pagamento comunicado por <strong>@pc.Cliente</strong> a @Formato.Data(pc.ComunicadoEm): @Formato.Moeda(pc.Valor) de @Formato.Data(pc.Data)@(pc.Referencia is null ? "" : $", ref. {pc.Referencia}"). Confira o comprovativo com o extracto bancário antes de emitir.</span>
             @if (pc.TemComprovativo)
             {
-                <a class="btn btn-sm btn-outline-primary" asp-page="Comunicados" asp-page-handler="Comprovativo" asp-route-id="@pc.Id" target="_blank"><i class="bi bi-paperclip me-1"></i>Ver comprovativo</a>
+                <a class="btn btn-sm btn-outline-primary" asp-page="Comunicados" asp-page-handler="Comprovativo" asp-route-id="@pc.Id" target="_blank"><i class="ph ph-paperclip me-1"></i>Ver comprovativo</a>
             }
         </div>
     }

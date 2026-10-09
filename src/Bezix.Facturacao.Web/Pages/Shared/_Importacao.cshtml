@@ -5,7 +5,7 @@
 }
 <div class="cabecalho-pagina">
     <div>
-        <a href="@Url.Page(Model.PaginaLista)" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> @Model.NomeRegistos</a>
+        <a href="@Url.Page(Model.PaginaLista)" class="small text-decoration-none"><i class="ph ph-arrow-left"></i> @Model.NomeRegistos</a>
         <h1 class="mt-1">@Model.Titulo</h1>
         <p>Primeiro o sistema analisa o ficheiro e mostra o que vai acontecer a cada linha. Só grava depois de confirmar.</p>
     </div>
@@ -46,7 +46,7 @@
                     <li>Uma linha por registo; a primeira linha tem os nomes das colunas.</li>
                     <li>Guarde como <em>CSV (separado por vírgulas)</em>.</li>
                 </ol>
-                <a class="btn btn-outline-primary" href="@Url.Page(null, "Modelo")"><i class="bi bi-download me-1"></i>Descarregar modelo</a>
+                <a class="btn btn-outline-primary" href="@Url.Page(null, "Modelo")"><i class="ph ph-download-simple me-1"></i>Descarregar modelo</a>
                 <p class="small text-body-secondary mt-3 mb-0">Valores podem estar escritos como 1.234,56 ou 1234.56. Colunas com outros nomes são ignoradas e indicadas na análise.</p>
             </section>
         </div>
@@ -57,7 +57,7 @@
 {
     @if (r.ErroFicheiro is not null)
     {
-        <div class="alert alert-danger mt-4"><i class="bi bi-exclamation-triangle me-1"></i>@r.ErroFicheiro</div>
+        <div class="alert alert-danger mt-4"><i class="ph ph-warning me-1"></i>@r.ErroFicheiro</div>
     }
     else
     {

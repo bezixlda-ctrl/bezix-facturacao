@@ -12,7 +12,7 @@
 
 @if (Model.Obrigatorio && !Model.DoisPassosActivo)
 {
-    <div class="alert alert-warning"><i class="bi bi-shield-exclamation me-1"></i><strong>Active a verificação em dois passos para continuar.</strong>
+    <div class="alert alert-warning"><i class="ph ph-shield-warning me-1"></i><strong>Active a verificação em dois passos para continuar.</strong>
         Os administradores têm de proteger a conta com um código do telemóvel (aplicação como Google Authenticator ou Microsoft Authenticator).</div>
 }
 
@@ -21,7 +21,7 @@
 @if (Model.CodigosRecuperacaoNovos is not null)
 {
     <div class="alert alert-warning">
-        <div class="fw-bold mb-2"><i class="bi bi-key me-1"></i>Guarde estes códigos de recuperação num sítio seguro</div>
+        <div class="fw-bold mb-2"><i class="ph ph-key me-1"></i>Guarde estes códigos de recuperação num sítio seguro</div>
         <p class="mb-2">Cada código serve uma vez, se perder o telemóvel. Não voltam a ser mostrados.</p>
         <div class="row row-cols-2 row-cols-sm-5 g-2 tabular fw-bold">
             @foreach (var c in Model.CodigosRecuperacaoNovos.Split(' '))

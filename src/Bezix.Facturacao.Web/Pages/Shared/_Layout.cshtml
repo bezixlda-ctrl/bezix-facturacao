@@ -13,14 +13,17 @@
     <script>
         // Aplica o tema antes de desenhar a página, para não piscar.
         (function () {
-            var tema = null;
-            try { tema = localStorage.getItem("bz-tema"); } catch (e) { }
-            if (!tema) tema = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+            var escolha = null;
+            try { escolha = localStorage.getItem("bz-tema"); } catch (e) { }
+            if (escolha !== "light" && escolha !== "dark") escolha = "auto";
+            var tema = escolha === "auto" ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light") : escolha;
             document.documentElement.setAttribute("data-bs-theme", tema);
+            document.documentElement.setAttribute("data-tema-escolha", escolha);
         })();
     </script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/lib/phosphor/regular/style.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/phosphor/fill/style.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="icon" href="~/favicon.ico" />
 </head>
@@ -45,12 +48,12 @@
         <div class="app-principal">
             <header class="app-topo">
                 <button class="btn-icone d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuLateral" aria-controls="menuLateral" aria-label="Abrir menu">
-                    <i class="bi bi-list"></i>
+                    <i class="ph ph-list"></i>
                 </button>
                 @if (User.TemAlguma(Permissoes.Clientes.Ver, Permissoes.Artigos.Ver))
                 {
                     <div class="pesquisa-global" role="search">
-                        <i class="bi bi-search" aria-hidden="true"></i>
+                        <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
                         <label class="visually-hidden" for="pesquisaGlobal">Pesquisar clientes e artigos</label>
                         <input class="form-control" type="search" id="pesquisaGlobal" name="q" placeholder="Pesquisar cliente, NUIT, telefone, artigo" autocomplete="off"
                                hx-get="/Pesquisa" hx-trigger="input changed delay:250ms, search" hx-target="#resultadosPesquisa" />
@@ -63,44 +66,57 @@
                     {
                         <div class="dropdown">
                             <button class="btn btn-primary d-inline-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-plus-lg"></i><span class="d-none d-md-inline">Novo</span>
+                                <i class="ph ph-plus"></i><span class="d-none d-md-inline">Novo</span>
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 @if (User.TemAlguma(Permissoes.Documentos.Rascunho, Permissoes.Documentos.EmitirFactura))
                                 {
-                                    <li><a class="dropdown-item" asp-page="/Documentos/Editar" asp-route-tipo="FT"><i class="bi bi-file-earmark-text me-2"></i>Nova factura</a></li>
+                                    <li><a class="dropdown-item" asp-page="/Documentos/Editar" asp-route-tipo="FT"><i class="ph ph-file-text me-2"></i>Nova factura</a></li>
                                 }
                                 @if (User.TemAlguma(Permissoes.Documentos.Rascunho, Permissoes.Documentos.EmitirFacturaRecibo))
                                 {
-                                    <li><a class="dropdown-item" asp-page="/Documentos/Editar" asp-route-tipo="FR"><i class="bi bi-file-earmark-check me-2"></i>Nova factura-recibo</a></li>
+                                    <li><a class="dropdown-item" asp-page="/Documentos/Editar" asp-route-tipo="FR"><i class="ph ph-receipt me-2"></i>Nova factura-recibo</a></li>
                                 }
                                 @if (User.TemPermissao(Permissoes.Recibos.Registar))
                                 {
-                                    <li><a class="dropdown-item" asp-page="/Recibos/Novo"><i class="bi bi-receipt me-2"></i>Novo recibo</a></li>
+                                    <li><a class="dropdown-item" asp-page="/Recibos/Novo"><i class="ph ph-receipt me-2"></i>Novo recibo</a></li>
                                 }
                                 @if (User.TemPermissao(Permissoes.Clientes.Gerir))
                                 {
-                                    <li><a class="dropdown-item" asp-page="/Clientes/Editar"><i class="bi bi-person-plus me-2"></i>Novo cliente</a></li>
+                                    <li><a class="dropdown-item" asp-page="/Clientes/Editar"><i class="ph ph-user-plus me-2"></i>Novo cliente</a></li>
                                 }
                             </ul>
                         </div>
                     }
-                    <button class="btn-icone" type="button" id="alternarTema" aria-label="Mudar entre modo claro e escuro" title="Modo claro/escuro">
-                        <i class="bi bi-moon-stars"></i>
-                    </button>
+                    <div class="dropdown d-none d-sm-block">
+                        <button class="btn-icone" type="button" id="botaoTema" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Aspecto: claro, escuro ou automático" title="Aspecto">
+                            <i class="ph ph-circle-half" aria-hidden="true"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end menu-tema" role="menu" aria-labelledby="botaoTema">
+                            <li><button class="dropdown-item" type="button" role="menuitemradio" data-tema="light"><i class="ph ph-sun" aria-hidden="true"></i>Claro</button></li>
+                            <li><button class="dropdown-item" type="button" role="menuitemradio" data-tema="dark"><i class="ph ph-moon" aria-hidden="true"></i>Escuro</button></li>
+                            <li><button class="dropdown-item" type="button" role="menuitemradio" data-tema="auto"><i class="ph ph-desktop" aria-hidden="true"></i>Automático (sistema)</button></li>
+                        </ul>
+                    </div>
                     <div class="dropdown">
                         <button class="btn-icone w-auto px-2 gap-2 d-inline-flex" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-person-circle"></i>
+                            <i class="ph ph-user-circle" aria-hidden="true"></i>
                             <span class="d-none d-sm-inline fw-semibold">@User.NomeVisivel()</span>
-                            <i class="bi bi-chevron-down small"></i>
+                            <span class="visually-hidden d-sm-none">Conta de @User.NomeVisivel()</span>
+                            <i class="ph ph-caret-down small" aria-hidden="true"></i>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><span class="dropdown-item-text small text-body-secondary">@User.Identity?.Name</span></li>
-                            <li><a class="dropdown-item" asp-page="/Conta/Seguranca"><i class="bi bi-person-gear me-2"></i>A minha conta</a></li>
+                            <li><a class="dropdown-item" asp-page="/Conta/Seguranca"><i class="ph ph-user-gear me-2"></i>A minha conta</a></li>
+                            <li class="d-sm-none"><hr class="dropdown-divider" /></li>
+                            <li class="d-sm-none"><span class="dropdown-item-text small text-body-secondary">Aspecto</span></li>
+                            <li class="d-sm-none menu-tema"><button class="dropdown-item" type="button" role="menuitemradio" data-tema="light"><i class="ph ph-sun" aria-hidden="true"></i>Claro</button></li>
+                            <li class="d-sm-none menu-tema"><button class="dropdown-item" type="button" role="menuitemradio" data-tema="dark"><i class="ph ph-moon" aria-hidden="true"></i>Escuro</button></li>
+                            <li class="d-sm-none menu-tema"><button class="dropdown-item" type="button" role="menuitemradio" data-tema="auto"><i class="ph ph-desktop" aria-hidden="true"></i>Automático</button></li>
                             <li><hr class="dropdown-divider" /></li>
                             <li>
                                 <form method="post" asp-page="/Conta/Sair">
-                                    <button class="dropdown-item" type="submit"><i class="bi bi-box-arrow-right me-2"></i>Sair</button>
+                                    <button class="dropdown-item" type="submit"><i class="ph ph-sign-out me-2"></i>Sair</button>
                                 </form>
                             </li>
                         </ul>

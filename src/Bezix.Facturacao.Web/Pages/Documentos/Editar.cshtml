@@ -10,7 +10,7 @@
 }
 <div class="cabecalho-pagina">
     <div>
-        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Documentos</a>
+        <a asp-page="Index" class="small text-decoration-none"><i class="ph ph-arrow-left"></i> Documentos</a>
         <h1 class="mt-1">@ViewData["Title"]</h1>
         @if (RegrasTipo.MencaoObrigatoria(tipo) is { } mencao) { <p>@mencao.</p> }
     </div>
@@ -29,7 +29,7 @@
     @if (Model.Origem is { } origem)
     {
         <div class="alert alert-info d-flex flex-wrap gap-3 align-items-center">
-            <i class="bi bi-link-45deg fs-5"></i>
+            <i class="ph ph-link-simple fs-5"></i>
             <div>
                 @(tipo == TipoDocumento.NC ? "Credita" : "Debita") <a asp-page="Detalhe" asp-route-id="@origem.Id" target="_blank" class="doc-num">@origem.NumeroFormatado</a>
                 de @Formato.Data(origem.Data), total @Formato.Numero(origem.Total) @origem.Moeda.
@@ -157,7 +157,7 @@
         <section class="painel mb-4">
             <div class="painel-cabecalho">
                 <h2>Linhas</h2>
-                <button type="button" class="btn btn-sm btn-outline-primary" id="adicionarLinha"><i class="bi bi-plus-lg me-1"></i>Adicionar linha</button>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="adicionarLinha"><i class="ph ph-plus me-1"></i>Adicionar linha</button>
             </div>
             <div class="table-responsive">
                 <table class="table linhas-documento mb-0">
@@ -210,12 +210,12 @@
                 <section class="painel painel-corpo d-grid gap-2">
                     <button type="submit" class="btn btn-primary btn-lg" asp-page-handler="Emitir"
                             data-confirmar="Emitir é definitivo: o documento recebe número e deixa de poder ser alterado. Correcções só por nota de crédito/débito ou anulação. Emitir agora?">
-                        <i class="bi bi-check2-circle me-1"></i>Emitir @nome.ToLowerInvariant()
+                        <i class="ph ph-check-circle me-1"></i>Emitir @nome.ToLowerInvariant()
                     </button>
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-outline-secondary flex-fill" asp-page-handler="Guardar">Guardar rascunho</button>
                         <button type="submit" class="btn btn-outline-secondary flex-fill" asp-page-handler="PreVisualizar" formtarget="_blank">
-                            <i class="bi bi-eye me-1"></i>Pré-visualizar
+                            <i class="ph ph-eye me-1"></i>Pré-visualizar
                         </button>
                     </div>
                     <details class="small">

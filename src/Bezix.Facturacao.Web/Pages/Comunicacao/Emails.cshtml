@@ -12,7 +12,7 @@
     </div>
     @if (User.TemPermissao(Permissoes.Comunicacao.GerirModelos))
     {
-        <a class="btn btn-outline-secondary" asp-page="Modelos/Index"><i class="bi bi-pencil-square me-1"></i>Modelos de email</a>
+        <a class="btn btn-outline-secondary" asp-page="Modelos/Index"><i class="ph ph-note-pencil me-1"></i>Modelos de email</a>
     }
 </div>
 
@@ -25,7 +25,7 @@
     </div>
     @if (Model.Resultado.Total == 0)
     {
-        <div class="vazio"><i class="bi bi-envelope"></i><p class="mb-0">Sem emails @(Model.Estado is null ? "" : "neste estado").</p></div>
+        <div class="vazio"><i class="ph ph-envelope-simple"></i><p class="mb-0">Sem emails @(Model.Estado is null ? "" : "neste estado").</p></div>
     }
     else
     {
@@ -56,7 +56,7 @@
                                 @if (e.Estado != EstadoEmail.Enviado)
                                 {
                                     <form method="post" asp-page-handler="Reenviar" asp-route-id="@e.Id" asp-route-estado="@Model.Estado" class="d-inline">
-                                        <button class="btn btn-sm btn-outline-secondary" type="submit"><i class="bi bi-arrow-clockwise me-1"></i>Reenviar</button>
+                                        <button class="btn btn-sm btn-outline-secondary" type="submit"><i class="ph ph-arrow-clockwise me-1"></i>Reenviar</button>
                                     </form>
                                 }
                             </td>

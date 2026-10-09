@@ -7,7 +7,7 @@
 }
 <div class="cabecalho-pagina">
     <div>
-        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Conta corrente</a>
+        <a asp-page="Index" class="small text-decoration-none"><i class="ph ph-arrow-left"></i> Conta corrente</a>
         <h1 class="mt-1">Antiguidade de saldos</h1>
         <p>Valores em aberto em @Formato.Data(Model.Data), por dias de atraso face ao vencimento. Em meticais.</p>
     </div>
@@ -21,7 +21,7 @@
             <input class="form-control" type="search" id="Q" name="Q" value="@Model.Q" placeholder="Nome ou NUIT" />
         </div>
         <button class="btn btn-outline-primary" type="submit">Actualizar</button>
-        <a class="btn btn-outline-secondary" href="@Url.Page("/ContaCorrente/Antiguidade", "Csv", new { Referencia = Model.Data.ToString("yyyy-MM-dd"), Model.Q })"><i class="bi bi-filetype-csv me-1"></i>Excel (CSV)</a>
+        <a class="btn btn-outline-secondary" href="@Url.Page("/ContaCorrente/Antiguidade", "Csv", new { Referencia = Model.Data.ToString("yyyy-MM-dd"), Model.Q })"><i class="ph ph-file-csv me-1"></i>Excel (CSV)</a>
     </form>
 </div>
 
@@ -44,7 +44,7 @@
 <section class="painel">
     @if (Model.Linhas.Count == 0)
     {
-        <div class="vazio"><i class="bi bi-check2-all"></i>Não há valores em aberto.</div>
+        <div class="vazio"><i class="ph ph-checks"></i>Não há valores em aberto.</div>
     }
     else
     {

@@ -11,7 +11,7 @@
     @if (Model.Opcoes.Configurado)
     {
         <form method="post" asp-page-handler="Executar" data-confirmar="Fazer agora um backup completo? Pode demorar alguns minutos.">
-            <button class="btn btn-primary" type="submit"><i class="bi bi-cloud-arrow-up me-1"></i>Fazer backup agora</button>
+            <button class="btn btn-primary" type="submit"><i class="ph ph-cloud-arrow-up me-1"></i>Fazer backup agora</button>
         </form>
     }
 </div>
@@ -43,7 +43,7 @@ else
             }
             else if (Model.Remotos.Count == 0)
             {
-                <div class="vazio"><i class="bi bi-cloud"></i><p class="mb-0">Ainda não há backups no destino.</p></div>
+                <div class="vazio"><i class="ph ph-cloud"></i><p class="mb-0">Ainda não há backups no destino.</p></div>
             }
             else
             {
@@ -74,7 +74,7 @@ else
             <div class="painel-cabecalho"><h2>Últimas execuções</h2></div>
             @if (Model.Execucoes.Count == 0)
             {
-                <div class="vazio"><i class="bi bi-clock"></i><p class="mb-0">Ainda não correu. Configure a tarefa agendada <code>/internal/jobs/backup</code>.</p></div>
+                <div class="vazio"><i class="ph ph-clock"></i><p class="mb-0">Ainda não correu. Configure a tarefa agendada <code>/internal/jobs/backup</code>.</p></div>
             }
             else
             {

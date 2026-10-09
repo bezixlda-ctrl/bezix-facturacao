@@ -9,13 +9,13 @@
         <h1>Utilizadores</h1>
         <p>Colaboradores com acesso ao sistema. O perfil define o que cada um pode ver e fazer.</p>
     </div>
-    <a class="btn btn-primary" asp-page="Editar"><i class="bi bi-person-plus me-1"></i>Criar utilizador</a>
+    <a class="btn btn-primary" asp-page="Editar"><i class="ph ph-user-plus me-1"></i>Criar utilizador</a>
 </div>
 
 @if (Model.AdministradoresActivos < ServicoUtilizadores.MinimoAdministradores)
 {
     <div class="alert alert-warning">
-        <i class="bi bi-exclamation-triangle me-1"></i>
+        <i class="ph ph-warning me-1"></i>
         Só há @Model.AdministradoresActivos administrador activo. Crie um segundo para a empresa não ficar sem acesso à gestão se este faltar.
     </div>
 }

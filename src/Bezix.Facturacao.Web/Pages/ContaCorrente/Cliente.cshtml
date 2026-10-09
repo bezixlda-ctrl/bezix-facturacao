@@ -7,13 +7,13 @@
 }
 <div class="cabecalho-pagina">
     <div>
-        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Conta corrente</a>
+        <a asp-page="Index" class="small text-decoration-none"><i class="ph ph-arrow-left"></i> Conta corrente</a>
         <h1 class="mt-1 mb-1">@x.ClienteNome</h1>
         <p class="mt-0"><a asp-page="/Clientes/Detalhe" asp-route-id="@Model.Id">Ficha do cliente</a> @if (x.ClienteNuit is not null) { <span class="tabular">· NUIT @x.ClienteNuit</span> }</p>
     </div>
     @if (Model.PodeRegistar)
     {
-        <a class="btn btn-primary" asp-page="/Recibos/Novo" asp-route-clienteId="@Model.Id"><i class="bi bi-cash-coin me-1"></i>Registar recibo</a>
+        <a class="btn btn-primary" asp-page="/Recibos/Novo" asp-route-clienteId="@Model.Id"><i class="ph ph-hand-coins me-1"></i>Registar recibo</a>
     }
 </div>
 
@@ -51,7 +51,7 @@
                     <label class="visually-hidden" for="Ate">Até</label>
                     <input class="form-control form-control-sm w-auto" type="date" id="Ate" name="Ate" value="@x.Ate.ToString("yyyy-MM-dd")" />
                     <button class="btn btn-sm btn-outline-primary" type="submit">Ver</button>
-                    <a class="btn btn-sm btn-outline-secondary" href="@pdf" target="_blank"><i class="bi bi-printer me-1"></i>PDF</a>
+                    <a class="btn btn-sm btn-outline-secondary" href="@pdf" target="_blank"><i class="ph ph-printer me-1"></i>PDF</a>
                 </form>
             </div>
             <div class="table-responsive">
@@ -88,7 +88,7 @@
         {
             <section class="painel">
                 <details>
-                    <summary class="painel-cabecalho"><h2 class="mb-0"><i class="bi bi-envelope me-2"></i>Enviar extracto por email</h2></summary>
+                    <summary class="painel-cabecalho"><h2 class="mb-0"><i class="ph ph-envelope-simple me-2"></i>Enviar extracto por email</h2></summary>
                     <form method="post" asp-page-handler="Enviar" asp-route-id="@Model.Id" asp-route-De="@x.De.ToString("yyyy-MM-dd")" asp-route-Ate="@x.Ate.ToString("yyyy-MM-dd")" class="painel-corpo row g-3">
                         <div class="col-md-6">
                             <label class="form-label" for="Para">Para</label>
@@ -108,7 +108,7 @@
                             <div class="form-text">Vai em anexo o extracto em PDF do período indicado acima.</div>
                         </div>
                         <div class="col-12 d-flex justify-content-end">
-                            <button class="btn btn-primary" type="submit"><i class="bi bi-send me-1"></i>Enviar extracto</button>
+                            <button class="btn btn-primary" type="submit"><i class="ph ph-paper-plane-tilt me-1"></i>Enviar extracto</button>
                         </div>
                     </form>
                 </details>

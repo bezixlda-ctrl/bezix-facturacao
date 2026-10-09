@@ -6,18 +6,18 @@
 }
 <div class="cabecalho-pagina">
     <div>
-        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Relatórios</a>
+        <a asp-page="Index" class="small text-decoration-none"><i class="ph ph-arrow-left"></i> Relatórios</a>
         <h1 class="mt-1">Mapa de IVA</h1>
         <p>IVA liquidado por taxa, para a declaração periódica: o facturado (FT, FR, FG, ND) menos o creditado em notas de crédito. Documentos anulados não contam. Por omissão, o mês anterior.</p>
     </div>
-    <a class="btn btn-outline-secondary" asp-page-handler="Csv" asp-all-route-data="rota"><i class="bi bi-filetype-csv me-1"></i>Excel (CSV)</a>
+    <a class="btn btn-outline-secondary" asp-page-handler="Csv" asp-all-route-data="rota"><i class="ph ph-file-csv me-1"></i>Excel (CSV)</a>
 </div>
 
 <section class="painel mb-4">
     <form method="get" class="p-3 border-bottom"><partial name="_Periodo" model="(Model.Inicio, Model.Fim)" /></form>
     @if (Model.Linhas.Count == 0)
     {
-        <div class="vazio"><i class="bi bi-percent"></i><p class="mb-0">Sem documentos com IVA neste período.</p></div>
+        <div class="vazio"><i class="ph ph-percent"></i><p class="mb-0">Sem documentos com IVA neste período.</p></div>
     }
     else
     {
@@ -57,7 +57,7 @@
     </div>
     @if (Model.Anulados.Count == 0)
     {
-        <div class="vazio"><i class="bi bi-check2-circle"></i><p class="mb-0">Nenhum documento anulado neste período.</p></div>
+        <div class="vazio"><i class="ph ph-check-circle"></i><p class="mb-0">Nenhum documento anulado neste período.</p></div>
     }
     else
     {

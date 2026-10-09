@@ -92,10 +92,10 @@ public class DetalheModel(ServicoClientes clientes, ServicoEmpresa empresas, Ser
 
     public static string Icone(TipoActividade t) => t switch
     {
-        TipoActividade.Chamada => "bi-telephone",
-        TipoActividade.Reuniao => "bi-people",
-        TipoActividade.Tarefa => "bi-check2-square",
-        _ => "bi-sticky",
+        TipoActividade.Chamada => "ph-phone",
+        TipoActividade.Reuniao => "ph-users",
+        TipoActividade.Tarefa => "ph-check-square",
+        _ => "ph-note",
     };
 
     public static string Nome(TipoActividade t) => t switch

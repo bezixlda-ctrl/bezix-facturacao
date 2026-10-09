@@ -10,7 +10,7 @@
         <h1>Integrações</h1>
         <p>Ligue outros sistemas (loja online, ERP, contabilidade) à facturação: a API para criar e consultar documentos, os webhooks para ser avisado quando algo acontece.</p>
     </div>
-    <a class="btn btn-outline-secondary" href="/api/docs" target="_blank"><i class="bi bi-book me-1"></i>Documentação da API</a>
+    <a class="btn btn-outline-secondary" href="/api/docs" target="_blank"><i class="ph ph-book-open me-1"></i>Documentação da API</a>
 </div>
 
 <partial name="_ResumoErros" />
@@ -18,10 +18,10 @@
 @if (Model.SegredoNovo is not null)
 {
     <div class="alert alert-warning segredo" role="alert">
-        <div class="fw-semibold mb-2"><i class="bi bi-key me-1"></i>@Model.SegredoDescricao</div>
+        <div class="fw-semibold mb-2"><i class="ph ph-key me-1"></i>@Model.SegredoDescricao</div>
         <div class="input-group">
             <input class="form-control font-monospace" id="segredoNovo" value="@Model.SegredoNovo" readonly aria-label="Valor secreto" />
-            <button class="btn btn-outline-dark" type="button" data-copiar="#segredoNovo"><i class="bi bi-clipboard me-1"></i>Copiar</button>
+            <button class="btn btn-outline-dark" type="button" data-copiar="#segredoNovo"><i class="ph ph-copy-simple me-1"></i>Copiar</button>
         </div>
     </div>
 }
@@ -32,7 +32,7 @@
             <div class="painel-cabecalho"><h2>Chaves da API</h2></div>
             @if (Model.Chaves.Count == 0)
             {
-                <div class="vazio"><i class="bi bi-key"></i><p class="mb-0">Sem chaves. Crie uma por cada sistema que se liga, para a poder revogar sem afectar os outros.</p></div>
+                <div class="vazio"><i class="ph ph-key"></i><p class="mb-0">Sem chaves. Crie uma por cada sistema que se liga, para a poder revogar sem afectar os outros.</p></div>
             }
             else
             {
@@ -64,7 +64,7 @@
         </section>
 
         <details class="painel" open="@(Model.ModelState.ErrorCount > 0 && Model.NomeChave is not null)">
-            <summary class="painel-cabecalho"><h2>Nova chave</h2><i class="bi bi-chevron-down"></i></summary>
+            <summary class="painel-cabecalho"><h2>Nova chave</h2><i class="ph ph-caret-down"></i></summary>
             <form method="post" asp-page-handler="Chave" class="painel-corpo">
                 <div class="mb-3">
                     <label class="form-label" asp-for="NomeChave">Nome do sistema</label>
@@ -80,7 +80,7 @@
                         </div>
                     }
                 </fieldset>
-                <button class="btn btn-primary" type="submit"><i class="bi bi-plus-lg me-1"></i>Criar chave</button>
+                <button class="btn btn-primary" type="submit"><i class="ph ph-plus me-1"></i>Criar chave</button>
             </form>
         </details>
     </div>
@@ -97,7 +97,7 @@
             </div>
             @if (Model.Webhooks.Count == 0)
             {
-                <div class="vazio"><i class="bi bi-broadcast"></i><p class="mb-0">Sem webhooks. Cada evento é enviado por POST, assinado com HMAC-SHA256 no cabeçalho X-Signature.</p></div>
+                <div class="vazio"><i class="ph ph-broadcast"></i><p class="mb-0">Sem webhooks. Cada evento é enviado por POST, assinado com HMAC-SHA256 no cabeçalho X-Signature.</p></div>
             }
             else
             {
@@ -119,7 +119,7 @@
         </section>
 
         <details class="painel" open="@(Model.ModelState.ErrorCount > 0 && Model.NomeWebhook is not null)">
-            <summary class="painel-cabecalho"><h2>Novo webhook</h2><i class="bi bi-chevron-down"></i></summary>
+            <summary class="painel-cabecalho"><h2>Novo webhook</h2><i class="ph ph-caret-down"></i></summary>
             <form method="post" asp-page-handler="Webhook" class="painel-corpo">
                 <div class="mb-3">
                     <label class="form-label" asp-for="NomeWebhook">Nome</label>
@@ -130,7 +130,7 @@
                     <input class="form-control font-monospace" asp-for="UrlWebhook" type="url" maxlength="500" placeholder="https://erp.exemplo.co.mz/webhooks/facturacao" required />
                 </div>
                 <partial name="_Eventos" model="Model.Eventos" />
-                <button class="btn btn-primary" type="submit"><i class="bi bi-plus-lg me-1"></i>Criar webhook</button>
+                <button class="btn btn-primary" type="submit"><i class="ph ph-plus me-1"></i>Criar webhook</button>
             </form>
         </details>
     </div>

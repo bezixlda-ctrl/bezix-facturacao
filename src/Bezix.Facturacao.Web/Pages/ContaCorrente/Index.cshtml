@@ -9,10 +9,10 @@
         <p>Saldo de cada cliente em meticais: facturas e notas de débito menos notas de crédito e recibos. Os clientes com valores vencidos aparecem primeiro.</p>
     </div>
     <div class="d-flex gap-2">
-        <a class="btn btn-outline-primary" asp-page="Antiguidade"><i class="bi bi-hourglass-split me-1"></i>Antiguidade de saldos</a>
+        <a class="btn btn-outline-primary" asp-page="Antiguidade"><i class="ph ph-hourglass-medium me-1"></i>Antiguidade de saldos</a>
         @if (User.TemPermissao(Permissoes.Recibos.Registar))
         {
-            <a class="btn btn-primary" asp-page="/Recibos/Novo"><i class="bi bi-cash-coin me-1"></i>Registar recibo</a>
+            <a class="btn btn-primary" asp-page="/Recibos/Novo"><i class="ph ph-hand-coins me-1"></i>Registar recibo</a>
         }
     </div>
 </div>

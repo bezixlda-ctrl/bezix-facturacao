@@ -12,7 +12,7 @@
     @if (Model.PodeGerir)
     {
         <form method="post" asp-page-handler="Executar">
-            <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-play-circle me-1"></i>Executar tarefas agora</button>
+            <button class="btn btn-outline-secondary" type="submit"><i class="ph ph-play-circle me-1"></i>Executar tarefas agora</button>
         </form>
     }
 </div>
@@ -70,7 +70,7 @@
                         <a class="small" asp-page="/Comunicacao/Modelos/Index">Editar o texto dos lembretes</a>
                     }
                     else { <span></span> }
-                    <button class="btn btn-primary" type="submit"><i class="bi bi-check2 me-1"></i>Guardar plano</button>
+                    <button class="btn btn-primary" type="submit"><i class="ph ph-check me-1"></i>Guardar plano</button>
                 </div>
             }
         </form>
@@ -82,7 +82,7 @@
             @if (Model.Recorrencias.Count == 0)
             {
                 <div class="vazio">
-                    <i class="bi bi-arrow-repeat"></i>
+                    <i class="ph ph-arrows-clockwise"></i>
                     <p class="mb-0">Sem facturas recorrentes. Para criar uma, abra uma factura emitida e escolha <strong>Tornar recorrente</strong>.</p>
                 </div>
             }
@@ -119,7 +119,7 @@
             @if (Model.Historico.Count == 0)
             {
                 <div class="vazio">
-                    <i class="bi bi-clock"></i>
+                    <i class="ph ph-clock"></i>
                     <p class="mb-0">As tarefas ainda não correram. No servidor, configure uma chamada a <code>/internal/jobs/tick</code> de 15 em 15 minutos (ver instalação).</p>
                 </div>
             }

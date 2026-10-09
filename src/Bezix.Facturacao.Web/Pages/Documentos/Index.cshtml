@@ -15,14 +15,14 @@
         <div class="d-flex gap-2">
             @if (Model.TiposNovos.Contains(TipoDocumento.FT))
             {
-                <a class="btn btn-primary" asp-page="Editar" asp-route-tipo="FT"><i class="bi bi-plus-lg me-1"></i>Nova factura</a>
+                <a class="btn btn-primary" asp-page="Editar" asp-route-tipo="FT"><i class="ph ph-plus me-1"></i>Nova factura</a>
             }
             <div class="dropdown">
                 <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Outro documento</button>
                 <ul class="dropdown-menu dropdown-menu-end">
                     @foreach (var t in Model.TiposNovos.Where(t => t != TipoDocumento.FT))
                     {
-                        <li><a class="dropdown-item" asp-page="Editar" asp-route-tipo="@t"><i class="bi @Vista.Icone(t) me-2"></i>@Vista.Novo(t)</a></li>
+                        <li><a class="dropdown-item" asp-page="Editar" asp-route-tipo="@t"><i class="ph @Vista.Icone(t) me-2"></i>@Vista.Novo(t)</a></li>
                     }
                 </ul>
             </div>

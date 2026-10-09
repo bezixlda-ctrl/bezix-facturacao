@@ -1,7 +1,7 @@
 @if (!ViewData.ModelState.IsValid)
 {
     <div class="alert alert-danger" role="alert">
-        <div class="fw-bold mb-1"><i class="bi bi-exclamation-triangle me-1"></i>Corrija o seguinte antes de guardar:</div>
+        <div class="fw-bold mb-1"><i class="ph ph-warning me-1"></i>Corrija o seguinte antes de guardar:</div>
         <ul class="mb-0 ps-3">
             @foreach (var erro in ViewData.ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).Distinct())
             {

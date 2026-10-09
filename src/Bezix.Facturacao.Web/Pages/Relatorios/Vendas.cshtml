@@ -7,11 +7,11 @@
 }
 <div class="cabecalho-pagina">
     <div>
-        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Relatórios</a>
+        <a asp-page="Index" class="small text-decoration-none"><i class="ph ph-arrow-left"></i> Relatórios</a>
         <h1 class="mt-1">Vendas</h1>
         <p>Facturas, facturas-recibo, facturas globais e notas de débito emitidas, menos as notas de crédito. Os anulados não contam. Valores em meticais, sem IVA na coluna Base.@(Model.SoProprios ? " Só os documentos de que é responsável." : "")</p>
     </div>
-    <a class="btn btn-outline-secondary" asp-page-handler="Csv" asp-route-de="@Model.Inicio.ToString("yyyy-MM-dd")" asp-route-ate="@Model.Fim.ToString("yyyy-MM-dd")" asp-route-agrupar="@Model.Agrupar"><i class="bi bi-filetype-csv me-1"></i>Excel (CSV)</a>
+    <a class="btn btn-outline-secondary" asp-page-handler="Csv" asp-route-de="@Model.Inicio.ToString("yyyy-MM-dd")" asp-route-ate="@Model.Fim.ToString("yyyy-MM-dd")" asp-route-agrupar="@Model.Agrupar"><i class="ph ph-file-csv me-1"></i>Excel (CSV)</a>
 </div>
 
 <section class="painel">
@@ -29,7 +29,7 @@
     </form>
     @if (Model.Linhas.Count == 0)
     {
-        <div class="vazio"><i class="bi bi-bar-chart-line"></i><p class="mb-0">Sem vendas neste período.</p></div>
+        <div class="vazio"><i class="ph ph-chart-bar"></i><p class="mb-0">Sem vendas neste período.</p></div>
     }
     else
     {

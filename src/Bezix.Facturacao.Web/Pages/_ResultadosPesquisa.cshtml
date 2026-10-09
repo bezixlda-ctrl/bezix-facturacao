@@ -10,7 +10,7 @@
         <div class="grupo">Clientes</div>
         @foreach (var c in Model.Clientes)
         {
-            <a asp-page="/Clientes/Detalhe" asp-route-id="@c.Id"><i class="bi bi-person text-body-secondary"></i><span>@c.Nome</span><small>@c.Nuit</small></a>
+            <a asp-page="/Clientes/Detalhe" asp-route-id="@c.Id"><i class="ph ph-user text-body-secondary"></i><span>@c.Nome</span><small>@c.Nuit</small></a>
         }
         @if (Model.Clientes.Count == Bezix.Facturacao.Web.Pages.PesquisaModel.Limite)
         {
@@ -23,7 +23,7 @@
         @foreach (var a in Model.Artigos)
         {
             var url = User.TemPermissao(Permissoes.Artigos.Gerir) ? Url.Page("/Artigos/Editar", new { id = a.Id }) : Url.Page("/Artigos/Index", new { Q = a.Codigo });
-            <a href="@url"><i class="bi bi-box-seam text-body-secondary"></i><span>@a.Descricao</span><small>@a.Codigo</small></a>
+            <a href="@url"><i class="ph ph-package text-body-secondary"></i><span>@a.Descricao</span><small>@a.Codigo</small></a>
         }
     }
 }

@@ -8,7 +8,7 @@
 }
 <div class="cabecalho-pagina">
     <div>
-        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Automação</a>
+        <a asp-page="Index" class="small text-decoration-none"><i class="ph ph-arrow-left"></i> Automação</a>
         <h1 class="mt-1">@(nova ? "Tornar recorrente" : "Factura recorrente")</h1>
         <p>Na data marcada o sistema copia a factura modelo com a data do dia, os preços e as taxas de IVA em vigor. O documento original não muda.</p>
     </div>
@@ -16,7 +16,7 @@
     {
         <form method="post" asp-page-handler="Executar" asp-route-id="@Model.Id"
               data-confirmar="Gerar agora o próximo documento? A próxima data avança um período.">
-            <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-lightning me-1"></i>Gerar já</button>
+            <button class="btn btn-outline-secondary" type="submit"><i class="ph ph-lightning me-1"></i>Gerar já</button>
         </form>
     }
 </div>
@@ -74,7 +74,7 @@
                 }
             </div>
             <div class="painel-rodape d-flex justify-content-end">
-                <button class="btn btn-primary" type="submit"><i class="bi bi-check2 me-1"></i>@(nova ? "Criar recorrência" : "Guardar")</button>
+                <button class="btn btn-primary" type="submit"><i class="ph ph-check me-1"></i>@(nova ? "Criar recorrência" : "Guardar")</button>
             </div>
         </form>
     </div>

@@ -174,15 +174,15 @@ public class IndexModel(
         }
         return a.Accao switch
         {
-            "Documento.Emitir" => ("bi-file-earmark-check", $"{Campo("NumeroFormatado")} emitida para {Campo("ClienteNome")}"),
-            "Recibo.Emitir" => ("bi-cash-coin", $"Pagamento recebido de {Campo("Nome")} ({Campo("NumeroFormatado")})"),
-            "Documento.Anular" => ("bi-x-octagon", $"{Campo("NumeroFormatado")} anulado"),
-            "Documento.PedirAprovacao" => ("bi-patch-question", "Aprovação pedida"),
-            "Documento.Enviar" => ("bi-envelope", $"{Campo("NumeroFormatado")} enviado para {Campo("Para")}"),
-            "Documento.Visto" => ("bi-eye", $"{Campo("NumeroFormatado")} visto pelo cliente"),
-            "Pagamento.Comunicado" => ("bi-bell", $"Pagamento comunicado por {Campo("Cliente")}"),
-            "Cliente.Criar" => ("bi-person-plus", $"Novo cliente: {Campo("Nome")}"),
-            _ => ("bi-dot", a.Accao),
+            "Documento.Emitir" => ("ph-receipt", $"{Campo("NumeroFormatado")} emitida para {Campo("ClienteNome")}"),
+            "Recibo.Emitir" => ("ph-hand-coins", $"Pagamento recebido de {Campo("Nome")} ({Campo("NumeroFormatado")})"),
+            "Documento.Anular" => ("ph-prohibit", $"{Campo("NumeroFormatado")} anulado"),
+            "Documento.PedirAprovacao" => ("ph-seal-question", "Aprovação pedida"),
+            "Documento.Enviar" => ("ph-envelope-simple", $"{Campo("NumeroFormatado")} enviado para {Campo("Para")}"),
+            "Documento.Visto" => ("ph-eye", $"{Campo("NumeroFormatado")} visto pelo cliente"),
+            "Pagamento.Comunicado" => ("ph-bell-simple", $"Pagamento comunicado por {Campo("Cliente")}"),
+            "Cliente.Criar" => ("ph-user-plus", $"Novo cliente: {Campo("Nome")}"),
+            _ => ("ph-dot-outline", a.Accao),
         };
     }
 }

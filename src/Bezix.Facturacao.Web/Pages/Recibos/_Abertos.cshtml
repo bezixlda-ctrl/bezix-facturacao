@@ -8,7 +8,7 @@
 </div>
 @if (Model.ClienteId <= 0)
 {
-    <div class="vazio"><i class="bi bi-person"></i>Escolha o cliente para ver as facturas por pagar.</div>
+    <div class="vazio"><i class="ph ph-user"></i>Escolha o cliente para ver as facturas por pagar.</div>
 }
 else
 {
@@ -22,7 +22,7 @@ else
     @if (Model.Abertos.Count == 0)
     {
         <div class="vazio">
-            <i class="bi bi-check2-all"></i>
+            <i class="ph ph-checks"></i>
             Não há facturas em aberto. Um recibo agora fica todo como adiantamento.
         </div>
     }
@@ -71,7 +71,7 @@ else
             <div class="small text-danger mb-2 d-none" id="avisoExcesso">O valor alocado passa o valor recebido.</div>
             <button type="submit" class="btn btn-primary btn-lg" id="emitirRecibo"
                     data-confirmar="Emitir o recibo? Fica numerado e não pode ser alterado (só anulado).">
-                <i class="bi bi-check2-circle me-1"></i>Emitir recibo
+                <i class="ph ph-check-circle me-1"></i>Emitir recibo
             </button>
         </div>
     </div>

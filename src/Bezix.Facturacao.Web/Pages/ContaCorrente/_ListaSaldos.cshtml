@@ -1,7 +1,7 @@
 @model Bezix.Facturacao.Web.Pages.ContaCorrente.IndexModel
 @if (Model.Resultado.Total == 0)
 {
-    <div class="vazio"><i class="bi bi-journal-check"></i>Nenhum cliente com saldo@(Model.SoVencidos ? " vencido" : "").</div>
+    <div class="vazio"><i class="ph ph-notebook"></i>Nenhum cliente com saldo@(Model.SoVencidos ? " vencido" : "").</div>
 }
 else
 {

@@ -25,7 +25,7 @@
             @foreach (var p in Model.Passos)
             {
                 <li class="@(p.Feito ? "feito" : "")">
-                    <span class="marca" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+                    <span class="marca" aria-hidden="true"><i class="ph ph-check"></i></span>
                     <div class="flex-grow-1">
                         <div class="titulo">@p.Titulo<span class="visually-hidden">@(p.Feito ? " (concluído)" : " (por fazer)")</span></div>
                         <p>@p.Explicacao</p>
@@ -68,12 +68,12 @@
                                 }
                             </div>
                             <div class="btn-group btn-group-sm align-self-start" role="group" aria-label="Período do gráfico" id="periodoGrafico">
-                                <button type="button" class="btn btn-outline-secondary" data-periodo="Diario">Diário</button>
-                                <button type="button" class="btn btn-outline-secondary active" data-periodo="Mensal">Mensal</button>
-                                <button type="button" class="btn btn-outline-secondary" data-periodo="Anual">Anual</button>
+                                <button type="button" class="btn btn-outline-secondary" data-periodo="Diario" aria-pressed="false">Diário</button>
+                                <button type="button" class="btn btn-outline-secondary active" data-periodo="Mensal" aria-pressed="true">Mensal</button>
+                                <button type="button" class="btn btn-outline-secondary" data-periodo="Anual" aria-pressed="false">Anual</button>
                             </div>
                         </div>
-                        <div id="graficoPrincipal" class="grafico" style="min-height: 260px" aria-label="Facturação e recebimentos ao longo do tempo"></div>
+                        <div id="graficoPrincipal" class="grafico" style="min-height: 260px" role="img" aria-label="Facturação e recebimentos ao longo do tempo"></div>
                     </div>
                     <div class="mini-indicadores">
                         @if (Model.VeSaldos)
@@ -97,67 +97,67 @@
                 <div class="col-xl-4">
                     <section class="painel h-100">
                         <div class="painel-cabecalho"><h2>Antiguidade do vencido</h2><a class="small" asp-page="/ContaCorrente/Antiguidade">Detalhe</a></div>
-                        <div class="painel-corpo">
-                            <div id="graficoAntiguidade" class="grafico" style="min-height: 260px" aria-label="Valor vencido por antiguidade"></div>
-                            @if (ind.Vencido == 0) { <p class="text-center text-body-secondary small mb-0">Nada vencido.</p> }
-                        </div>
+                        @if (ind.Vencido == 0)
+                        {
+                            <div class="vazio-positivo">
+                                <i class="ph ph-check-circle" aria-hidden="true"></i>
+                                <strong>Sem facturas vencidas</strong>
+                                <span>@(ind.PorReceber > 0 ? $"{Formato.Moeda(ind.PorReceber)} por receber, ainda dentro do prazo." : "Não há valores por receber.")</span>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="painel-corpo">
+                                <div id="graficoAntiguidade" class="grafico" style="min-height: 260px" role="img" aria-label="Valor vencido por antiguidade"></div>
+                            </div>
+                        }
                     </section>
                 </div>
             }
         </div>
     }
 
-    <div class="row g-3 mb-4">
+    <section class="painel faixa-indicadores mb-4" aria-label="Indicadores de @mes">
         @if (Model.VeFacturacao)
         {
-            <div class="col-sm-6 col-xl-3">
-                <a class="indicador indicador-facturas d-block text-decoration-none" asp-page="/Documentos/Index">
-                    <span class="rotulo">Facturas emitidas em @mes</span>
-                    <span class="valor">@ind.FacturasEmitidas</span>
-                    <span class="nota">@Formato.Moeda(ind.Facturado.Valor)</span>
-                    <div class="spark" data-serie="sparkFacturado"></div>
-                </a>
-            </div>
+            <a class="kpi" asp-page="/Documentos/Index">
+                <span class="kpi-rotulo"><i class="ph ph-file-text" aria-hidden="true"></i>Facturas emitidas em @mes</span>
+                <span class="kpi-valor">@ind.FacturasEmitidas</span>
+                <span class="kpi-nota">@Formato.Moeda(ind.Facturado.Valor)</span>
+                <div class="spark" data-serie="sparkFacturado" data-cor="--bz-primaria" aria-hidden="true"></div>
+            </a>
         }
         @if (Model.VeRecebimentos)
         {
-            <div class="col-sm-6 col-xl-3">
-                <a class="indicador indicador-recibos d-block text-decoration-none" asp-page="/Recibos/Index">
-                    <span class="rotulo">Recibos em @mes</span>
-                    <span class="valor">@ind.RecibosEmitidos</span>
-                    <span class="nota">@Formato.Moeda(ind.Recebido.Valor)</span>
-                    <div class="spark" data-serie="sparkRecebido"></div>
-                </a>
-            </div>
-        }
-        <div class="col-sm-6 col-xl-3">
-            <a class="indicador indicador-clientes d-block text-decoration-none" asp-page="/Clientes/Index">
-                <span class="rotulo">Clientes activos</span>
-                <span class="valor">@ind.ClientesActivos</span>
-                <span class="nota">@ind.ClientesComFacturas com facturas nos últimos 12 meses</span>
+            <a class="kpi" asp-page="/Recibos/Index">
+                <span class="kpi-rotulo"><i class="ph ph-hand-coins" aria-hidden="true"></i>Recibos em @mes</span>
+                <span class="kpi-valor">@ind.RecibosEmitidos</span>
+                <span class="kpi-nota">@Formato.Moeda(ind.Recebido.Valor)</span>
+                <div class="spark" data-serie="sparkRecebido" data-cor="--bz-sucesso" aria-hidden="true"></div>
             </a>
-        </div>
+        }
+        <a class="kpi" asp-page="/Clientes/Index">
+            <span class="kpi-rotulo"><i class="ph ph-users" aria-hidden="true"></i>Clientes activos</span>
+            <span class="kpi-valor">@ind.ClientesActivos</span>
+            <span class="kpi-nota">@ind.ClientesComFacturas com facturas nos últimos 12 meses</span>
+        </a>
         @if (Model.VeSaldos)
         {
-            <div class="col-sm-6 col-xl-3">
-                <a class="indicador indicador-vencido d-block text-decoration-none" asp-page="/ContaCorrente/Index" asp-route-SoVencidos="true">
-                    <span class="rotulo">Valor vencido</span>
-                    <span class="valor">@Formato.Numero(ind.Vencido)</span>
-                    <span class="nota">MT · de @Formato.Moeda(ind.PorReceber) por receber</span>
-                </a>
-            </div>
+            var vencido = ind.Vencido > 0;
+            <a class="kpi @(vencido ? "kpi-alerta" : "kpi-ok")" asp-page="/ContaCorrente/Index" asp-route-SoVencidos="true">
+                <span class="kpi-rotulo"><i class="ph @(vencido ? "ph-warning-circle" : "ph-check-circle")" aria-hidden="true"></i>Valor vencido</span>
+                <span class="kpi-valor">@Formato.Moeda(ind.Vencido)</span>
+                <span class="kpi-nota">@(vencido ? $"de {Formato.Moeda(ind.PorReceber)} por receber" : $"Nada vencido · {Formato.Moeda(ind.PorReceber)} a vencer")</span>
+            </a>
         }
         else if (Model.VeIva)
         {
-            <div class="col-sm-6 col-xl-3">
-                <div class="indicador indicador-vencido">
-                    <span class="rotulo">IVA liquidado em @mes</span>
-                    <span class="valor">@Formato.Numero(ind.Iva.Valor)</span>
-                    <span class="nota">MT</span>
-                </div>
+            <div class="kpi">
+                <span class="kpi-rotulo"><i class="ph ph-percent" aria-hidden="true"></i>IVA liquidado em @mes</span>
+                <span class="kpi-valor">@Formato.Moeda(ind.Iva.Valor)</span>
             </div>
         }
-    </div>
+    </section>
 }
 
 <div class="row g-4">
@@ -172,36 +172,36 @@
             }
             @if (nada)
             {
-                <div class="vazio py-4"><i class="bi bi-check2-all"></i>Nada pendente.</div>
+                <div class="vazio py-4"><i class="ph ph-checks"></i>Nada pendente.</div>
             }
             <ul class="lista-accoes">
                 @if (Model.AprovacoesPendentes > 0)
                 {
-                    <li class="alerta"><i class="bi bi-patch-question"></i><span>@Model.AprovacoesPendentes @(Model.AprovacoesPendentes == 1 ? "documento aguarda" : "documentos aguardam") a sua aprovação.</span><a class="btn btn-sm btn-primary" asp-page="/Documentos/Aprovacoes">Ver</a></li>
+                    <li class="alerta"><i class="ph ph-seal-question"></i><span>@Model.AprovacoesPendentes @(Model.AprovacoesPendentes == 1 ? "documento aguarda" : "documentos aguardam") a sua aprovação.</span><a class="btn btn-sm btn-primary" asp-page="/Documentos/Aprovacoes">Ver</a></li>
                 }
                 @if (Model.ExportacaoPorFazer is { } exp)
                 {
-                    <li class="alerta"><i class="bi bi-file-earmark-zip"></i><span>A exportação AT de @exp.Mes.ToString("00")/@exp.Ano ainda não foi gerada.</span><a class="btn btn-sm btn-primary" asp-page="/Relatorios/ExportacaoAT">Gerar</a></li>
+                    <li class="alerta"><i class="ph ph-file-zip"></i><span>A exportação AT de @exp.Mes.ToString("00")/@exp.Ano ainda não foi gerada.</span><a class="btn btn-sm btn-primary" asp-page="/Relatorios/ExportacaoAT">Gerar</a></li>
                 }
                 @if (Model.PagamentosPorValidar > 0)
                 {
-                    <li class="alerta"><i class="bi bi-inbox"></i><span>@Model.PagamentosPorValidar @(Model.PagamentosPorValidar == 1 ? "pagamento comunicado por clientes aguarda" : "pagamentos comunicados por clientes aguardam") validação.</span><a class="btn btn-sm btn-primary" asp-page="/Recibos/Comunicados">Validar</a></li>
+                    <li class="alerta"><i class="ph ph-tray"></i><span>@Model.PagamentosPorValidar @(Model.PagamentosPorValidar == 1 ? "pagamento comunicado por clientes aguarda" : "pagamentos comunicados por clientes aguardam") validação.</span><a class="btn btn-sm btn-primary" asp-page="/Recibos/Comunicados">Validar</a></li>
                 }
                 @if (Model.RecorrentesSemana.Count > 0)
                 {
-                    <li class="alerta"><i class="bi bi-arrow-repeat"></i><span>@Model.RecorrentesSemana.Count @(Model.RecorrentesSemana.Count == 1 ? "factura recorrente sai" : "facturas recorrentes saem") nos próximos 7 dias: @string.Join(", ", Model.RecorrentesSemana.Take(3).Select(r => r.Cliente))@(Model.RecorrentesSemana.Count > 3 ? "…" : "").</span><a class="btn btn-sm btn-outline-secondary" asp-page="/Automacao/Index">Ver</a></li>
+                    <li class="alerta"><i class="ph ph-arrows-clockwise"></i><span>@Model.RecorrentesSemana.Count @(Model.RecorrentesSemana.Count == 1 ? "factura recorrente sai" : "facturas recorrentes saem") nos próximos 7 dias: @string.Join(", ", Model.RecorrentesSemana.Take(3).Select(r => r.Cliente))@(Model.RecorrentesSemana.Count > 3 ? "…" : "").</span><a class="btn btn-sm btn-outline-secondary" asp-page="/Automacao/Index">Ver</a></li>
                 }
                 @if (Model.WebhooksFalhados > 0)
                 {
-                    <li class="alerta erro"><i class="bi bi-broadcast"></i><span>@Model.WebhooksFalhados @(Model.WebhooksFalhados == 1 ? "notificação a outro sistema falhou" : "notificações a outros sistemas falharam") nos últimos 30 dias.</span><a class="btn btn-sm btn-outline-secondary" asp-page="/Administracao/Integracoes/Entregas" asp-route-estado="Falhou">Ver</a></li>
+                    <li class="alerta erro"><i class="ph ph-broadcast"></i><span>@Model.WebhooksFalhados @(Model.WebhooksFalhados == 1 ? "notificação a outro sistema falhou" : "notificações a outros sistemas falharam") nos últimos 30 dias.</span><a class="btn btn-sm btn-outline-secondary" asp-page="/Administracao/Integracoes/Entregas" asp-route-estado="Falhou">Ver</a></li>
                 }
                 @if (Model.EmailsFalhados > 0)
                 {
-                    <li class="alerta erro"><i class="bi bi-envelope-exclamation"></i><span>@Model.EmailsFalhados @(Model.EmailsFalhados == 1 ? "email não foi entregue" : "emails não foram entregues") nos últimos 30 dias.</span><a class="btn btn-sm btn-outline-secondary" asp-page="/Comunicacao/Emails" asp-route-estado="Falhou">Ver</a></li>
+                    <li class="alerta erro"><i class="ph ph-envelope-simple"></i><span>@Model.EmailsFalhados @(Model.EmailsFalhados == 1 ? "email não foi entregue" : "emails não foram entregues") nos últimos 30 dias.</span><a class="btn btn-sm btn-outline-secondary" asp-page="/Comunicacao/Emails" asp-route-estado="Falhou">Ver</a></li>
                 }
                 @foreach (var s in Model.SeriesPorFechar)
                 {
-                    <li class="alerta"><i class="bi bi-123"></i><span>A série @s.Descricao de @s.Ano ainda está aberta. Feche-a para encerrar o ano.</span><a class="btn btn-sm btn-outline-secondary" asp-page="/Configuracoes/Series">Séries</a></li>
+                    <li class="alerta"><i class="ph ph-hash"></i><span>A série @s.Descricao de @s.Ano ainda está aberta. Feche-a para encerrar o ano.</span><a class="btn btn-sm btn-outline-secondary" asp-page="/Configuracoes/Series">Séries</a></li>
                 }
             </ul>
             @if (Model.Vencidas.Count > 0 || Model.AVencer.Count > 0)
@@ -224,7 +224,7 @@
                                         @if (User.TemPermissao(Permissoes.Comunicacao.Enviar))
                                         {
                                             <form method="post" asp-page="/Comunicacao/Lembrete" asp-route-id="@d.Id" class="d-inline">
-                                                <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap"><i class="bi bi-bell me-1"></i>Enviar lembrete</button>
+                                                <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap"><i class="ph ph-bell-simple me-1"></i>Enviar lembrete</button>
                                             </form>
                                         }
                                     </td>
@@ -290,7 +290,7 @@
                     {
                         var (icone, texto) = IndexModel.DescreverActividade(a);
                         <li>
-                            <span class="icone"><i class="bi @icone"></i></span>
+                            <span class="icone"><i class="ph @icone"></i></span>
                             <div>
                                 <div class="small">@texto</div>
                                 <div class="small text-body-secondary tabular">@Formato.DataHora(a.Data) · @a.Utilizador</div>

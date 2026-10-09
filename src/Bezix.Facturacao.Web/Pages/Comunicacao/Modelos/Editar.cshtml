@@ -6,7 +6,7 @@
 }
 <div class="cabecalho-pagina">
     <div>
-        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Modelos de email</a>
+        <a asp-page="Index" class="small text-decoration-none"><i class="ph ph-arrow-left"></i> Modelos de email</a>
         <h1 class="mt-1">@Model.Modelo.Nome</h1>
         <p>Escreva texto simples; parágrafos separados por uma linha em branco. Os links começados por https:// ficam clicáveis.</p>
     </div>
@@ -44,10 +44,10 @@
             <div class="painel-rodape d-flex flex-wrap gap-2 justify-content-between">
                 <div class="d-flex flex-wrap gap-2">
                     <button type="button" class="btn btn-outline-secondary" hx-post="@Url.Page(null, "Previsualizar", new { codigo = Model.Codigo })"
-                            hx-include="#formModelo" hx-target="#previsao"><i class="bi bi-eye me-1"></i>Pré-visualizar</button>
-                    <button type="submit" class="btn btn-outline-secondary" asp-page-handler="Teste"><i class="bi bi-send me-1"></i>Enviar teste para mim</button>
+                            hx-include="#formModelo" hx-target="#previsao"><i class="ph ph-eye me-1"></i>Pré-visualizar</button>
+                    <button type="submit" class="btn btn-outline-secondary" asp-page-handler="Teste"><i class="ph ph-paper-plane-tilt me-1"></i>Enviar teste para mim</button>
                 </div>
-                <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Guardar modelo</button>
+                <button type="submit" class="btn btn-primary"><i class="ph ph-check me-1"></i>Guardar modelo</button>
             </div>
         </form>
         @if (Model.TemOriginal)

@@ -8,7 +8,7 @@
         <h1>Perfis e permissões</h1>
         <p>Um perfil é um conjunto de permissões. Ajuste os perfis existentes ou crie novos sem mexer no sistema.</p>
     </div>
-    <a class="btn btn-primary" asp-page="Editar"><i class="bi bi-plus-lg me-1"></i>Criar perfil</a>
+    <a class="btn btn-primary" asp-page="Editar"><i class="ph ph-plus me-1"></i>Criar perfil</a>
 </div>
 
 <section class="painel">
@@ -28,7 +28,7 @@
                 @foreach (var p in Model.Lista)
                 {
                     <tr>
-                        <td class="fw-semibold text-nowrap">@p.Nome @if (p.Sistema) { <i class="bi bi-lock text-body-secondary small" title="Perfil do sistema"></i> }</td>
+                        <td class="fw-semibold text-nowrap">@p.Nome @if (p.Sistema) { <i class="ph ph-lock-simple text-body-secondary small" title="Perfil do sistema"></i> }</td>
                         <td class="text-body-secondary small">@p.Descricao</td>
                         <td class="num">@p.Permissoes de @Permissoes.Todas.Count</td>
                         <td class="num">@(p.DescontoMaximoPct is { } d ? Formato.Percentagem(d) : "Sem limite")</td>

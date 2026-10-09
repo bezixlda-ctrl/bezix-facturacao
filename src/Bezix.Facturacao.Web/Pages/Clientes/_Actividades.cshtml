@@ -34,7 +34,7 @@
 
 @if (Model.Actividades.Count == 0)
 {
-    <div class="vazio"><i class="bi bi-clock-history"></i>Sem actividades registadas.</div>
+    <div class="vazio"><i class="ph ph-clock-counter-clockwise"></i>Sem actividades registadas.</div>
 }
 else
 {
@@ -44,7 +44,7 @@ else
             var tarefaPendente = a.Tipo == TipoActividade.Tarefa && a.ConcluidaEm is null;
             var atrasada = tarefaPendente && a.Data < DateTime.UtcNow;
             <li class="@(a.ConcluidaEm is not null ? "concluida" : "")">
-                <span class="icone"><i class="bi @Bezix.Facturacao.Web.Pages.Clientes.DetalheModel.Icone(a.Tipo)"></i></span>
+                <span class="icone"><i class="ph @Bezix.Facturacao.Web.Pages.Clientes.DetalheModel.Icone(a.Tipo)"></i></span>
                 <div class="flex-grow-1">
                     <div class="d-flex flex-wrap gap-2 align-items-baseline">
                         <strong>@Bezix.Facturacao.Web.Pages.Clientes.DetalheModel.Nome(a.Tipo)</strong>

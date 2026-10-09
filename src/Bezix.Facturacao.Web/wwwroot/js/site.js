@@ -12,22 +12,33 @@
     document.addEventListener("DOMContentLoaded", function () { mostrarToasts(document); });
     document.body.addEventListener("htmx:afterSwap", function (e) { mostrarToasts(e.target); });
 
-    // Modo claro/escuro.
-    var botaoTema = document.getElementById("alternarTema");
-    function iconeTema() {
-        if (!botaoTema) return;
-        var escuro = document.documentElement.getAttribute("data-bs-theme") === "dark";
-        botaoTema.querySelector("i").className = escuro ? "bi bi-sun" : "bi bi-moon-stars";
-    }
-    if (botaoTema) {
-        iconeTema();
-        botaoTema.addEventListener("click", function () {
-            var novo = document.documentElement.getAttribute("data-bs-theme") === "dark" ? "light" : "dark";
-            document.documentElement.setAttribute("data-bs-theme", novo);
-            try { localStorage.setItem("bz-tema", novo); } catch (e) { }
-            iconeTema();
+    // Aspecto: claro, escuro ou automático (segue o sistema). Avisa a página ("bz:tema") para redesenhar gráficos.
+    var raizHtml = document.documentElement;
+    var sistemaEscuro = window.matchMedia("(prefers-color-scheme: dark)");
+    var iconesTema = { light: "ph-sun", dark: "ph-moon", auto: "ph-circle-half" };
+    function aplicarTema(escolha) {
+        var tema = escolha === "auto" ? (sistemaEscuro.matches ? "dark" : "light") : escolha;
+        var mudou = raizHtml.getAttribute("data-bs-theme") !== tema;
+        raizHtml.setAttribute("data-bs-theme", tema);
+        raizHtml.setAttribute("data-tema-escolha", escolha);
+        document.querySelectorAll("[data-tema]").forEach(function (b) {
+            b.setAttribute("aria-checked", b.getAttribute("data-tema") === escolha ? "true" : "false");
         });
+        var icone = document.querySelector("#botaoTema i");
+        if (icone) icone.className = "ph " + iconesTema[escolha];
+        if (mudou) document.dispatchEvent(new CustomEvent("bz:tema", { detail: { tema: tema } }));
     }
+    aplicarTema(raizHtml.getAttribute("data-tema-escolha") || "auto");
+    document.addEventListener("click", function (e) {
+        var b = e.target.closest("[data-tema]");
+        if (!b) return;
+        var escolha = b.getAttribute("data-tema");
+        try { localStorage.setItem("bz-tema", escolha); } catch (er) { }
+        aplicarTema(escolha);
+    });
+    sistemaEscuro.addEventListener("change", function () {
+        if (raizHtml.getAttribute("data-tema-escolha") === "auto") aplicarTema("auto");
+    });
 
     // Pesquisa global: Ctrl+K (ou Cmd+K) foca; Enter abre o primeiro resultado; Esc fecha.
     var pesquisa = document.getElementById("pesquisaGlobal");
@@ -97,7 +108,7 @@
         if (!campo) return;
         campo.select();
         (navigator.clipboard ? navigator.clipboard.writeText(campo.value) : Promise.reject()).then(function () {
-            botao.innerHTML = '<i class="bi bi-check2 me-1"></i>Copiado';
+            botao.innerHTML = '<i class="ph ph-check me-1"></i>Copiado';
         }, function () { document.execCommand("copy"); });
     });
 })();

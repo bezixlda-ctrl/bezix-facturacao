@@ -10,14 +10,15 @@
     <title>@ViewData["Title"] · @empresa.Nome</title>
     <script>
         (function () {
-            var tema = null;
-            try { tema = localStorage.getItem("bz-tema"); } catch (e) { }
-            if (!tema) tema = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-            document.documentElement.setAttribute("data-bs-theme", tema);
+            var escolha = null;
+            try { escolha = localStorage.getItem("bz-tema"); } catch (e) { }
+            if (escolha !== "light" && escolha !== "dark") escolha = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+            document.documentElement.setAttribute("data-bs-theme", escolha);
         })();
     </script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/lib/phosphor/regular/style.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/phosphor/fill/style.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="icon" href="~/favicon.ico" />
 </head>

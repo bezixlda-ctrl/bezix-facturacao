@@ -9,49 +9,49 @@
     var u = User;
 }
 <nav class="app-nav">
-    <a asp-page="/Index" class="@Activo("/Index")" aria-current="@Atual("/Index")"><i class="bi bi-grid-1x2"></i>Painel</a>
+    <a asp-page="/Index" class="@Activo("/Index")" aria-current="@Atual("/Index")"><i class="ph ph-squares-four"></i>Painel</a>
 
     @if (u.TemAlguma(Permissoes.Documentos.Ver, Permissoes.Clientes.Ver, Permissoes.Artigos.Ver))
     {
         <div class="app-nav-grupo">Vendas</div>
         @if (u.TemPermissao(Permissoes.Documentos.Ver))
         {
-            <a asp-page="/Documentos/Index" class="@Activo("/Documentos/Index") @Activo("/Documentos/Editar") @Activo("/Documentos/Detalhe")" aria-current="@Atual("/Documentos/Index")"><i class="bi bi-file-earmark-text"></i>Documentos</a>
+            <a asp-page="/Documentos/Index" class="@Activo("/Documentos/Index") @Activo("/Documentos/Editar") @Activo("/Documentos/Detalhe")" aria-current="@Atual("/Documentos/Index")"><i class="ph ph-file-text"></i>Documentos</a>
             @if (u.TemPermissao(Permissoes.Documentos.Aprovar))
             {
                 var pendentes = await Aprovacoes.ContarPendentesAsync();
                 <a asp-page="/Documentos/Aprovacoes" class="@Activo("/Documentos/Aprovacoes")" aria-current="@Atual("/Documentos/Aprovacoes")">
-                    <i class="bi bi-patch-check"></i>Aprovações
+                    <i class="ph ph-seal-check"></i>Aprovações
                     @if (pendentes > 0) { <span class="badge rounded-pill text-bg-warning ms-auto">@pendentes</span> }
                 </a>
             }
         }
         @if (u.TemPermissao(Permissoes.Clientes.Ver))
         {
-            <a asp-page="/Clientes/Index" class="@Activo("/Clientes")" aria-current="@Atual("/Clientes")"><i class="bi bi-people"></i>Clientes</a>
+            <a asp-page="/Clientes/Index" class="@Activo("/Clientes")" aria-current="@Atual("/Clientes")"><i class="ph ph-users"></i>Clientes</a>
         }
         @if (u.TemPermissao(Permissoes.Artigos.Ver))
         {
-            <a asp-page="/Artigos/Index" class="@Activo("/Artigos")" aria-current="@Atual("/Artigos")"><i class="bi bi-box-seam"></i>Artigos</a>
+            <a asp-page="/Artigos/Index" class="@Activo("/Artigos")" aria-current="@Atual("/Artigos")"><i class="ph ph-package"></i>Artigos</a>
         }
     }
 
     @if (u.TemAlguma(Permissoes.Recibos.Registar, Permissoes.Documentos.VerTodos))
     {
         <div class="app-nav-grupo">Recebimentos</div>
-        <a asp-page="/Recibos/Index" class="@Activo("/Recibos/Index") @Activo("/Recibos/Novo")" aria-current="@Atual("/Recibos/Index")"><i class="bi bi-receipt"></i>Recibos</a>
+        <a asp-page="/Recibos/Index" class="@Activo("/Recibos/Index") @Activo("/Recibos/Novo")" aria-current="@Atual("/Recibos/Index")"><i class="ph ph-receipt"></i>Recibos</a>
         @if (u.TemPermissao(Permissoes.Recibos.ValidarPagamentoComunicado))
         {
             var porValidar = await Comunicados.ContarPorValidarAsync();
             <a asp-page="/Recibos/Comunicados" class="@Activo("/Recibos/Comunicados")" aria-current="@Atual("/Recibos/Comunicados")">
-                <i class="bi bi-inbox"></i>Pagamentos comunicados
+                <i class="ph ph-tray"></i>Pagamentos comunicados
                 @if (porValidar > 0) { <span class="badge rounded-pill text-bg-warning ms-auto">@porValidar</span> }
             </a>
         }
-        <a asp-page="/ContaCorrente/Index" class="@Activo("/ContaCorrente/Index") @Activo("/ContaCorrente/Cliente") @Activo("/ContaCorrente/Antiguidade")" aria-current="@Atual("/ContaCorrente/Index")"><i class="bi bi-journal-text"></i>Conta corrente</a>
+        <a asp-page="/ContaCorrente/Index" class="@Activo("/ContaCorrente/Index") @Activo("/ContaCorrente/Cliente") @Activo("/ContaCorrente/Antiguidade")" aria-current="@Atual("/ContaCorrente/Index")"><i class="ph ph-book-open-text"></i>Conta corrente</a>
         @if (u.TemPermissao(Permissoes.Comunicacao.Enviar))
         {
-            <a asp-page="/ContaCorrente/Cobrancas" class="@Activo("/ContaCorrente/Cobrancas")" aria-current="@Atual("/ContaCorrente/Cobrancas")"><i class="bi bi-telephone-outbound"></i>Cobranças</a>
+            <a asp-page="/ContaCorrente/Cobrancas" class="@Activo("/ContaCorrente/Cobrancas")" aria-current="@Atual("/ContaCorrente/Cobrancas")"><i class="ph ph-phone-outgoing"></i>Cobranças</a>
         }
     }
 
@@ -60,11 +60,11 @@
         <div class="app-nav-grupo">Comunicação</div>
         @if (u.TemPermissao(Permissoes.Comunicacao.Enviar))
         {
-            <a asp-page="/Comunicacao/Emails" class="@Activo("/Comunicacao/Emails")" aria-current="@Atual("/Comunicacao/Emails")"><i class="bi bi-envelope"></i>Emails enviados</a>
+            <a asp-page="/Comunicacao/Emails" class="@Activo("/Comunicacao/Emails")" aria-current="@Atual("/Comunicacao/Emails")"><i class="ph ph-envelope-simple"></i>Emails enviados</a>
         }
         @if (u.TemPermissao(Permissoes.Comunicacao.GerirModelos))
         {
-            <a asp-page="/Comunicacao/Modelos/Index" class="@Activo("/Comunicacao/Modelos")" aria-current="@Atual("/Comunicacao/Modelos")"><i class="bi bi-pencil-square"></i>Modelos de email</a>
+            <a asp-page="/Comunicacao/Modelos/Index" class="@Activo("/Comunicacao/Modelos")" aria-current="@Atual("/Comunicacao/Modelos")"><i class="ph ph-note-pencil"></i>Modelos de email</a>
         }
     }
 
@@ -73,11 +73,11 @@
         <div class="app-nav-grupo">Análise</div>
         @if (u.TemAlguma(Permissoes.Relatorios.Vendas, Permissoes.Relatorios.Fiscal))
         {
-            <a asp-page="/Relatorios/Index" class="@Activo("/Relatorios")" aria-current="@Atual("/Relatorios")"><i class="bi bi-bar-chart-line"></i>Relatórios</a>
+            <a asp-page="/Relatorios/Index" class="@Activo("/Relatorios")" aria-current="@Atual("/Relatorios")"><i class="ph ph-chart-bar"></i>Relatórios</a>
         }
         @if (u.TemPermissao(Permissoes.Automacao.Ver))
         {
-            <a asp-page="/Automacao/Index" class="@Activo("/Automacao")" aria-current="@Atual("/Automacao")"><i class="bi bi-arrow-repeat"></i>Automação</a>
+            <a asp-page="/Automacao/Index" class="@Activo("/Automacao")" aria-current="@Atual("/Automacao")"><i class="ph ph-arrows-clockwise"></i>Automação</a>
         }
     }
 
@@ -86,24 +86,24 @@
         <div class="app-nav-grupo">Sistema</div>
         @if (u.TemAlguma(Permissoes.Configuracoes.Gerir, Permissoes.Configuracoes.VerTaxas))
         {
-            <a asp-page="/Configuracoes/Index" class="@Activo("/Configuracoes")" aria-current="@Atual("/Configuracoes")"><i class="bi bi-gear"></i>Configurações</a>
+            <a asp-page="/Configuracoes/Index" class="@Activo("/Configuracoes")" aria-current="@Atual("/Configuracoes")"><i class="ph ph-gear-six"></i>Configurações</a>
         }
         @if (u.TemPermissao(Permissoes.Administracao.Utilizadores))
         {
-            <a asp-page="/Administracao/Utilizadores/Index" class="@Activo("/Administracao/Utilizadores")" aria-current="@Atual("/Administracao/Utilizadores")"><i class="bi bi-person-gear"></i>Utilizadores</a>
-            <a asp-page="/Administracao/Perfis/Index" class="@Activo("/Administracao/Perfis")" aria-current="@Atual("/Administracao/Perfis")"><i class="bi bi-shield-check"></i>Perfis e permissões</a>
+            <a asp-page="/Administracao/Utilizadores/Index" class="@Activo("/Administracao/Utilizadores")" aria-current="@Atual("/Administracao/Utilizadores")"><i class="ph ph-user-gear"></i>Utilizadores</a>
+            <a asp-page="/Administracao/Perfis/Index" class="@Activo("/Administracao/Perfis")" aria-current="@Atual("/Administracao/Perfis")"><i class="ph ph-shield-check"></i>Perfis e permissões</a>
         }
         @if (u.TemPermissao(Permissoes.Configuracoes.Gerir))
         {
-            <a asp-page="/Administracao/Backups" class="@Activo("/Administracao/Backups")" aria-current="@Atual("/Administracao/Backups")"><i class="bi bi-cloud-check"></i>Backups</a>
+            <a asp-page="/Administracao/Backups" class="@Activo("/Administracao/Backups")" aria-current="@Atual("/Administracao/Backups")"><i class="ph ph-cloud-check"></i>Backups</a>
         }
         @if (u.TemPermissao(Permissoes.Administracao.Integracoes))
         {
-            <a asp-page="/Administracao/Integracoes/Index" class="@Activo("/Administracao/Integracoes")" aria-current="@Atual("/Administracao/Integracoes")"><i class="bi bi-plug"></i>Integrações</a>
+            <a asp-page="/Administracao/Integracoes/Index" class="@Activo("/Administracao/Integracoes")" aria-current="@Atual("/Administracao/Integracoes")"><i class="ph ph-plugs-connected"></i>Integrações</a>
         }
         @if (u.TemPermissao(Permissoes.Administracao.VerAuditoria))
         {
-            <a asp-page="/Administracao/Auditoria" class="@Activo("/Administracao/Auditoria")" aria-current="@Atual("/Administracao/Auditoria")"><i class="bi bi-clock-history"></i>Auditoria</a>
+            <a asp-page="/Administracao/Auditoria" class="@Activo("/Administracao/Auditoria")" aria-current="@Atual("/Administracao/Auditoria")"><i class="ph ph-clock-counter-clockwise"></i>Auditoria</a>
         }
     }
 </nav>

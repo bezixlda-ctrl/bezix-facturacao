@@ -6,7 +6,7 @@
 }
 <div class="cabecalho-pagina">
     <div>
-        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Recibos</a>
+        <a asp-page="Index" class="small text-decoration-none"><i class="ph ph-arrow-left"></i> Recibos</a>
         <h1 class="mt-1">Pagamentos comunicados</h1>
         <p>Pagamentos que os clientes indicaram pelo link do documento. Nada entra na conta corrente até confirmar o valor no banco e emitir o recibo.</p>
     </div>
@@ -19,7 +19,7 @@
 <section class="painel">
     @if (Model.Lista.Count == 0)
     {
-        <div class="vazio"><i class="bi bi-inbox"></i><p class="mb-0">@(Model.Todos ? "Os clientes ainda não comunicaram pagamentos." : "Não há pagamentos por validar.")</p></div>
+        <div class="vazio"><i class="ph ph-tray"></i><p class="mb-0">@(Model.Todos ? "Os clientes ainda não comunicaram pagamentos." : "Não há pagamentos por validar.")</p></div>
     }
     else
     {
@@ -38,7 +38,7 @@
                             <td class="small">
                                 @if (p.Referencia is not null) { <div>Ref. @p.Referencia</div> }
                                 @if (p.Mensagem is not null) { <div class="text-body-secondary">“@p.Mensagem”</div> }
-                                @if (p.TemComprovativo) { <a asp-page-handler="Comprovativo" asp-route-id="@p.Id" target="_blank"><i class="bi bi-paperclip"></i> Comprovativo</a> }
+                                @if (p.TemComprovativo) { <a asp-page-handler="Comprovativo" asp-route-id="@p.Id" target="_blank"><i class="ph ph-paperclip"></i> Comprovativo</a> }
                             </td>
                             <td class="text-nowrap">
                                 @switch (p.Estado)
@@ -54,7 +54,7 @@
                             <td class="text-end text-nowrap">
                                 @if (p.Estado == EstadoPagamentoComunicado.PorValidar)
                                 {
-                                    <a class="btn btn-sm btn-primary" asp-page="Novo" asp-route-comunicadoId="@p.Id"><i class="bi bi-check2 me-1"></i>Validar e emitir recibo</a>
+                                    <a class="btn btn-sm btn-primary" asp-page="Novo" asp-route-comunicadoId="@p.Id"><i class="ph ph-check me-1"></i>Validar e emitir recibo</a>
                                     <details class="d-inline-block text-start rejeitar">
                                         <summary class="btn btn-sm btn-outline-danger">Rejeitar</summary>
                                         <form method="post" asp-page-handler="Rejeitar" asp-route-id="@p.Id" class="rejeitar-form">

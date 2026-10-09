@@ -12,7 +12,7 @@
 }
 <div class="cabecalho-pagina">
     <div>
-        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Documentos</a>
+        <a asp-page="Index" class="small text-decoration-none"><i class="ph ph-arrow-left"></i> Documentos</a>
         <div class="d-flex flex-wrap align-items-center gap-3 mt-1">
             <h1 class="mb-0">
                 @if (d.NumeroFormatado is not null)
@@ -32,20 +32,20 @@
     <div class="d-flex flex-wrap gap-2">
         @if (Model.PodeRegistarRecibo)
         {
-            <a class="btn btn-primary order-last" asp-page="/Recibos/Novo" asp-route-clienteId="@d.ClienteId" asp-route-documentoId="@d.Id"><i class="bi bi-cash-coin me-1"></i>Registar recibo</a>
+            <a class="btn btn-primary order-last" asp-page="/Recibos/Novo" asp-route-clienteId="@d.ClienteId" asp-route-documentoId="@d.Id"><i class="ph ph-hand-coins me-1"></i>Registar recibo</a>
         }
         @if (d.Emitido)
         {
-            <a class="btn btn-outline-primary" href="@pdfUrl" target="_blank"><i class="bi bi-printer me-1"></i>Imprimir</a>
-            <a class="btn btn-outline-primary" href="@Url.Page("/Documentos/Detalhe", "Pdf", new { id = d.Id, descarregar = true })"><i class="bi bi-download me-1"></i>PDF</a>
+            <a class="btn btn-outline-primary" href="@pdfUrl" target="_blank"><i class="ph ph-printer me-1"></i>Imprimir</a>
+            <a class="btn btn-outline-primary" href="@Url.Page("/Documentos/Detalhe", "Pdf", new { id = d.Id, descarregar = true })"><i class="ph ph-download-simple me-1"></i>PDF</a>
         }
         @if (Model.PodeEditar)
         {
-            <a class="btn btn-outline-primary" href="@pdfUrl" target="_blank"><i class="bi bi-eye me-1"></i>Pré-visualizar</a>
-            <a class="btn btn-outline-primary" asp-page="Editar" asp-route-id="@d.Id"><i class="bi bi-pencil me-1"></i>Editar</a>
+            <a class="btn btn-outline-primary" href="@pdfUrl" target="_blank"><i class="ph ph-eye me-1"></i>Pré-visualizar</a>
+            <a class="btn btn-outline-primary" asp-page="Editar" asp-route-id="@d.Id"><i class="ph ph-pencil-simple me-1"></i>Editar</a>
             <form method="post" asp-page-handler="Emitir" asp-route-id="@d.Id"
                   data-confirmar="Emitir é definitivo: o documento recebe número e deixa de poder ser alterado. Emitir agora?">
-                <button class="btn btn-primary" type="submit"><i class="bi bi-check2-circle me-1"></i>Emitir</button>
+                <button class="btn btn-primary" type="submit"><i class="ph ph-check-circle me-1"></i>Emitir</button>
             </form>
         }
         @if (d.Estado == EstadoDocumento.Emitido || d.Estado == EstadoDocumento.Anulado)
@@ -53,13 +53,13 @@
             <div class="dropdown">
                 <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Mais</button>
                 <ul class="dropdown-menu dropdown-menu-end">
-                    <li><a class="dropdown-item" href="@Url.Page("/Documentos/Detalhe", "Pdf", new { id = d.Id, via = true })" target="_blank"><i class="bi bi-files me-2"></i>Imprimir 2.ª via</a></li>
+                    <li><a class="dropdown-item" href="@Url.Page("/Documentos/Detalhe", "Pdf", new { id = d.Id, via = true })" target="_blank"><i class="ph ph-files me-2"></i>Imprimir 2.ª via</a></li>
                     @if (Model.ConversoesPossiveis.Any() || Model.PodeCriarNc || Model.PodeCriarNd) { <li><hr class="dropdown-divider" /></li> }
                     @foreach (var t in Model.ConversoesPossiveis)
                     {
                         <li>
                             <form method="post" asp-page-handler="Converter" asp-route-id="@d.Id" asp-route-destino="@t">
-                                <button class="dropdown-item" type="submit"><i class="bi @Vista.Icone(t) me-2"></i>Converter em @TipoDocumentoInfo.Nome(t).ToLowerInvariant()</button>
+                                <button class="dropdown-item" type="submit"><i class="ph @Vista.Icone(t) me-2"></i>Converter em @TipoDocumentoInfo.Nome(t).ToLowerInvariant()</button>
                             </form>
                         </li>
                     }
@@ -67,7 +67,7 @@
                     {
                         <li>
                             <form method="post" asp-page-handler="Correccao" asp-route-id="@d.Id" asp-route-tipo="NC">
-                                <button class="dropdown-item" type="submit"><i class="bi bi-file-earmark-minus me-2"></i>Criar nota de crédito</button>
+                                <button class="dropdown-item" type="submit"><i class="ph ph-file-minus me-2"></i>Criar nota de crédito</button>
                             </form>
                         </li>
                     }
@@ -75,7 +75,7 @@
                     {
                         <li>
                             <form method="post" asp-page-handler="Correccao" asp-route-id="@d.Id" asp-route-tipo="ND">
-                                <button class="dropdown-item" type="submit"><i class="bi bi-file-earmark-plus me-2"></i>Criar nota de débito</button>
+                                <button class="dropdown-item" type="submit"><i class="ph ph-file-plus me-2"></i>Criar nota de débito</button>
                             </form>
                         </li>
                     }
@@ -83,18 +83,18 @@
                     {
                         <li>
                             <form method="post" asp-page-handler="Duplicar" asp-route-id="@d.Id">
-                                <button class="dropdown-item" type="submit"><i class="bi bi-copy me-2"></i>Duplicar como rascunho</button>
+                                <button class="dropdown-item" type="submit"><i class="ph ph-copy me-2"></i>Duplicar como rascunho</button>
                             </form>
                         </li>
                     }
                     @if (Model.PodeTornarRecorrente)
                     {
-                        <li><a class="dropdown-item" asp-page="/Automacao/Recorrencia" asp-route-documentoId="@d.Id"><i class="bi bi-arrow-repeat me-2"></i>Tornar recorrente</a></li>
+                        <li><a class="dropdown-item" asp-page="/Automacao/Recorrencia" asp-route-documentoId="@d.Id"><i class="ph ph-arrows-clockwise me-2"></i>Tornar recorrente</a></li>
                     }
                     @if (Model.PodeAnular)
                     {
                         <li><hr class="dropdown-divider" /></li>
-                        <li><button class="dropdown-item text-danger" type="button" data-bs-toggle="modal" data-bs-target="#modalAnular"><i class="bi bi-x-octagon me-2"></i>Anular</button></li>
+                        <li><button class="dropdown-item text-danger" type="button" data-bs-toggle="modal" data-bs-target="#modalAnular"><i class="ph ph-prohibit me-2"></i>Anular</button></li>
                     }
                 </ul>
             </div>
@@ -105,7 +105,7 @@
 @if (d.Estado == EstadoDocumento.AguardaAprovacao)
 {
     <div class="alert alert-warning">
-        <div class="fw-bold mb-1"><i class="bi bi-hourglass-split me-1"></i>A aguardar aprovação</div>
+        <div class="fw-bold mb-1"><i class="ph ph-hourglass-medium me-1"></i>A aguardar aprovação</div>
         @foreach (var a in Model.Aprovacoes.Where(a => a.Estado == EstadoAprovacao.Pendente))
         {
             <div>
@@ -136,11 +136,11 @@
 }
 @if (d.Estado == EstadoDocumento.Anulado)
 {
-    <div class="alert alert-danger"><i class="bi bi-x-octagon me-1"></i>Anulado em @Formato.DataHora(d.AnuladoEm!.Value) por @d.AnuladoPor. Motivo: @d.MotivoAnulacao</div>
+    <div class="alert alert-danger"><i class="ph ph-prohibit me-1"></i>Anulado em @Formato.DataHora(d.AnuladoEm!.Value) por @d.AnuladoPor. Motivo: @d.MotivoAnulacao</div>
 }
 @if (Model.Aprovacoes.LastOrDefault(a => a.Estado == EstadoAprovacao.Rejeitada) is { } rejeitada && d.Estado == EstadoDocumento.Rascunho)
 {
-    <div class="alert alert-secondary"><i class="bi bi-arrow-counterclockwise me-1"></i>Pedido de aprovação devolvido por @rejeitada.DecididoPorNome: @rejeitada.NotaDecisao</div>
+    <div class="alert alert-secondary"><i class="ph ph-arrow-counter-clockwise me-1"></i>Pedido de aprovação devolvido por @rejeitada.DecididoPorNome: @rejeitada.NotaDecisao</div>
 }
 
 <div class="row g-4">
@@ -245,7 +245,7 @@
         {
             <section class="painel mb-4">
                 <details open="@(Model.Emails.Count == 0)">
-                    <summary class="painel-cabecalho"><h2 class="mb-0"><i class="bi bi-envelope me-2"></i>Enviar por email</h2></summary>
+                    <summary class="painel-cabecalho"><h2 class="mb-0"><i class="ph ph-envelope-simple me-2"></i>Enviar por email</h2></summary>
                     <form method="post" asp-page-handler="Enviar" asp-route-id="@d.Id" class="painel-corpo row g-3">
                         <div class="col-md-6">
                             <label class="form-label" for="Para">Para</label>
@@ -265,7 +265,7 @@
                             <div class="form-text">O PDF do documento vai em anexo (o mesmo que se imprime). O texto inicial vem do modelo de email deste tipo de documento.</div>
                         </div>
                         <div class="col-12 d-flex justify-content-end">
-                            <button class="btn btn-primary" type="submit"><i class="bi bi-send me-1"></i>Enviar email</button>
+                            <button class="btn btn-primary" type="submit"><i class="ph ph-paper-plane-tilt me-1"></i>Enviar email</button>
                         </div>
                     </form>
                 </details>
@@ -318,14 +318,14 @@
                     @if (Model.Lembretes.Count > 0)
                     {
                         <p class="small text-body-secondary mt-2 mb-0">
-                            <i class="bi bi-bell me-1"></i>Lembretes: @string.Join(", ", Model.Lembretes.Select(l => Formato.Data(l.EnviadoEm) + (l.Tipo == Bezix.Facturacao.Domain.Automacao.TipoLembrete.Manual ? " (manual)" : "")))
+                            <i class="ph ph-bell-simple me-1"></i>Lembretes: @string.Join(", ", Model.Lembretes.Select(l => Formato.Data(l.EnviadoEm) + (l.Tipo == Bezix.Facturacao.Domain.Automacao.TipoLembrete.Manual ? " (manual)" : "")))
                         </p>
                     }
                     @if (Model.PodeLembrar)
                     {
                         <form method="post" asp-page="/Comunicacao/Lembrete" asp-route-id="@d.Id" asp-route-voltar="@Url.Page("Detalhe", new { id = d.Id })" class="mt-3"
                               data-confirmar="Enviar agora um lembrete de pagamento ao cliente?">
-                            <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-bell me-1"></i>Enviar lembrete</button>
+                            <button type="submit" class="btn btn-sm btn-outline-primary"><i class="ph ph-bell-simple me-1"></i>Enviar lembrete</button>
                         </form>
                     }
                     @if (Model.Pagamentos.Count > 0)
@@ -361,7 +361,7 @@
         @if (Model.Emails.Count > 0 || Model.VistoEm is not null)
         {
             <section class="painel mb-4">
-                <div class="painel-cabecalho"><h2>Envio ao cliente</h2>@if (Model.VistoEm is { } visto) { <span class="small text-success"><i class="bi bi-eye me-1"></i>Visto pelo cliente a @Formato.DataHora(visto)</span> }</div>
+                <div class="painel-cabecalho"><h2>Envio ao cliente</h2>@if (Model.VistoEm is { } visto) { <span class="small text-success"><i class="ph ph-eye me-1"></i>Visto pelo cliente a @Formato.DataHora(visto)</span> }</div>
                 <ul class="list-unstyled painel-corpo mb-0 small">
                     @foreach (var e in Model.Emails)
                     {

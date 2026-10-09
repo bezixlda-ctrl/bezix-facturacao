@@ -14,9 +14,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex, nofollow" />
     <meta name="referrer" content="no-referrer" />
+    <script>
+        document.documentElement.setAttribute("data-bs-theme", window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    </script>
     <title>@(d is null ? "Link expirado" : $"{TipoDocumentoInfo.Nome(d.TipoDoc)} {d.NumeroFormatado} · {Model.Empresa.Nome}")</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/lib/phosphor/regular/style.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/phosphor/fill/style.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
@@ -24,7 +28,7 @@
         @if (d is null)
         {
             <div class="painel painel-corpo text-center p-5" style="max-width: 520px; margin: 10vh auto">
-                <i class="bi bi-link-45deg fs-1 text-body-secondary"></i>
+                <i class="ph ph-link-simple fs-1 text-body-secondary"></i>
                 <h1 class="h2 mt-2">Este link já não é válido</h1>
                 <p class="text-body-secondary mb-0">Os links para documentos expiram por segurança. Peça à empresa que lhe enviou o documento um link novo.</p>
             </div>
@@ -41,12 +45,12 @@
                         <div class="small text-body-secondary">NUIT @e.Nuit@(e.Telefones is null ? "" : " · " + e.Telefones)</div>
                     </div>
                 </div>
-                <a class="btn btn-primary" href="@Url.Page(null, "Pdf", new { token = Model.Token })" target="_blank"><i class="bi bi-file-earmark-pdf me-1"></i>Ver / descarregar PDF</a>
+                <a class="btn btn-primary" href="@Url.Page(null, "Pdf", new { token = Model.Token })" target="_blank"><i class="ph ph-file-pdf me-1"></i>Ver / descarregar PDF</a>
             </header>
 
             @if (Model.Comunicado)
             {
-                <div class="alert alert-success"><i class="bi bi-check-circle me-1"></i>Obrigado. Recebemos a informação do seu pagamento; vamos confirmá-lo e enviar-lhe o recibo.</div>
+                <div class="alert alert-success"><i class="ph ph-check-circle me-1"></i>Obrigado. Recebemos a informação do seu pagamento; vamos confirmá-lo e enviar-lhe o recibo.</div>
             }
 
             <section class="painel mb-4">
@@ -151,7 +155,7 @@
                                     <textarea class="form-control" id="Mensagem" name="Mensagem" rows="2" maxlength="1000">@Model.Mensagem</textarea>
                                 </div>
                                 <div class="col-12 d-flex justify-content-end">
-                                    <button class="btn btn-primary" type="submit"><i class="bi bi-send me-1"></i>Enviar comprovativo</button>
+                                    <button class="btn btn-primary" type="submit"><i class="ph ph-paper-plane-tilt me-1"></i>Enviar comprovativo</button>
                                 </div>
                             </div>
                         </form>

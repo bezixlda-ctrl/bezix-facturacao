@@ -7,7 +7,7 @@
 }
 <div class="cabecalho-pagina">
     <div>
-        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Clientes</a>
+        <a asp-page="Index" class="small text-decoration-none"><i class="ph ph-arrow-left"></i> Clientes</a>
         <h1 class="mt-1 mb-1">@c.Nome</h1>
         <div class="d-flex flex-wrap gap-2 align-items-center small text-body-secondary">
             <span>@(c.Tipo == TipoCliente.Empresa ? "Empresa" : "Particular")</span>
@@ -25,13 +25,13 @@
         <div class="d-flex gap-2">
             @if (Model.PodeFacturar && c.Activo)
             {
-                <a class="btn btn-primary order-last" asp-page="/Documentos/Editar" asp-route-tipo="FT" asp-route-clienteId="@c.Id"><i class="bi bi-plus-lg me-1"></i>Nova factura</a>
+                <a class="btn btn-primary order-last" asp-page="/Documentos/Editar" asp-route-tipo="FT" asp-route-clienteId="@c.Id"><i class="ph ph-plus me-1"></i>Nova factura</a>
             }
             <form method="post" asp-page-handler="Estado" asp-route-activo="@(!c.Activo)"
                   data-confirmar="@(c.Activo ? "Desactivar este cliente? Deixa de aparecer nas listas e em documentos novos; o histórico mantém-se." : null)">
                 <button type="submit" class="btn btn-outline-secondary">@(c.Activo ? "Desactivar" : "Reactivar")</button>
             </form>
-            <a class="btn btn-outline-primary" asp-page="Editar" asp-route-id="@c.Id"><i class="bi bi-pencil me-1"></i>Editar</a>
+            <a class="btn btn-outline-primary" asp-page="Editar" asp-route-id="@c.Id"><i class="ph ph-pencil-simple me-1"></i>Editar</a>
         </div>
     }
 </div>
@@ -111,7 +111,7 @@
                         <div class="fs-5 fw-bold tabular">@Formato.Moeda(saldo.AdiantamentoPorAlocar)</div>
                     </div>
                 }
-                <span class="ms-auto small">Conta corrente e extracto <i class="bi bi-chevron-right"></i></span>
+                <span class="ms-auto small">Conta corrente e extracto <i class="ph ph-caret-right"></i></span>
             </a>
         }
         @if (Model.Documentos is { } docs)

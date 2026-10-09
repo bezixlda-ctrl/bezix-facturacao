@@ -5,18 +5,18 @@
 }
 <div class="cabecalho-pagina">
     <div>
-        <a asp-page="../Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Configurações</a>
+        <a asp-page="../Index" class="small text-decoration-none"><i class="ph ph-arrow-left"></i> Configurações</a>
         <h1 class="mt-1">Contas bancárias</h1>
         <p>As contas marcadas como visíveis aparecem no rodapé das facturas, recibos e extractos.</p>
     </div>
-    <a class="btn btn-primary" asp-page="Editar"><i class="bi bi-plus-lg me-1"></i>Adicionar conta</a>
+    <a class="btn btn-primary" asp-page="Editar"><i class="ph ph-plus me-1"></i>Adicionar conta</a>
 </div>
 
 <section class="painel">
     @if (Model.Contas.Count == 0)
     {
         <div class="vazio">
-            <i class="bi bi-bank"></i>
+            <i class="ph ph-bank"></i>
             <p>Ainda não há contas. Adicione pelo menos uma para os clientes saberem onde pagar.</p>
             <a class="btn btn-primary" asp-page="Editar">Adicionar conta</a>
         </div>

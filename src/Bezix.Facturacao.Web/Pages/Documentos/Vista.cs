@@ -28,14 +28,14 @@ public static class Vista
 
     public static string Icone(TipoDocumento t) => t switch
     {
-        TipoDocumento.FT => "bi-file-earmark-text",
-        TipoDocumento.FR => "bi-file-earmark-check",
-        TipoDocumento.FG => "bi-files",
-        TipoDocumento.NC => "bi-file-earmark-minus",
-        TipoDocumento.ND => "bi-file-earmark-plus",
-        TipoDocumento.CT => "bi-file-earmark-richtext",
-        TipoDocumento.GR => "bi-truck",
-        _ => "bi-receipt",
+        TipoDocumento.FT => "ph-file-text",
+        TipoDocumento.FR => "ph-receipt",
+        TipoDocumento.FG => "ph-files",
+        TipoDocumento.NC => "ph-file-minus",
+        TipoDocumento.ND => "ph-file-plus",
+        TipoDocumento.CT => "ph-clipboard-text",
+        TipoDocumento.GR => "ph-truck",
+        _ => "ph-receipt",
     };
 
     /// <summary>Texto do botão "Nova …".</summary>

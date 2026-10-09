@@ -3,7 +3,7 @@
 @if (Model.Resultado.Total == 0)
 {
     <div class="vazio">
-        <i class="bi bi-receipt"></i>
+        <i class="ph ph-receipt"></i>
         <p class="mb-0">@(string.IsNullOrWhiteSpace(Model.Q) && Model.De is null && Model.Ate is null ? "Ainda não há recibos." : "Nenhum recibo corresponde à pesquisa.")</p>
     </div>
 }
