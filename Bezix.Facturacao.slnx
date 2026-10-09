@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Bezix.Facturacao.Application/Bezix.Facturacao.Application.csproj" />
+    <Project Path="src/Bezix.Facturacao.Domain/Bezix.Facturacao.Domain.csproj" />
+    <Project Path="src/Bezix.Facturacao.Infrastructure/Bezix.Facturacao.Infrastructure.csproj" />
+    <Project Path="src/Bezix.Facturacao.Web/Bezix.Facturacao.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Bezix.Facturacao.Tests/Bezix.Facturacao.Tests.csproj" />
+  </Folder>
+</Solution>

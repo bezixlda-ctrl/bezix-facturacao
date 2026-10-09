@@ -1,0 +1,44 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Painel";
+}
+<div class="cabecalho-pagina">
+    <div>
+        <h1>@Model.Saudacao</h1>
+        <p>Os indicadores de facturação, cobranças e IVA aparecem aqui assim que houver documentos emitidos.</p>
+    </div>
+</div>
+
+@if (Model.Passos.Count > 0)
+{
+    <section class="painel" style="max-width: 760px" aria-labelledby="tituloPassos">
+        <div class="painel-cabecalho">
+            <h2 id="tituloPassos">Preparar o sistema para facturar</h2>
+            <span class="text-body-secondary small tabular">@Model.PassosFeitos de @Model.Passos.Count concluídos</span>
+        </div>
+        <ol class="passos">
+            @foreach (var p in Model.Passos)
+            {
+                <li class="@(p.Feito ? "feito" : "")">
+                    <span class="marca" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+                    <div class="flex-grow-1">
+                        <div class="titulo">@p.Titulo<span class="visually-hidden">@(p.Feito ? " (concluído)" : " (por fazer)")</span></div>
+                        <p>@p.Explicacao</p>
+                    </div>
+                    @if (!p.Feito && p.Pagina is not null)
+                    {
+                        <a class="btn btn-sm btn-outline-primary flex-shrink-0" asp-page="@p.Pagina">@p.Accao</a>
+                    }
+                </li>
+            }
+        </ol>
+    </section>
+}
+else
+{
+    <div class="painel vazio" style="max-width: 760px">
+        <i class="bi bi-hourglass-split"></i>
+        Os módulos de documentos, clientes e recebimentos estão a ser preparados.
+    </div>
+}

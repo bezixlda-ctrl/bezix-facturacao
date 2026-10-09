@@ -1,0 +1,53 @@
+@page "{id:int?}"
+@model Bezix.Facturacao.Web.Pages.Configuracoes.ContasBancarias.EditarModel
+@{
+    ViewData["Title"] = Model.Id is null ? "Adicionar conta bancária" : "Editar conta bancária";
+}
+<div class="cabecalho-pagina">
+    <div>
+        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Contas bancárias</a>
+        <h1 class="mt-1">@ViewData["Title"]</h1>
+    </div>
+</div>
+
+<form method="post" class="painel" style="max-width: 720px" novalidate>
+    <div class="painel-corpo">
+        <partial name="_ResumoErros" />
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label" asp-for="Dados.Banco">Banco</label>
+                <input class="form-control" asp-for="Dados.Banco" placeholder="Ex.: BCI, Millennium bim, Standard Bank" required />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" asp-for="Dados.NumeroConta">N.º de conta</label>
+                <input class="form-control tabular" asp-for="Dados.NumeroConta" required />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" asp-for="Dados.Nib">NIB</label>
+                <input class="form-control tabular" asp-for="Dados.Nib" inputmode="numeric" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" asp-for="Dados.Iban">IBAN <span class="text-body-secondary">(opcional)</span></label>
+                <input class="form-control tabular" asp-for="Dados.Iban" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" asp-for="Dados.Swift">SWIFT <span class="text-body-secondary">(opcional)</span></label>
+                <input class="form-control tabular" asp-for="Dados.Swift" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" asp-for="Dados.Ordem">Ordem no documento</label>
+                <input class="form-control tabular" asp-for="Dados.Ordem" type="number" min="0" />
+            </div>
+            <div class="col-12">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" asp-for="Dados.MostrarNoDocumento" role="switch" />
+                    <label class="form-check-label" asp-for="Dados.MostrarNoDocumento">Mostrar esta conta no rodapé dos documentos</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="painel-corpo border-top d-flex justify-content-end gap-2">
+        <a class="btn btn-outline-secondary" asp-page="Index">Cancelar</a>
+        <button type="submit" class="btn btn-primary">Guardar conta</button>
+    </div>
+</form>

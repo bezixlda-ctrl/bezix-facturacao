@@ -1,0 +1,83 @@
+@page "{id?}"
+@model Bezix.Facturacao.Web.Pages.Administracao.Perfis.EditarModel
+@{
+    ViewData["Title"] = Model.Novo ? "Criar perfil" : $"Perfil {Model.Nome}";
+    var marcadas = Model.Seleccionadas.ToHashSet();
+}
+<div class="cabecalho-pagina">
+    <div>
+        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Perfis e permissões</a>
+        <h1 class="mt-1">@ViewData["Title"]</h1>
+    </div>
+</div>
+
+<partial name="_ResumoErros" />
+
+<form method="post" class="painel" novalidate>
+    <div class="painel-corpo row g-3 border-bottom">
+        <div class="col-md-4">
+            <label class="form-label" for="Nome">Nome</label>
+            <input class="form-control" asp-for="Nome" readonly="@Model.Sistema" />
+            @if (Model.Sistema) { <div class="form-text">Os perfis do sistema mantêm o nome.</div> }
+        </div>
+        <div class="col-md-5">
+            <label class="form-label" for="Descricao">Descrição</label>
+            <input class="form-control" asp-for="Descricao" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="DescontoMaximoPct">Desconto máximo sem aprovação</label>
+            <div class="input-group">
+                <input class="form-control tabular text-end" asp-for="DescontoMaximoPct" type="text" inputmode="decimal"
+                       value="@(Model.DescontoMaximoPct is { } d ? Formato.Numero(d) : "")" placeholder="sem limite" />
+                <span class="input-group-text">%</span>
+            </div>
+            <div class="form-text">Acima deste valor o documento fica a aguardar aprovação.</div>
+        </div>
+    </div>
+
+    <div class="painel-corpo">
+        <h2 class="mb-1">Permissões</h2>
+        @if (Model.Administrador)
+        {
+            <p class="text-body-secondary">O perfil Administrador tem sempre todas as permissões, para que a empresa nunca perca o acesso à gestão.</p>
+        }
+        else
+        {
+            <p class="text-body-secondary">Marque o que este perfil pode ver e fazer.</p>
+        }
+        <div class="grelha-permissoes mt-3">
+            @foreach (var grupo in Permissoes.Todas.GroupBy(p => p.Grupo))
+            {
+                <fieldset>
+                    <legend>@grupo.Key</legend>
+                    @foreach (var p in grupo)
+                    {
+                        var id = "p-" + p.Codigo.Replace(".", "-");
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="Seleccionadas" value="@p.Codigo" id="@id"
+                                   checked="@(Model.Administrador || marcadas.Contains(p.Codigo))" disabled="@Model.Administrador" />
+                            <label class="form-check-label" for="@id">@p.Descricao</label>
+                        </div>
+                        @if (Model.Administrador)
+                        {
+                            <input type="hidden" name="Seleccionadas" value="@p.Codigo" />
+                        }
+                    }
+                </fieldset>
+            }
+        </div>
+    </div>
+
+    <div class="painel-corpo border-top d-flex justify-content-between gap-2">
+        <div>
+            @if (!Model.Novo && !Model.Sistema)
+            {
+                <button type="submit" asp-page-handler="Apagar" class="btn btn-outline-danger" data-confirmar="Apagar o perfil @Model.Nome?">Apagar perfil</button>
+            }
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-secondary" asp-page="Index">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Guardar perfil</button>
+        </div>
+    </div>
+</form>

@@ -1,0 +1,87 @@
+@inject Bezix.Facturacao.Application.Configuracao.ServicoEmpresa Empresas
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    var empresa = await Empresas.ObterAsync();
+    var tokenHtmx = Antiforgery.GetAndStoreTokens(Context).RequestToken;
+}
+<!DOCTYPE html>
+<html lang="pt" style="--bz-primaria: @empresa.CorPrimaria">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] is string t ? $"{t} · " : "")@empresa.Nome</title>
+    <script>
+        // Aplica o tema antes de desenhar a página, para não piscar.
+        (function () {
+            var tema = null;
+            try { tema = localStorage.getItem("bz-tema"); } catch (e) { }
+            if (!tema) tema = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+            document.documentElement.setAttribute("data-bs-theme", tema);
+        })();
+    </script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="icon" href="~/favicon.ico" />
+</head>
+<body hx-headers='{"RequestVerificationToken": "@tokenHtmx"}'>
+    <a class="visually-hidden-focusable position-absolute m-2 btn btn-primary" href="#conteudo">Saltar para o conteúdo</a>
+    <div class="app">
+        <aside class="app-menu offcanvas-lg offcanvas-start" tabindex="-1" id="menuLateral" aria-label="Menu principal">
+            <a class="app-marca" asp-page="/Index">
+                @if (empresa.LogoPath is not null)
+                {
+                    <img src="/marca/logotipo?v=@empresa.UpdatedAt?.Ticks" alt="@empresa.Nome" />
+                }
+                else
+                {
+                    <span class="app-marca-sigla" aria-hidden="true">@(empresa.Nome.Length > 0 ? empresa.Nome[0] : 'B')</span>
+                    <span>@empresa.Nome</span>
+                }
+            </a>
+            <partial name="_Menu" />
+        </aside>
+
+        <div class="app-principal">
+            <header class="app-topo">
+                <button class="btn-icone d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuLateral" aria-controls="menuLateral" aria-label="Abrir menu">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div class="ms-auto d-flex align-items-center gap-2">
+                    <button class="btn-icone" type="button" id="alternarTema" aria-label="Mudar entre modo claro e escuro" title="Modo claro/escuro">
+                        <i class="bi bi-moon-stars"></i>
+                    </button>
+                    <div class="dropdown">
+                        <button class="btn-icone w-auto px-2 gap-2 d-inline-flex" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-circle"></i>
+                            <span class="d-none d-sm-inline fw-semibold">@User.NomeVisivel()</span>
+                            <i class="bi bi-chevron-down small"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><span class="dropdown-item-text small text-body-secondary">@User.Identity?.Name</span></li>
+                            <li><a class="dropdown-item" asp-page="/Conta/Seguranca"><i class="bi bi-shield-lock me-2"></i>Password e verificação em dois passos</a></li>
+                            <li><hr class="dropdown-divider" /></li>
+                            <li>
+                                <form method="post" asp-page="/Conta/Sair">
+                                    <button class="dropdown-item" type="submit"><i class="bi bi-box-arrow-right me-2"></i>Sair</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+
+            <main class="app-conteudo" id="conteudo">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <partial name="_Mensagens" />
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/htmx/htmx.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

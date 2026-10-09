@@ -1,0 +1,66 @@
+@{
+    var pagina = ViewContext.RouteData.Values["page"] as string ?? "";
+    string Activo(string prefixo) => prefixo == "/Index"
+        ? (pagina == "/Index" ? "activo" : "")
+        : (pagina.StartsWith(prefixo, StringComparison.OrdinalIgnoreCase) ? "activo" : "");
+    string? Atual(string prefixo) => Activo(prefixo) == "activo" ? "page" : null;
+    var u = User;
+}
+<nav class="app-nav">
+    <a asp-page="/Index" class="@Activo("/Index")" aria-current="@Atual("/Index")"><i class="bi bi-grid-1x2"></i>Painel</a>
+
+    @if (u.TemAlguma(Permissoes.Documentos.Ver, Permissoes.Clientes.Ver, Permissoes.Artigos.Ver))
+    {
+        <div class="app-nav-grupo">Vendas</div>
+        @if (u.TemPermissao(Permissoes.Documentos.Ver))
+        {
+            <span class="em-breve"><i class="bi bi-file-earmark-text"></i>Documentos<small>em breve</small></span>
+        }
+        @if (u.TemPermissao(Permissoes.Clientes.Ver))
+        {
+            <span class="em-breve"><i class="bi bi-people"></i>Clientes<small>em breve</small></span>
+        }
+        @if (u.TemPermissao(Permissoes.Artigos.Ver))
+        {
+            <span class="em-breve"><i class="bi bi-box-seam"></i>Artigos<small>em breve</small></span>
+        }
+    }
+
+    @if (u.TemAlguma(Permissoes.Recibos.Registar, Permissoes.Documentos.VerTodos))
+    {
+        <div class="app-nav-grupo">Recebimentos</div>
+        <span class="em-breve"><i class="bi bi-receipt"></i>Recibos<small>em breve</small></span>
+        <span class="em-breve"><i class="bi bi-journal-text"></i>Conta corrente<small>em breve</small></span>
+    }
+
+    @if (u.TemAlguma(Permissoes.Relatorios.Vendas, Permissoes.Relatorios.Fiscal, Permissoes.Automacao.Ver))
+    {
+        <div class="app-nav-grupo">Análise</div>
+        @if (u.TemAlguma(Permissoes.Relatorios.Vendas, Permissoes.Relatorios.Fiscal))
+        {
+            <span class="em-breve"><i class="bi bi-bar-chart-line"></i>Relatórios<small>em breve</small></span>
+        }
+        @if (u.TemPermissao(Permissoes.Automacao.Ver))
+        {
+            <span class="em-breve"><i class="bi bi-arrow-repeat"></i>Automação<small>em breve</small></span>
+        }
+    }
+
+    @if (u.TemAlguma(Permissoes.Configuracoes.Gerir, Permissoes.Configuracoes.VerTaxas, Permissoes.Administracao.Utilizadores, Permissoes.Administracao.VerAuditoria))
+    {
+        <div class="app-nav-grupo">Sistema</div>
+        @if (u.TemAlguma(Permissoes.Configuracoes.Gerir, Permissoes.Configuracoes.VerTaxas))
+        {
+            <a asp-page="/Configuracoes/Index" class="@Activo("/Configuracoes")" aria-current="@Atual("/Configuracoes")"><i class="bi bi-gear"></i>Configurações</a>
+        }
+        @if (u.TemPermissao(Permissoes.Administracao.Utilizadores))
+        {
+            <a asp-page="/Administracao/Utilizadores/Index" class="@Activo("/Administracao/Utilizadores")" aria-current="@Atual("/Administracao/Utilizadores")"><i class="bi bi-person-gear"></i>Utilizadores</a>
+            <a asp-page="/Administracao/Perfis/Index" class="@Activo("/Administracao/Perfis")" aria-current="@Atual("/Administracao/Perfis")"><i class="bi bi-shield-check"></i>Perfis e permissões</a>
+        }
+        @if (u.TemPermissao(Permissoes.Administracao.VerAuditoria))
+        {
+            <a asp-page="/Administracao/Auditoria" class="@Activo("/Administracao/Auditoria")" aria-current="@Atual("/Administracao/Auditoria")"><i class="bi bi-clock-history"></i>Auditoria</a>
+        }
+    }
+</nav>

@@ -1,0 +1,66 @@
+@page
+@model Bezix.Facturacao.Web.Pages.Administracao.Utilizadores.IndexModel
+@using Bezix.Facturacao.Infrastructure.Identidade
+@{
+    ViewData["Title"] = "Utilizadores";
+}
+<div class="cabecalho-pagina">
+    <div>
+        <h1>Utilizadores</h1>
+        <p>Colaboradores com acesso ao sistema. O perfil define o que cada um pode ver e fazer.</p>
+    </div>
+    <a class="btn btn-primary" asp-page="Editar"><i class="bi bi-person-plus me-1"></i>Criar utilizador</a>
+</div>
+
+@if (Model.AdministradoresActivos < ServicoUtilizadores.MinimoAdministradores)
+{
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle me-1"></i>
+        Só há @Model.AdministradoresActivos administrador activo. Crie um segundo para a empresa não ficar sem acesso à gestão se este faltar.
+    </div>
+}
+
+<section class="painel">
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>Perfil</th>
+                    <th>Dois passos</th>
+                    <th>Última entrada</th>
+                    <th>Estado</th>
+                    <th><span class="visually-hidden">Acções</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var u in Model.Lista)
+                {
+                    <tr>
+                        <td class="fw-semibold">@u.Nome</td>
+                        <td>@u.Email</td>
+                        <td>@(u.Perfil ?? "—")</td>
+                        <td>@(u.DoisFactores ? "Activa" : "—")</td>
+                        <td class="tabular">@(u.UltimoLogin is { } l ? Formato.DataHora(l) : "Nunca")</td>
+                        <td>
+                            @if (!u.Activo)
+                            {
+                                <span class="estado estado-inactivo">Inactivo</span>
+                            }
+                            else if (u.Bloqueado)
+                            {
+                                <span class="estado estado-parcial">Bloqueado</span>
+                            }
+                            else
+                            {
+                                <span class="estado estado-activo">Activo</span>
+                            }
+                        </td>
+                        <td class="text-end"><a class="btn btn-sm btn-outline-secondary" asp-page="Editar" asp-route-id="@u.Id">Editar</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>

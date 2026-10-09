@@ -1,0 +1,54 @@
+@page
+@model Bezix.Facturacao.Web.Pages.Configuracoes.IndexModel
+@{
+    ViewData["Title"] = "Configurações";
+    var gerir = User.TemPermissao(Permissoes.Configuracoes.Gerir);
+}
+<div class="cabecalho-pagina">
+    <div>
+        <h1>Configurações</h1>
+        <p>Dados que aparecem nos documentos e regras de numeração e IVA.</p>
+    </div>
+</div>
+
+<div class="row g-3" style="max-width: 1000px">
+    @if (gerir)
+    {
+        <div class="col-md-6">
+            <a class="painel painel-corpo d-flex gap-3 text-decoration-none text-reset h-100" asp-page="Empresa">
+                <i class="bi bi-building fs-3 text-primary"></i>
+                <div>
+                    <h2 class="mb-1">Empresa e documentos</h2>
+                    <p class="text-body-secondary mb-0">Nome, NUIT, endereço, logótipo, cor da marca, rodapé e prazo de pagamento.</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-6">
+            <a class="painel painel-corpo d-flex gap-3 text-decoration-none text-reset h-100" asp-page="ContasBancarias/Index">
+                <i class="bi bi-bank fs-3 text-primary"></i>
+                <div>
+                    <h2 class="mb-1">Contas bancárias</h2>
+                    <p class="text-body-secondary mb-0">Contas mostradas no rodapé das facturas para o cliente pagar.</p>
+                </div>
+            </a>
+        </div>
+    }
+    <div class="col-md-6">
+        <a class="painel painel-corpo d-flex gap-3 text-decoration-none text-reset h-100" asp-page="TaxasIva">
+            <i class="bi bi-percent fs-3 text-primary"></i>
+            <div>
+                <h2 class="mb-1">Taxas de IVA e isenções</h2>
+                <p class="text-body-secondary mb-0">Taxa normal, isenções e respectivos motivos legais, com data de vigência.</p>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-6">
+        <a class="painel painel-corpo d-flex gap-3 text-decoration-none text-reset h-100" asp-page="Series">
+            <i class="bi bi-123 fs-3 text-primary"></i>
+            <div>
+                <h2 class="mb-1">Séries de numeração</h2>
+                <p class="text-body-secondary mb-0">Uma série por tipo de documento e ano. Ex.: FT A2026/0001.</p>
+            </div>
+        </a>
+    </div>
+</div>

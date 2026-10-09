@@ -1,0 +1,49 @@
+@inject Bezix.Facturacao.Application.Configuracao.ServicoEmpresa Empresas
+@{
+    var empresa = await Empresas.ObterAsync();
+}
+<!DOCTYPE html>
+<html lang="pt" style="--bz-primaria: @empresa.CorPrimaria">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] · @empresa.Nome</title>
+    <script>
+        (function () {
+            var tema = null;
+            try { tema = localStorage.getItem("bz-tema"); } catch (e) { }
+            if (!tema) tema = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+            document.documentElement.setAttribute("data-bs-theme", tema);
+        })();
+    </script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="icon" href="~/favicon.ico" />
+</head>
+<body>
+    <main class="acesso">
+        <div class="acesso-cartao">
+            <div class="text-center mb-4">
+                @if (empresa.LogoPath is not null)
+                {
+                    <img src="/marca/logotipo?v=@empresa.UpdatedAt?.Ticks" alt="@empresa.Nome" style="max-height:56px;max-width:220px" />
+                }
+                else
+                {
+                    <div class="app-marca justify-content-center p-0">
+                        <span class="app-marca-sigla" aria-hidden="true">@(empresa.Nome.Length > 0 ? empresa.Nome[0] : 'B')</span>
+                        <span>@empresa.Nome</span>
+                    </div>
+                }
+            </div>
+            <div class="painel painel-corpo p-4">
+                @RenderBody()
+            </div>
+            <p class="text-center text-body-secondary small mt-3 mb-0">Facturação · uso interno</p>
+        </div>
+    </main>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,139 @@
+@page
+@model Bezix.Facturacao.Web.Pages.Configuracoes.EmpresaModel
+@using Bezix.Facturacao.Domain.Configuracao
+@{
+    ViewData["Title"] = "Empresa e documentos";
+}
+<div class="cabecalho-pagina">
+    <div>
+        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Configurações</a>
+        <h1 class="mt-1">Empresa e documentos</h1>
+        <p>Estes dados são copiados para cada documento no momento da emissão. Alterá-los não muda documentos já emitidos.</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-8">
+        <form method="post" asp-page-handler="Dados" class="painel" novalidate>
+            <div class="painel-cabecalho"><h2>Dados fiscais</h2></div>
+            <div class="painel-corpo">
+                <partial name="_ResumoErros" />
+                @if (Model.NuitPorPreencher)
+                {
+                    <div class="alert alert-warning py-2"><i class="bi bi-info-circle me-1"></i>O NUIT ainda não foi preenchido. Sem ele não é possível emitir documentos fiscais.</div>
+                }
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label" asp-for="Dados.Nome">Nome legal</label>
+                        <input class="form-control" asp-for="Dados.Nome" required />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" asp-for="Dados.Nuit">NUIT</label>
+                        <input class="form-control tabular" asp-for="Dados.Nuit" inputmode="numeric" maxlength="9" placeholder="9 algarismos" required />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" asp-for="Dados.Slogan">Slogan <span class="text-body-secondary">(opcional)</span></label>
+                        <input class="form-control" asp-for="Dados.Slogan" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" asp-for="Dados.Endereco">Endereço</label>
+                        <input class="form-control" asp-for="Dados.Endereco" placeholder="Av. ..., n.º ..." required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" asp-for="Dados.Cidade">Cidade</label>
+                        <input class="form-control" asp-for="Dados.Cidade" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" asp-for="Dados.Provincia">Província</label>
+                        <input class="form-control" asp-for="Dados.Provincia" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" asp-for="Dados.Telefones">Telefones</label>
+                        <input class="form-control" asp-for="Dados.Telefones" placeholder="+258 84 ... / +258 21 ..." />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" asp-for="Dados.Email">Email</label>
+                        <input class="form-control" asp-for="Dados.Email" type="email" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" asp-for="Dados.Site">Site</label>
+                        <input class="form-control" asp-for="Dados.Site" placeholder="www..." />
+                    </div>
+                </div>
+
+                <h3 class="mt-4 mb-3">Documentos</h3>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label" asp-for="Dados.PrazoPagamentoDias">Prazo de pagamento</label>
+                        <div class="input-group">
+                            <input class="form-control tabular" asp-for="Dados.PrazoPagamentoDias" type="number" min="0" max="365" />
+                            <span class="input-group-text">dias</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" asp-for="Dados.LimiteNuitObrigatorio">NUIT do cliente obrigatório a partir de</label>
+                        <div class="input-group">
+                            <input class="form-control tabular text-end" asp-for="Dados.LimiteNuitObrigatorio" type="text" inputmode="decimal" value="@Formato.Numero(Model.Dados.LimiteNuitObrigatorio)" />
+                            <span class="input-group-text">MT</span>
+                        </div>
+                        <div class="form-text">Para empresas é sempre obrigatório. Confirmar o valor com a AT.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" asp-for="Dados.CorPrimaria">Cor da marca</label>
+                        <div class="d-flex gap-2">
+                            <input class="form-control form-control-color flex-shrink-0" type="color" value="@Model.Dados.CorPrimaria" aria-label="Escolher cor"
+                                   oninput="document.getElementById('Dados_CorPrimaria').value = this.value.toUpperCase()" />
+                            <input class="form-control tabular" asp-for="Dados.CorPrimaria" maxlength="7" />
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" asp-for="Dados.ModoArredondamentoIva">Cálculo do IVA</label>
+                        <select class="form-select" asp-for="Dados.ModoArredondamentoIva">
+                            <option value="@ModoArredondamentoIva.PorTaxa">Por taxa: IVA sobre a soma das bases de cada taxa (recomendado)</option>
+                            <option value="@ModoArredondamentoIva.PorLinha">Por linha: IVA arredondado em cada linha e somado</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label" asp-for="Dados.RodapeTexto">Texto do rodapé</label>
+                        <textarea class="form-control" asp-for="Dados.RodapeTexto" rows="2"></textarea>
+                        <div class="form-text">Deve incluir "Processado por computador". A identificação do software certificado é acrescentada automaticamente.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="painel-corpo border-top d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary">Guardar dados</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="col-xl-4">
+        <section class="painel">
+            <div class="painel-cabecalho"><h2>Logótipo</h2></div>
+            <div class="painel-corpo">
+                <div class="logotipo-previa mb-3">
+                    @if (Model.TemLogotipo)
+                    {
+                        <img id="previaLogotipo" src="/marca/logotipo?v=@Model.VersaoLogotipo" alt="Logótipo actual" />
+                    }
+                    else
+                    {
+                        <img id="previaLogotipo" alt="Pré-visualização" hidden />
+                        <span class="text-body-secondary small">Sem logótipo</span>
+                    }
+                </div>
+                <form method="post" asp-page-handler="Logotipo" enctype="multipart/form-data">
+                    <label class="form-label" for="Logotipo">Escolher imagem</label>
+                    <input class="form-control mb-2" type="file" id="Logotipo" name="Logotipo" accept="image/png,image/jpeg" data-previa="#previaLogotipo" />
+                    <div class="form-text mb-3">PNG ou JPG, até 2 MB. Imagens mais largas são reduzidas para 600 px. Um fundo transparente (PNG) fica melhor.</div>
+                    <button type="submit" class="btn btn-primary">Carregar logótipo</button>
+                </form>
+                @if (Model.TemLogotipo)
+                {
+                    <form method="post" asp-page-handler="RemoverLogotipo" class="mt-2" data-confirmar="Remover o logótipo? Os documentos já emitidos mantêm o logótipo da época.">
+                        <button type="submit" class="btn btn-link text-danger px-0">Remover logótipo</button>
+                    </form>
+                }
+            </div>
+        </section>
+    </div>
+</div>

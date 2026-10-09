@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  testar-e-publicar:
+    # Windows: igual ao Winhost e tem SQL Server LocalDB para os testes de integração.
+    runs-on: windows-latest
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+      DOTNET_NOLOGO: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Preparar SQL Server LocalDB
+        shell: pwsh
+        run: |
+          if (-not (Get-Command SqlLocalDB.exe -ErrorAction SilentlyContinue)) {
+            choco install sqllocaldb --no-progress -y
+            $env:Path += ";C:\Program Files\Microsoft SQL Server\160\Tools\Binn"
+          }
+          SqlLocalDB.exe start MSSQLLocalDB
+          SqlLocalDB.exe info MSSQLLocalDB
+
+      - name: Restaurar
+        run: dotnet restore
+
+      - name: Compilar
+        run: dotnet build --no-restore -c Release -warnaserror
+
+      - name: Testar
+        run: dotnet test --no-build -c Release --logger "trx;LogFileName=resultados.trx" --results-directory artifacts/testes
+
+      - name: Verificar que não há alterações ao modelo sem migração
+        run: |
+          dotnet tool restore
+          dotnet ef migrations has-pending-model-changes -p src/Bezix.Facturacao.Infrastructure -s src/Bezix.Facturacao.Web
+
+      - name: Publicar (self-contained win-x64)
+        run: dotnet publish src/Bezix.Facturacao.Web -p:PublishProfile=Winhost
+
+      - name: Gerar script SQL das migrações (idempotente)
+        run: dotnet ef migrations script --idempotent -p src/Bezix.Facturacao.Infrastructure -s src/Bezix.Facturacao.Web -o artifacts/publish/migracoes.sql
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: resultados-testes
+          path: artifacts/testes
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bezix-facturacao-winhost
+          path: |
+            artifacts/publish/winhost
+            artifacts/publish/migracoes.sql
+          retention-days: 30

@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Bezix.Facturacao.Infrastructure\Bezix.Facturacao.Infrastructure.csproj" />
+    <ProjectReference Include="..\Bezix.Facturacao.Application\Bezix.Facturacao.Application.csproj" />
+    <ProjectReference Include="..\Bezix.Facturacao.Domain\Bezix.Facturacao.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="QRCoder" Version="1.8.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageReference Include="Serilog.Sinks.MSSqlServer" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Definições de desenvolvimento (LocalDB, password de teste) nunca vão para o servidor. -->
+    <Content Update="appsettings.Development.json" CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
+  <!-- O pacote nativo do SkiaSharp traz símbolos de depuração com ~96 MB; não são precisos no servidor. -->
+  <Target Name="RemoverSimbolosDaPublicacao" AfterTargets="ComputeResolvedFilesToPublishList">
+    <ItemGroup>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="'%(Extension)' == '.pdb'" />
+    </ItemGroup>
+  </Target>
+
+  <PropertyGroup>
+    <SatelliteResourceLanguages>pt</SatelliteResourceLanguages>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

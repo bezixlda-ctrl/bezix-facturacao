@@ -1,0 +1,27 @@
+@model Bezix.Facturacao.Web.Pages.Administracao.AuditoriaModel
+@foreach (var r in Model.Registos)
+{
+    <tr>
+        <td class="tabular text-nowrap">@Formato.DataHora(r.Data)</td>
+        <td>@r.Utilizador</td>
+        <td class="fw-semibold">@r.Accao</td>
+        <td class="text-nowrap">@r.Entidade @if (r.EntidadeId is not null && r.EntidadeId.Length < 12) { <span class="text-body-secondary">#@r.EntidadeId</span> }</td>
+        <td style="max-width: 420px">
+            @if (r.Antes is not null) { <div><span class="small text-body-secondary">Antes</span> <code class="json">@r.Antes</code></div> }
+            @if (r.Depois is not null) { <div><span class="small text-body-secondary">Depois</span> <code class="json">@r.Depois</code></div> }
+        </td>
+        <td class="tabular small text-body-secondary">@r.Ip</td>
+    </tr>
+}
+@if (Model.HaMais)
+{
+    <tr id="maisAuditoria">
+        <td colspan="6" class="text-center">
+            <button class="btn btn-sm btn-outline-primary"
+                    hx-get="@Url.Page("/Administracao/Auditoria", new { Model.Pesquisa, Pagina = Model.Pagina + 1 })"
+                    hx-target="#maisAuditoria" hx-swap="outerHTML">
+                Mostrar mais
+            </button>
+        </td>
+    </tr>
+}

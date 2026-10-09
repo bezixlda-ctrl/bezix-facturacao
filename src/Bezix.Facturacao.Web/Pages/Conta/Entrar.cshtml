@@ -1,0 +1,28 @@
+@page
+@model Bezix.Facturacao.Web.Pages.Conta.EntrarModel
+@{
+    ViewData["Title"] = "Entrar";
+    Layout = "_LayoutAcesso";
+}
+<h1 class="h2 mb-1">Entrar</h1>
+<p class="text-body-secondary mb-4">Use o email e a password que o administrador lhe deu.</p>
+
+<partial name="_ResumoErros" />
+
+<form method="post" novalidate>
+    <input type="hidden" asp-for="ReturnUrl" />
+    <div class="mb-3">
+        <label asp-for="Email" class="form-label">Email</label>
+        <input asp-for="Email" class="form-control" autocomplete="username" autofocus />
+    </div>
+    <div class="mb-3">
+        <label asp-for="Password" class="form-label">Password</label>
+        <input asp-for="Password" class="form-control" autocomplete="current-password" />
+    </div>
+    <div class="form-check mb-4">
+        <input asp-for="Lembrar" class="form-check-input" />
+        <label asp-for="Lembrar" class="form-check-label">Manter a sessão neste computador</label>
+    </div>
+    <button type="submit" class="btn btn-primary w-100">Entrar</button>
+</form>
+<p class="small text-body-secondary mt-4 mb-0">Esqueceu a password? Peça a um administrador para a redefinir.</p>

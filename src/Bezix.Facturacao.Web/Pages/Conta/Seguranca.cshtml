@@ -1,0 +1,99 @@
+@page
+@model Bezix.Facturacao.Web.Pages.Conta.SegurancaModel
+@{
+    ViewData["Title"] = "Segurança da conta";
+}
+<div class="cabecalho-pagina">
+    <div>
+        <h1>Segurança da conta</h1>
+        <p>Altere a sua password e proteja a conta com um código do telemóvel.</p>
+    </div>
+</div>
+
+<partial name="_ResumoErros" />
+
+@if (Model.CodigosRecuperacaoNovos is not null)
+{
+    <div class="alert alert-warning">
+        <div class="fw-bold mb-2"><i class="bi bi-key me-1"></i>Guarde estes códigos de recuperação num sítio seguro</div>
+        <p class="mb-2">Cada código serve uma vez, se perder o telemóvel. Não voltam a ser mostrados.</p>
+        <div class="row row-cols-2 row-cols-sm-5 g-2 tabular fw-bold">
+            @foreach (var c in Model.CodigosRecuperacaoNovos.Split(' '))
+            {
+                <div class="col"><code>@c</code></div>
+            }
+        </div>
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <section class="painel">
+            <div class="painel-cabecalho"><h2>Password</h2></div>
+            <form method="post" asp-page-handler="Password" class="painel-corpo">
+                <div class="mb-3">
+                    <label class="form-label" for="PasswordActual">Password actual</label>
+                    <input type="password" class="form-control" asp-for="PasswordActual" autocomplete="current-password" />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" for="PasswordNova">Nova password</label>
+                    <input type="password" class="form-control" asp-for="PasswordNova" autocomplete="new-password" aria-describedby="ajudaPassword" />
+                    <div id="ajudaPassword" class="form-text">Pelo menos 10 caracteres, com maiúsculas, minúsculas e algarismos.</div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label" for="PasswordConfirmacao">Repita a nova password</label>
+                    <input type="password" class="form-control" asp-for="PasswordConfirmacao" autocomplete="new-password" />
+                </div>
+                <button type="submit" class="btn btn-primary">Alterar password</button>
+            </form>
+        </section>
+    </div>
+
+    <div class="col-lg-7">
+        <section class="painel">
+            <div class="painel-cabecalho">
+                <h2>Verificação em dois passos</h2>
+                <span class="estado @(Model.DoisPassosActivo ? "estado-activo" : "estado-inactivo")">@(Model.DoisPassosActivo ? "Activa" : "Desactivada")</span>
+            </div>
+            <div class="painel-corpo">
+                @if (Model.DoisPassosActivo)
+                {
+                    <p>Ao entrar, além da password, é pedido o código da aplicação de autenticação.</p>
+                    <p class="text-body-secondary">Códigos de recuperação por usar: <strong class="tabular">@Model.CodigosRecuperacaoRestantes</strong></p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <form method="post" asp-page-handler="NovosCodigos">
+                            <button type="submit" class="btn btn-outline-primary">Criar novos códigos de recuperação</button>
+                        </form>
+                        <form method="post" asp-page-handler="Desactivar" data-confirmar="Desactivar a verificação em dois passos? A conta fica protegida só pela password.">
+                            <button type="submit" class="btn btn-outline-danger">Desactivar</button>
+                        </form>
+                    </div>
+                }
+                else
+                {
+                    <ol class="ps-3">
+                        <li class="mb-2">Instale no telemóvel uma aplicação de autenticação (Google Authenticator, Microsoft Authenticator ou outra).</li>
+                        <li class="mb-2">Leia este código QR com a aplicação, ou escreva a chave manualmente.</li>
+                        <li>Escreva abaixo o código de 6 algarismos que a aplicação mostra.</li>
+                    </ol>
+                    <div class="d-flex flex-wrap align-items-center gap-4 my-3">
+                        <div class="bg-white p-2 rounded" style="width:180px">@Html.Raw(Model.QrSvg)</div>
+                        <div>
+                            <div class="small text-body-secondary">Chave manual</div>
+                            <code class="tabular fs-6">@Model.ChaveManual</code>
+                        </div>
+                    </div>
+                    <form method="post" asp-page-handler="Activar" class="row g-2 align-items-end">
+                        <div class="col-sm-5">
+                            <label class="form-label" for="CodigoVerificacao">Código</label>
+                            <input class="form-control tabular" asp-for="CodigoVerificacao" inputmode="numeric" autocomplete="one-time-code" />
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary">Activar</button>
+                        </div>
+                    </form>
+                }
+            </div>
+        </section>
+    </div>
+</div>

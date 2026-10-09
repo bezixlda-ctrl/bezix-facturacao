@@ -1,0 +1,103 @@
+@page
+@model Bezix.Facturacao.Web.Pages.Configuracoes.SeriesModel
+@using Bezix.Facturacao.Domain.Documentos
+@{
+    ViewData["Title"] = "Séries de numeração";
+}
+<div class="cabecalho-pagina">
+    <div>
+        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Configurações</a>
+        <h1 class="mt-1">Séries de numeração</h1>
+        <p>Cada série numera um tipo de documento num ano, sem saltos. Feche a série no fim do ano ou quando a taxa de IVA mudar, e abra uma nova.</p>
+    </div>
+</div>
+
+<partial name="_ResumoErros" />
+
+<section class="painel mb-4">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Série</th>
+                    <th>Documento</th>
+                    <th class="num">Próximo número</th>
+                    <th>Aberta em</th>
+                    <th>Último documento</th>
+                    <th>Estado</th>
+                    @if (Model.PodeGerir) { <th><span class="visually-hidden">Acções</span></th> }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var s in Model.Series)
+                {
+                    <tr>
+                        <td><span class="doc-num"><span class="tipo">@s.TipoDoc</span> @(s.Codigo + s.Ano)</span></td>
+                        <td>@TipoDocumentoInfo.Nome(s.TipoDoc)</td>
+                        <td class="num"><span class="doc-num">@Serie.FormatarNumero(s.TipoDoc, s.Codigo, s.Ano, s.ProximoNumero).Split(' ')[1]</span></td>
+                        <td class="tabular">@Formato.Data(s.DataAbertura)</td>
+                        <td class="tabular">@(s.UltimaData is { } u ? Formato.Data(u) : "—")</td>
+                        <td>
+                            @if (s.Estado == EstadoSerie.Activa)
+                            {
+                                <span class="estado estado-activo">Activa</span>
+                            }
+                            else
+                            {
+                                <span class="estado estado-inactivo">Fechada em @(s.DataFecho is { } f ? Formato.Data(f) : "")</span>
+                            }
+                        </td>
+                        @if (Model.PodeGerir)
+                        {
+                            <td class="text-end">
+                                @if (s.Estado == EstadoSerie.Activa)
+                                {
+                                    <form method="post" asp-page-handler="Fechar" asp-route-id="@s.Id" class="d-inline-flex gap-1 align-items-center"
+                                          data-confirmar="Fechar a série @s.TipoDoc @(s.Codigo + s.Ano)? Não volta a aceitar documentos. Esta acção não se desfaz.">
+                                        <label class="visually-hidden" for="fecho-@s.Id">Data de fecho</label>
+                                        <input type="date" class="form-control form-control-sm" id="fecho-@s.Id" name="dataFecho" value="@Model.Hoje.ToString("yyyy-MM-dd")" required />
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary text-nowrap">Fechar série</button>
+                                    </form>
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</section>
+
+@if (Model.PodeGerir)
+{
+    <form method="post" asp-page-handler="Criar" class="painel" style="max-width: 820px" novalidate>
+        <div class="painel-cabecalho"><h2>Abrir série</h2></div>
+        <div class="painel-corpo row g-3">
+            <div class="col-sm-5">
+                <label class="form-label" asp-for="Nova.TipoDoc">Documento</label>
+                <select class="form-select" asp-for="Nova.TipoDoc">
+                    @foreach (var t in Enum.GetValues<TipoDocumento>())
+                    {
+                        <option value="@t">@t · @TipoDocumentoInfo.Nome(t)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-sm-2">
+                <label class="form-label" asp-for="Nova.Codigo">Código</label>
+                <input class="form-control text-uppercase" asp-for="Nova.Codigo" maxlength="10" placeholder="A" />
+            </div>
+            <div class="col-sm-2">
+                <label class="form-label" asp-for="Nova.Ano">Ano</label>
+                <input class="form-control tabular" asp-for="Nova.Ano" type="number" />
+            </div>
+            <div class="col-sm-3">
+                <label class="form-label" asp-for="Nova.DataAbertura">Abre em</label>
+                <input class="form-control" asp-for="Nova.DataAbertura" type="date" />
+            </div>
+        </div>
+        <div class="painel-corpo border-top d-flex justify-content-between align-items-center gap-3">
+            <span class="small text-body-secondary">A numeração começa em 0001.</span>
+            <button type="submit" class="btn btn-primary">Abrir série</button>
+        </div>
+    </form>
+}

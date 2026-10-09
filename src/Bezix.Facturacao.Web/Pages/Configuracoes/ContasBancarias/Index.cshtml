@@ -1,0 +1,61 @@
+@page
+@model Bezix.Facturacao.Web.Pages.Configuracoes.ContasBancarias.IndexModel
+@{
+    ViewData["Title"] = "Contas bancárias";
+}
+<div class="cabecalho-pagina">
+    <div>
+        <a asp-page="../Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Configurações</a>
+        <h1 class="mt-1">Contas bancárias</h1>
+        <p>As contas marcadas como visíveis aparecem no rodapé das facturas, recibos e extractos.</p>
+    </div>
+    <a class="btn btn-primary" asp-page="Editar"><i class="bi bi-plus-lg me-1"></i>Adicionar conta</a>
+</div>
+
+<section class="painel">
+    @if (Model.Contas.Count == 0)
+    {
+        <div class="vazio">
+            <i class="bi bi-bank"></i>
+            <p>Ainda não há contas. Adicione pelo menos uma para os clientes saberem onde pagar.</p>
+            <a class="btn btn-primary" asp-page="Editar">Adicionar conta</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Banco</th>
+                        <th>N.º de conta</th>
+                        <th>NIB</th>
+                        <th>IBAN / SWIFT</th>
+                        <th>Nos documentos</th>
+                        <th><span class="visually-hidden">Acções</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in Model.Contas)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@c.Banco</td>
+                            <td class="tabular">@c.NumeroConta</td>
+                            <td class="tabular">@c.Nib</td>
+                            <td class="tabular">@c.Iban @if (c.Swift is not null) { <span class="text-body-secondary">· @c.Swift</span> }</td>
+                            <td>
+                                <span class="estado @(c.MostrarNoDocumento ? "estado-activo" : "estado-inactivo")">@(c.MostrarNoDocumento ? "Visível" : "Oculta")</span>
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <a class="btn btn-sm btn-outline-secondary" asp-page="Editar" asp-route-id="@c.Id">Editar</a>
+                                <form method="post" asp-page-handler="Remover" asp-route-id="@c.Id" class="d-inline" data-confirmar="Remover a conta @c.Banco @c.NumeroConta? Documentos já emitidos não são alterados.">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Remover</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

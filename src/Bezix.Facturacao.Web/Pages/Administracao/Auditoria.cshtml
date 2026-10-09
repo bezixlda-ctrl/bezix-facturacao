@@ -1,0 +1,40 @@
+@page
+@model Bezix.Facturacao.Web.Pages.Administracao.AuditoriaModel
+@{
+    ViewData["Title"] = "Auditoria";
+}
+<div class="cabecalho-pagina">
+    <div>
+        <h1>Auditoria</h1>
+        <p>Registo permanente das acções sensíveis: entradas no sistema, alterações de configurações, utilizadores e perfis, e, mais tarde, emissões e anulações.</p>
+    </div>
+    <form method="get" class="d-flex gap-2" role="search">
+        <label class="visually-hidden" for="Pesquisa">Pesquisar</label>
+        <input class="form-control" asp-for="Pesquisa" placeholder="Acção, utilizador ou entidade" />
+        <button class="btn btn-outline-primary" type="submit">Pesquisar</button>
+    </form>
+</div>
+
+<section class="painel">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Utilizador</th>
+                    <th>Acção</th>
+                    <th>Entidade</th>
+                    <th>Alteração</th>
+                    <th>IP</th>
+                </tr>
+            </thead>
+            <tbody id="linhasAuditoria">
+                <partial name="_LinhasAuditoria" model="Model" />
+            </tbody>
+        </table>
+    </div>
+    @if (Model.Registos.Count == 0)
+    {
+        <div class="vazio"><i class="bi bi-search"></i>Nenhum registo encontrado.</div>
+    }
+</section>

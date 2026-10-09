@@ -1,0 +1,78 @@
+@page "{id?}"
+@model Bezix.Facturacao.Web.Pages.Administracao.Utilizadores.EditarModel
+@{
+    ViewData["Title"] = Model.Novo ? "Criar utilizador" : Model.Dados.Nome;
+}
+<div class="cabecalho-pagina">
+    <div>
+        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Utilizadores</a>
+        <h1 class="mt-1">@ViewData["Title"]</h1>
+    </div>
+</div>
+
+<partial name="_ResumoErros" />
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <form method="post" class="painel" novalidate>
+            <div class="painel-corpo row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" asp-for="Dados.Nome">Nome</label>
+                    <input class="form-control" asp-for="Dados.Nome" required />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" asp-for="Dados.Email">Email</label>
+                    <input class="form-control" asp-for="Dados.Email" type="email" autocomplete="off" required />
+                    <div class="form-text">É também o nome de utilizador para entrar.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" asp-for="Dados.Perfil">Perfil</label>
+                    <select class="form-select" asp-for="Dados.Perfil">
+                        @foreach (var p in Model.Perfis)
+                        {
+                            <option value="@p.Nome">@p.Nome</option>
+                        }
+                    </select>
+                    <div class="form-text"><a asp-page="/Administracao/Perfis/Index" target="_blank">Ver o que cada perfil permite</a></div>
+                </div>
+                @if (Model.Novo)
+                {
+                    <div class="col-md-6">
+                        <label class="form-label" asp-for="Dados.Password">Password inicial</label>
+                        <input class="form-control" asp-for="Dados.Password" type="password" autocomplete="new-password" />
+                        <div class="form-text">Pelo menos 10 caracteres, com maiúsculas, minúsculas e algarismos. O utilizador pode alterá-la depois.</div>
+                    </div>
+                }
+                <div class="col-12">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" asp-for="Dados.Activo" role="switch" />
+                        <label class="form-check-label" asp-for="Dados.Activo">Conta activa</label>
+                    </div>
+                    <div class="form-text">Uma conta inactiva não consegue entrar e as sessões abertas terminam no minuto seguinte. O histórico mantém-se.</div>
+                </div>
+            </div>
+            <div class="painel-corpo border-top d-flex justify-content-end gap-2">
+                <a class="btn btn-outline-secondary" asp-page="Index">Cancelar</a>
+                <button type="submit" class="btn btn-primary">@(Model.Novo ? "Criar utilizador" : "Guardar")</button>
+            </div>
+        </form>
+    </div>
+
+    @if (!Model.Novo)
+    {
+        <div class="col-lg-5">
+            <form method="post" asp-page-handler="Password" class="painel" novalidate>
+                <div class="painel-cabecalho">
+                    <h2>Redefinir password</h2>
+                    @if (Model.Bloqueado) { <span class="estado estado-parcial">Bloqueado</span> }
+                </div>
+                <div class="painel-corpo">
+                    <p class="text-body-secondary small">Use quando o utilizador se esquece da password ou fica bloqueado depois de 5 tentativas. Desbloqueia a conta.</p>
+                    <label class="form-label" asp-for="NovaPassword">Nova password</label>
+                    <input class="form-control mb-3" asp-for="NovaPassword" type="password" autocomplete="new-password" />
+                    <button type="submit" class="btn btn-outline-primary">Redefinir password</button>
+                </div>
+            </form>
+        </div>
+    }
+</div>

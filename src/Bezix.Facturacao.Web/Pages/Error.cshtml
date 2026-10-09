@@ -1,0 +1,16 @@
+@page
+@model ErrorModel
+@{
+    ViewData["Title"] = "Erro";
+    Layout = User.Identity?.IsAuthenticated == true ? "_Layout" : "_LayoutAcesso";
+}
+<div class="vazio">
+    <i class="bi bi-exclamation-octagon"></i>
+    <h1 class="h2">Ocorreu um erro ao processar o pedido</h1>
+    <p>O erro ficou registado. Tente outra vez; se voltar a acontecer, indique ao suporte esta referência:</p>
+    @if (Model.ShowRequestId)
+    {
+        <p><code class="tabular">@Model.RequestId</code></p>
+    }
+    <a class="btn btn-primary" href="/">Voltar ao painel</a>
+</div>
