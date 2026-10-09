@@ -1,0 +1,25 @@
+@page
+@model Bezix.Facturacao.Web.Pages.Administracao.Integracoes.EntregasModel
+@using Bezix.Facturacao.Domain.Integracoes
+@{
+    ViewData["Title"] = "Entregas de webhooks";
+    string Filtro(EstadoEntrega? e) => Model.Estado == e ? "btn-primary" : "btn-outline-secondary";
+}
+<div class="cabecalho-pagina">
+    <div>
+        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Integrações</a>
+        <h1 class="mt-1">Entregas de webhooks</h1>
+        <p>Cada evento enviado a cada destino, com a resposta recebida.</p>
+    </div>
+</div>
+
+<section class="painel">
+    <div class="d-flex flex-wrap gap-2 p-3 border-bottom">
+        <a class="btn btn-sm @Filtro(null)" asp-page="Entregas">Todas</a>
+        <a class="btn btn-sm @Filtro(EstadoEntrega.Entregue)" asp-page="Entregas" asp-route-estado="Entregue">Entregues</a>
+        <a class="btn btn-sm @Filtro(EstadoEntrega.Pendente)" asp-page="Entregas" asp-route-estado="Pendente">Pendentes</a>
+        <a class="btn btn-sm @Filtro(EstadoEntrega.Falhou)" asp-page="Entregas" asp-route-estado="Falhou">Falhadas</a>
+    </div>
+    <partial name="_Entregas" model="Model.VistaEntregas" />
+    @if (Model.Resultado.Total > 0) { <partial name="_Paginacao" model="Model.Paginacao" /> }
+</section>

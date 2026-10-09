@@ -435,3 +435,51 @@ details > summary.painel-cabecalho { cursor: pointer; list-style: none; }
 details > summary.painel-cabecalho::-webkit-details-marker { display: none; }
 details[open] > summary.painel-cabecalho { border-bottom: 1px solid var(--bz-borda); }
 details:not([open]) > summary.painel-cabecalho { border-bottom: 0; }
+
+/* ---------- Painel ---------- */
+
+.legenda { display: inline-block; width: .6rem; height: .6rem; border-radius: 50%; background: var(--c); margin-right: .375rem; }
+.variacao { display: inline-flex; gap: .25rem; align-items: center; font-size: .8125rem; font-weight: 700; }
+.variacao.sobe { color: var(--bz-sucesso); }
+.variacao.desce { color: var(--bz-erro); }
+
+.mini-indicadores {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    border-top: 1px solid var(--bz-borda);
+}
+.mini-indicadores > div { padding: .875rem 1.25rem; display: flex; flex-direction: column; gap: .125rem; }
+.mini-indicadores > div + div { border-left: 1px solid var(--bz-borda); }
+.mini-indicadores span { font-size: .8125rem; color: var(--bz-texto-suave); }
+.mini-indicadores strong { font-size: 1.0625rem; }
+
+.indicador { transition: transform .15s ease; }
+a.indicador:hover { transform: translateY(-2px); color: #fff; }
+.indicador .spark { position: absolute; left: 0; right: 0; bottom: 0; opacity: .9; }
+.indicador .nota { display: block; position: relative; z-index: 1; }
+
+.lista-accoes { list-style: none; margin: 0; padding: 0; }
+.lista-accoes li { display: flex; gap: .75rem; align-items: center; padding: .75rem 1.25rem; border-bottom: 1px solid var(--bz-borda); }
+.lista-accoes li > i { font-size: 1.125rem; color: var(--bz-aviso); }
+.lista-accoes li.erro > i { color: var(--bz-erro); }
+.lista-accoes li > span { flex: 1; }
+
+.ranking { padding-left: 2.25rem !important; }
+.ranking li { display: flex; justify-content: space-between; gap: .75rem; padding: .3rem 0; font-size: .875rem; }
+.ranking li a { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ranking li::marker { color: var(--bz-texto-suave); font-variant-numeric: tabular-nums; }
+details > summary.painel-cabecalho h2 { font-size: 1.125rem; }
+
+/* ---------- Página pública do cliente ---------- */
+.publico { max-width: 960px; margin: 0 auto; padding: 2rem 1rem; }
+
+/* ---------- Modelos de email ---------- */
+.previsao-email { background: var(--bs-body-bg); border: 1px solid var(--bz-borda); border-radius: .5rem; padding: 1rem; }
+.previsao-email p:last-child { margin-bottom: 0; }
+.variaveis li { padding: .2rem 0; }
+.painel-rodape { padding: .875rem 1.25rem; border-top: 1px solid var(--bz-borda); }
+
+/* ---------- Pagamentos comunicados ---------- */
+.rejeitar { position: relative; }
+.rejeitar > summary { list-style: none; }
+.rejeitar > summary::-webkit-details-marker { display: none; }
+.rejeitar-form { position: absolute; right: 0; z-index: 5; width: 280px; margin-top: .25rem; padding: .75rem; background: var(--bs-body-bg); border: 1px solid var(--bz-borda); border-radius: .5rem; box-shadow: 0 8px 24px rgb(0 0 0 / .12); }

@@ -1,0 +1,74 @@
+@page
+@model Bezix.Facturacao.Web.Pages.Recibos.ComunicadosModel
+@using Bezix.Facturacao.Domain.Comunicacao
+@{
+    ViewData["Title"] = "Pagamentos comunicados";
+}
+<div class="cabecalho-pagina">
+    <div>
+        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Recibos</a>
+        <h1 class="mt-1">Pagamentos comunicados</h1>
+        <p>Pagamentos que os clientes indicaram pelo link do documento. Nada entra na conta corrente até confirmar o valor no banco e emitir o recibo.</p>
+    </div>
+    <div class="btn-group">
+        <a class="btn btn-sm @(Model.Todos ? "btn-outline-secondary" : "btn-primary")" asp-page="Comunicados">Por validar</a>
+        <a class="btn btn-sm @(Model.Todos ? "btn-primary" : "btn-outline-secondary")" asp-page="Comunicados" asp-route-todos="true">Todos</a>
+    </div>
+</div>
+
+<section class="painel">
+    @if (Model.Lista.Count == 0)
+    {
+        <div class="vazio"><i class="bi bi-inbox"></i><p class="mb-0">@(Model.Todos ? "Os clientes ainda não comunicaram pagamentos." : "Não há pagamentos por validar.")</p></div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table">
+                <thead><tr><th>Recebido</th><th>Cliente</th><th>Documento</th><th class="num">Valor</th><th>Pago a</th><th>Detalhes</th><th>Estado</th><th><span class="visually-hidden">Acções</span></th></tr></thead>
+                <tbody>
+                    @foreach (var p in Model.Lista)
+                    {
+                        <tr>
+                            <td class="tabular text-nowrap">@Formato.DataHora(p.ComunicadoEm)</td>
+                            <td><a class="text-reset" asp-page="/ContaCorrente/Cliente" asp-route-id="@p.ClienteId">@p.Cliente</a></td>
+                            <td>@if (p.DocumentoId is { } d) { <a class="doc-num text-decoration-none" asp-page="/Documentos/Detalhe" asp-route-id="@d">@p.Documento</a> } else { <span>—</span> }</td>
+                            <td class="num">@Formato.Moeda(p.Valor)</td>
+                            <td class="tabular">@Formato.Data(p.Data)</td>
+                            <td class="small">
+                                @if (p.Referencia is not null) { <div>Ref. @p.Referencia</div> }
+                                @if (p.Mensagem is not null) { <div class="text-body-secondary">“@p.Mensagem”</div> }
+                                @if (p.TemComprovativo) { <a asp-page-handler="Comprovativo" asp-route-id="@p.Id" target="_blank"><i class="bi bi-paperclip"></i> Comprovativo</a> }
+                            </td>
+                            <td class="text-nowrap">
+                                @switch (p.Estado)
+                                {
+                                    case EstadoPagamentoComunicado.PorValidar: <span class="estado estado-parcial">Por validar</span> break;
+                                    case EstadoPagamentoComunicado.Validado:
+                                        <span class="estado estado-pago">Validado</span>
+                                        @if (p.ReciboId is { } rc) { <a class="small d-block" asp-page="/Documentos/Detalhe" asp-route-id="@rc">Ver recibo</a> }
+                                        break;
+                                    default: <span class="estado estado-anulado" title="@p.MotivoRejeicao">Rejeitado</span> <div class="small text-body-secondary">@p.MotivoRejeicao</div> break;
+                                }
+                            </td>
+                            <td class="text-end text-nowrap">
+                                @if (p.Estado == EstadoPagamentoComunicado.PorValidar)
+                                {
+                                    <a class="btn btn-sm btn-primary" asp-page="Novo" asp-route-comunicadoId="@p.Id"><i class="bi bi-check2 me-1"></i>Validar e emitir recibo</a>
+                                    <details class="d-inline-block text-start rejeitar">
+                                        <summary class="btn btn-sm btn-outline-danger">Rejeitar</summary>
+                                        <form method="post" asp-page-handler="Rejeitar" asp-route-id="@p.Id" class="rejeitar-form">
+                                            <label class="form-label small" for="motivo-@p.Id">Motivo (fica registado)</label>
+                                            <input class="form-control form-control-sm mb-2" id="motivo-@p.Id" name="motivo" maxlength="500" required placeholder="Valor não consta no extracto…" />
+                                            <button class="btn btn-sm btn-danger" type="submit">Rejeitar pagamento</button>
+                                        </form>
+                                    </details>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

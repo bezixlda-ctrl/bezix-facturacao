@@ -20,6 +20,9 @@ public interface IArmazenamentoFicheiros
     Task<string> GuardarAsync(string pasta, string extensao, byte[] conteudo, CancellationToken ct = default);
     Stream? Abrir(string caminhoRelativo);
     void Apagar(string caminhoRelativo);
+
+    /// <summary>Apaga os ficheiros de uma pasta com mais de <paramref name="idade"/>; devolve quantos apagou.</summary>
+    int ApagarAntigos(string pasta, TimeSpan idade);
 }
 
 public interface IProcessadorImagem

@@ -46,6 +46,20 @@ public sealed class ArmazenamentoLocal : IArmazenamentoFicheiros
         if (File.Exists(completo)) File.Delete(completo);
     }
 
+    public int ApagarAntigos(string pasta, TimeSpan idade)
+    {
+        var dir = Resolver(pasta);
+        if (!Directory.Exists(dir)) return 0;
+        var limite = DateTime.UtcNow - idade;
+        var n = 0;
+        foreach (var f in Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories))
+        {
+            if (File.GetLastWriteTimeUtc(f) >= limite) continue;
+            try { File.Delete(f); n++; } catch (IOException) { }
+        }
+        return n;
+    }
+
     /// <summary>Impede que um caminho guardado na BD aponte para fora da pasta raiz.</summary>
     private string Resolver(string relativo)
     {

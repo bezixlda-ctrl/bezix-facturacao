@@ -1,0 +1,12 @@
+@model Bezix.Facturacao.Application.Painel.Indicador
+@if (Model.Variacao is { } v)
+{
+    <span class="variacao @(v >= 0 ? "sobe" : "desce")">
+        <i class="bi @(v >= 0 ? "bi-arrow-up-right" : "bi-arrow-down-right")"></i>@Formato.Percentagem(Math.Abs(v))
+        <span class="text-body-secondary fw-normal">vs. mês anterior</span>
+    </span>
+}
+else
+{
+    <span class="variacao text-body-secondary fw-normal">sem comparação com o mês anterior</span>
+}

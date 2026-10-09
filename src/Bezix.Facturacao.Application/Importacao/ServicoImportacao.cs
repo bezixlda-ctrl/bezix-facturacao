@@ -35,7 +35,7 @@ public sealed record RelatorioImportacao(
 /// Importação de clientes e artigos a partir de CSV. Funciona em dois passos com o mesmo ficheiro:
 /// analisar (não grava nada) e importar (grava tudo numa única transacção, ou nada).
 /// </summary>
-public sealed class ServicoImportacao(IAppDbContext db, IUtilizadorActual utilizador, IServicoAuditoria auditoria, TimeProvider relogio)
+public sealed class ServicoImportacao(IAppDbContext db, IUtilizadorActual utilizador, IServicoAuditoria auditoria, IPublicadorEventos eventos, TimeProvider relogio)
 {
     // Nomes de coluna aceites (já normalizados: minúsculas, sem acentos nem espaços).
     private static readonly string[] CNome = ["nome", "cliente", "name", "designacao", "razaosocial"];
@@ -156,10 +156,11 @@ public sealed class ServicoImportacao(IAppDbContext db, IUtilizadorActual utiliz
 
         var ids = aGravar.Where(x => x.Id is not null).Select(x => x.Id!.Value).ToList();
         var actualizar = await db.Clientes.Where(c => ids.Contains(c.Id)).ToDictionaryAsync(c => c.Id, ct);
+        var criados = new List<Cliente>();
         foreach (var (id, d) in aGravar)
         {
             var c = id is null ? new Cliente { ResponsavelId = utilizador.Id } : actualizar[id.Value];
-            if (id is null) db.Clientes.Add(c);
+            if (id is null) { db.Clientes.Add(c); criados.Add(c); }
             c.Nome = d.Nome.Trim();
             c.Tipo = d.Tipo;
             c.Nuit = d.Nuit;
@@ -184,6 +185,11 @@ public sealed class ServicoImportacao(IAppDbContext db, IUtilizadorActual utiliz
         auditoria.Registar(nameof(Cliente), null, "Cliente.Importar", null,
             new { relatorio.Novos, relatorio.Actualizados, relatorio.Ignorados, relatorio.Erros, Modo = modo.ToString() });
         await db.SaveChangesAsync(ct);
+        if (criados.Count > 0)
+        {
+            foreach (var c in criados) eventos.Publicar(Domain.Integracoes.EventosWebhook.ClienteCriado, ServicoClientes.DadosEvento(c));
+            await db.SaveChangesAsync(ct);
+        }
         return relatorio;
     }
 

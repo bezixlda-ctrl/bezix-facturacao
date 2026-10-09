@@ -105,6 +105,24 @@
                         <textarea class="form-control" asp-for="Dados.RodapeTexto" rows="2"></textarea>
                         <div class="form-text">Deve incluir "Processado por computador". A identificação do software certificado é acrescentada automaticamente.</div>
                     </div>
+                    <div class="col-12"><hr class="my-1" /><h3 class="h6 mt-3 mb-0">Emails e links para clientes</h3></div>
+                    <div class="col-12">
+                        <label class="form-label" asp-for="Dados.AssinaturaEmail">Assinatura dos emails</label>
+                        <textarea class="form-control" asp-for="Dados.AssinaturaEmail" rows="3" maxlength="1000" placeholder="Departamento Financeiro&#10;Telefone 84 000 0000"></textarea>
+                        <div class="form-text">Usada em <code>{assinatura}</code> quando o utilizador não tem assinatura própria.</div>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label" asp-for="Dados.UrlPublica">Endereço público do sistema</label>
+                        <input class="form-control" asp-for="Dados.UrlPublica" type="url" maxlength="200" placeholder="https://facturacao.empresa.co.mz" />
+                        <div class="form-text">Base dos links que os clientes recebem por email. Vazio = o endereço por onde o sistema está a ser usado.</div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" asp-for="Dados.DiasValidadeLink">Validade dos links</label>
+                        <div class="input-group">
+                            <input class="form-control" asp-for="Dados.DiasValidadeLink" type="number" min="1" max="365" />
+                            <span class="input-group-text">dias</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="painel-corpo border-top d-flex justify-content-end">

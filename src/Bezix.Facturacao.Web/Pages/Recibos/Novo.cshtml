@@ -15,6 +15,17 @@
 <form method="post" id="formRecibo" novalidate>
     <partial name="_ResumoErros" />
     <input type="hidden" asp-for="ClienteId" id="clienteId" />
+    @if (Model.Comunicado is { } pc)
+    {
+        <input type="hidden" asp-for="ComunicadoId" />
+        <div class="alert alert-info d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <span><i class="bi bi-info-circle me-1"></i>A validar o pagamento comunicado por <strong>@pc.Cliente</strong> a @Formato.Data(pc.ComunicadoEm): @Formato.Moeda(pc.Valor) de @Formato.Data(pc.Data)@(pc.Referencia is null ? "" : $", ref. {pc.Referencia}"). Confira o comprovativo com o extracto bancário antes de emitir.</span>
+            @if (pc.TemComprovativo)
+            {
+                <a class="btn btn-sm btn-outline-primary" asp-page="Comunicados" asp-page-handler="Comprovativo" asp-route-id="@pc.Id" target="_blank"><i class="bi bi-paperclip me-1"></i>Ver comprovativo</a>
+            }
+        </div>
+    }
 
     <div class="row g-4">
         <div class="col-xl-4">

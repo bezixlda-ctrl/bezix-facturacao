@@ -27,9 +27,27 @@ public class SegurancaModel(
     [BindProperty] public string PasswordNova { get; set; } = "";
     [BindProperty] public string PasswordConfirmacao { get; set; } = "";
     [BindProperty] public string CodigoVerificacao { get; set; } = "";
+    [BindProperty] public string? Assinatura { get; set; }
 
     public async Task<IActionResult> OnGetAsync()
     {
+        await CarregarAsync();
+        return Page();
+    }
+
+    /// <summary>Assinatura pessoal nos emails a clientes (variável {assinatura}).</summary>
+    public async Task<IActionResult> OnPostAssinaturaAsync()
+    {
+        var u = await utilizadores.GetUserAsync(User);
+        if (u is null) return Challenge();
+        var texto = string.IsNullOrWhiteSpace(Assinatura) ? null : Assinatura.Replace("\r\n", "\n").Trim();
+        if (texto?.Length > 2000) ModelState.AddModelError(string.Empty, "A assinatura pode ter no máximo 2000 caracteres.");
+        else
+        {
+            u.AssinaturaEmail = texto;
+            await utilizadores.UpdateAsync(u);
+            return RedirecionarComSucesso("Assinatura guardada.");
+        }
         await CarregarAsync();
         return Page();
     }
@@ -106,6 +124,7 @@ public class SegurancaModel(
     {
         var u = await utilizadores.GetUserAsync(User) ?? throw new InvalidOperationException("Sem sessão.");
         DoisPassosActivo = u.TwoFactorEnabled;
+        Assinatura ??= u.AssinaturaEmail;
         if (DoisPassosActivo)
         {
             CodigosRecuperacaoRestantes = await utilizadores.CountRecoveryCodesAsync(u);

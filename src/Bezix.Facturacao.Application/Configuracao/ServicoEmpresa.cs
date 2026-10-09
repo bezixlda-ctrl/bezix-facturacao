@@ -22,7 +22,10 @@ public sealed record DadosEmpresa(
     int PrazoPagamentoDias,
     decimal LimiteNuitObrigatorio,
     ModoArredondamentoIva ModoArredondamentoIva,
-    bool RestringirAosProprios = false);
+    bool RestringirAosProprios = false,
+    string? AssinaturaEmail = null,
+    string? UrlPublica = null,
+    int DiasValidadeLink = 90);
 
 public sealed partial class ServicoEmpresa(
     IAppDbContext db,
@@ -70,6 +73,9 @@ public sealed partial class ServicoEmpresa(
         empresa.LimiteNuitObrigatorio = dados.LimiteNuitObrigatorio;
         empresa.ModoArredondamentoIva = dados.ModoArredondamentoIva;
         empresa.RestringirAosProprios = dados.RestringirAosProprios;
+        empresa.AssinaturaEmail = Limpar(dados.AssinaturaEmail?.Replace("\r\n", "\n"));
+        empresa.UrlPublica = Limpar(dados.UrlPublica)?.TrimEnd('/');
+        empresa.DiasValidadeLink = dados.DiasValidadeLink;
 
         auditoria.Registar(nameof(Empresa), empresa.Id.ToString(), "Configuracao.Alterar", antes, Instantaneo(empresa));
         await db.SaveChangesAsync(ct);
@@ -117,6 +123,10 @@ public sealed partial class ServicoEmpresa(
         if (string.IsNullOrWhiteSpace(d.RodapeTexto)) erros.Add("O rodapé não pode ficar vazio: tem de incluir \"Processado por computador\".");
         if (d.PrazoPagamentoDias is < 0 or > 365) erros.Add("O prazo de pagamento tem de estar entre 0 e 365 dias.");
         if (d.LimiteNuitObrigatorio < 0) erros.Add("O limite do NUIT não pode ser negativo.");
+        if (d.AssinaturaEmail?.Length > 1000) erros.Add("A assinatura pode ter no máximo 1000 caracteres.");
+        if (!string.IsNullOrWhiteSpace(d.UrlPublica) && (!Uri.TryCreate(d.UrlPublica.Trim(), UriKind.Absolute, out var u) || u.Scheme != Uri.UriSchemeHttps || d.UrlPublica.Length > 200))
+            erros.Add("O endereço público tem de começar por https:// (ex.: https://facturacao.empresa.co.mz).");
+        if (d.DiasValidadeLink is < 1 or > 365) erros.Add("A validade dos links tem de estar entre 1 e 365 dias.");
         return erros;
     }
 
@@ -128,7 +138,7 @@ public sealed partial class ServicoEmpresa(
     {
         e.Nome, e.Nuit, e.Slogan, e.Endereco, e.Cidade, e.Provincia, e.Telefones, e.Email, e.Site,
         e.CorPrimaria, e.RodapeTexto, e.PrazoPagamentoDias, e.LimiteNuitObrigatorio, e.ModoArredondamentoIva,
-        e.RestringirAosProprios,
+        e.RestringirAosProprios, e.AssinaturaEmail, e.UrlPublica, e.DiasValidadeLink,
     };
 
     [GeneratedRegex(@"^\d{9}$")]

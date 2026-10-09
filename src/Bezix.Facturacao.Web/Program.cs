@@ -11,6 +11,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Serilog;
 using Serilog.Sinks.MSSqlServer;
+using System.Threading.RateLimiting;
+using Bezix.Facturacao.Web.Api;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.DataProtection;
 
 Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
 
@@ -48,6 +52,12 @@ try
     servicos.AddHttpContextAccessor();
     servicos.AddMemoryCache();
     servicos.AddScoped<IUtilizadorActual, UtilizadorActual>();
+    servicos.AddScoped<IEnderecoPublico, EnderecoPublico>();
+
+    // Chaves de cifra (cookies, antiforgery, segredos dos webhooks) guardadas em disco: sobrevivem à reciclagem do app pool.
+    servicos.AddDataProtection()
+        .SetApplicationName("Bezix.Facturacao")
+        .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, "App_Data", "chaves")));
     servicos.AddInfraestrutura(builder.Configuration, builder.Environment.ContentRootPath);
     servicos.Configure<OpcoesJobs>(builder.Configuration.GetSection("Jobs"));
 
@@ -86,6 +96,39 @@ try
     });
 
     servicos.AddSingleton<IAuthorizationPolicyProvider, PoliticaPermissaoProvider>();
+    servicos.AddAuthentication().AddScheme<AuthenticationSchemeOptions, AutenticacaoApi>(AutenticacaoApi.Esquema, null);
+    servicos.AddProblemDetails();
+    servicos.AddOpenApi("v1", o => o.AddDocumentTransformer((doc, _, _) =>
+    {
+        doc.Info.Title = "Bezix Facturação API";
+        doc.Info.Version = "v1";
+        doc.Info.Description = "Autenticação: cabeçalho Authorization: Bearer <chave> (chaves em Administração → Integrações). "
+            + "POST de documentos e recibos exigem o cabeçalho Idempotency-Key. Limite: 60 pedidos por minuto por chave. "
+            + "Erros em application/problem+json. Valores em meticais (MZN).";
+        return Task.CompletedTask;
+    }));
+    servicos.AddRateLimiter(o =>
+    {
+        o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        o.OnRejected = async (contexto, ct) =>
+        {
+            contexto.HttpContext.Response.Headers.RetryAfter = "60";
+            await Results.Problem(statusCode: 429, title: "Demasiados pedidos", detail: "Limite de pedidos por minuto atingido. Tente daqui a um minuto.")
+                .ExecuteAsync(contexto.HttpContext);
+        };
+        // API: 60 pedidos por minuto por chave (identificada pelo prefixo, antes da autenticação).
+        o.AddPolicy("api", http =>
+        {
+            var auth = http.Request.Headers.Authorization.ToString();
+            var partes = auth.StartsWith("Bearer bzx_", StringComparison.OrdinalIgnoreCase) ? auth["Bearer ".Length..].Split('_') : [];
+            var chave = partes.Length >= 2 ? "chave:" + partes[1] : "ip:" + http.Connection.RemoteIpAddress;
+            return RateLimitPartition.GetFixedWindowLimiter(chave, _ => new FixedWindowRateLimiterOptions { PermitLimit = 60, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 });
+        });
+        // Página pública do cliente: 30 pedidos por minuto por IP.
+        o.AddPolicy("publico", http => RateLimitPartition.GetFixedWindowLimiter("ip:" + http.Connection.RemoteIpAddress,
+            _ => new FixedWindowRateLimiterOptions { PermitLimit = 30, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+    });
+
     servicos.AddAuthorizationBuilder()
         .SetFallbackPolicy(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build());
 
@@ -102,6 +145,7 @@ try
             o.Conventions.AllowAnonymousToPage("/Conta/Entrar2FA");
             o.Conventions.AllowAnonymousToPage("/Conta/AcessoNegado");
             o.Conventions.AllowAnonymousToPage("/Error");
+            o.Conventions.AllowAnonymousToFolder("/Publico");
         })
         .AddMvcOptions(o => o.ModelBinderProviders.Insert(0, new DecimalModelBinderProvider()));
 
@@ -158,12 +202,21 @@ try
         : Serilog.Events.LogEventLevel.Information);
 
     app.UseRouting();
+    app.UseRateLimiter();
     app.UseAuthentication();
     app.UseAuthorization();
 
     app.MapStaticAssets().AllowAnonymous();
     app.MapRazorPages().WithStaticAssets();
     app.MapEndpointsSistema();
+    app.MapApiV1();
+    app.MapOpenApi("/api/openapi/{documentName}.json").AllowAnonymous();
+    app.UseSwaggerUI(o =>
+    {
+        o.SwaggerEndpoint("/api/openapi/v1.json", "Bezix Facturação API v1");
+        o.RoutePrefix = "api/docs";
+        o.DocumentTitle = "Bezix Facturação · API";
+    });
 
     await app.RunAsync();
 }

@@ -1,0 +1,158 @@
+@page "/p/{token}"
+@model Bezix.Facturacao.Web.Pages.Publico.DocumentoModel
+@using Bezix.Facturacao.Domain.Documentos
+@{
+    Layout = null;
+    var valido = Model.Valido;
+    var d = valido ? Model.Aberto.Documento : null;
+    var cor = valido ? Model.Empresa.CorPrimaria : "#0F5C8C";
+}
+<!DOCTYPE html>
+<html lang="pt" style="--bz-primaria: @cor">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="no-referrer" />
+    <title>@(d is null ? "Link expirado" : $"{TipoDocumentoInfo.Nome(d.TipoDoc)} {d.NumeroFormatado} · {Model.Empresa.Nome}")</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <main class="publico">
+        @if (d is null)
+        {
+            <div class="painel painel-corpo text-center p-5" style="max-width: 520px; margin: 10vh auto">
+                <i class="bi bi-link-45deg fs-1 text-body-secondary"></i>
+                <h1 class="h2 mt-2">Este link já não é válido</h1>
+                <p class="text-body-secondary mb-0">Os links para documentos expiram por segurança. Peça à empresa que lhe enviou o documento um link novo.</p>
+            </div>
+        }
+        else
+        {
+            var e = Model.Empresa;
+            var s = Model.Situacao;
+            <header class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                <div class="d-flex align-items-center gap-3">
+                    @if (e.LogoPath is not null) { <img src="/marca/logotipo" alt="@e.Nome" style="max-height: 52px; max-width: 180px" /> }
+                    <div>
+                        <div class="fw-bold">@e.Nome</div>
+                        <div class="small text-body-secondary">NUIT @e.Nuit@(e.Telefones is null ? "" : " · " + e.Telefones)</div>
+                    </div>
+                </div>
+                <a class="btn btn-primary" href="@Url.Page(null, "Pdf", new { token = Model.Token })" target="_blank"><i class="bi bi-file-earmark-pdf me-1"></i>Ver / descarregar PDF</a>
+            </header>
+
+            @if (Model.Comunicado)
+            {
+                <div class="alert alert-success"><i class="bi bi-check-circle me-1"></i>Obrigado. Recebemos a informação do seu pagamento; vamos confirmá-lo e enviar-lhe o recibo.</div>
+            }
+
+            <section class="painel mb-4">
+                <div class="painel-corpo">
+                    <div class="d-flex flex-wrap justify-content-between gap-3">
+                        <div>
+                            <div class="small text-body-secondary">@TipoDocumentoInfo.Nome(d.TipoDoc)</div>
+                            <div class="doc-num doc-num-grande"><span class="tipo">@d.TipoDoc</span> @d.NumeroFormatado?[3..]</div>
+                            <div class="small mt-1">@d.ClienteNome · NUIT @(d.ClienteNuit ?? "—")</div>
+                        </div>
+                        <div class="text-md-end">
+                            <div class="small text-body-secondary">Total</div>
+                            <div class="fs-3 fw-bold tabular">@Formato.Moeda(d.Total)</div>
+                            @if (d.Estado == EstadoDocumento.Anulado)
+                            {
+                                <span class="estado estado-anulado">Anulado</span>
+                            }
+                            else if (s is not null)
+                            {
+                                @if (s.EmAberto == 0) { <span class="estado estado-pago">Pago</span> }
+                                else
+                                {
+                                    <div class="small">Em aberto: <strong class="tabular">@Formato.Moeda(s.EmAberto)</strong></div>
+                                    @if (d.Vencimento is { } v) { <div class="small @(s.DiasAtraso > 0 ? "text-danger fw-semibold" : "text-body-secondary")">Vence a @Formato.Data(v)</div> }
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead><tr><th>Descrição</th><th class="num">Qtd</th><th class="num">Preço</th><th class="num">IVA</th><th class="num">Total</th></tr></thead>
+                        <tbody>
+                            @foreach (var l in d.Linhas)
+                            {
+                                <tr><td>@l.Descricao</td><td class="num">@l.Quantidade.ToString("0.####", Formato.Cultura)</td><td class="num">@Formato.Numero(l.PrecoUnitario)</td><td class="num">@Formato.Percentagem(l.TaxaIvaPct)</td><td class="num">@Formato.Numero(l.TotalLinha)</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <div class="row g-4">
+                @if (Model.Contas.Count > 0 && Model.PodeComunicar)
+                {
+                    <div class="col-lg-5">
+                        <section class="painel h-100">
+                            <div class="painel-cabecalho"><h2>Como pagar</h2></div>
+                            <ul class="list-unstyled painel-corpo mb-0">
+                                @foreach (var c in Model.Contas)
+                                {
+                                    <li class="mb-3">
+                                        <div class="fw-semibold">@c.Banco</div>
+                                        <div class="tabular small">Conta @c.NumeroConta</div>
+                                        @if (c.Nib is not null) { <div class="tabular small">NIB @c.Nib</div> }
+                                        @if (c.Iban is not null) { <div class="tabular small">IBAN @c.Iban</div> }
+                                    </li>
+                                }
+                                <li class="small text-body-secondary">Indique a referência <strong>@d.NumeroFormatado</strong> na transferência.</li>
+                            </ul>
+                        </section>
+                    </div>
+                }
+                @if (Model.PodeComunicar && !Model.Comunicado)
+                {
+                    <div class="col-lg-7">
+                        <form method="post" asp-page-handler="Comunicar" asp-route-token="@Model.Token" enctype="multipart/form-data" class="painel">
+                            <div class="painel-cabecalho"><h2>Já pagou? Envie o comprovativo</h2></div>
+                            <div class="painel-corpo row g-3">
+                                @if (Model.Erros.Count > 0)
+                                {
+                                    <div class="col-12"><div class="alert alert-danger mb-0"><ul class="mb-0 ps-3">@foreach (var erro in Model.Erros) { <li>@erro</li> }</ul></div></div>
+                                }
+                                <div class="col-sm-6">
+                                    <label class="form-label" for="Valor">Valor pago</label>
+                                    <div class="input-group">
+                                        <input class="form-control tabular text-end" id="Valor" name="Valor" inputmode="decimal" value="@Formato.Numero(Model.Valor)" required />
+                                        <span class="input-group-text">MT</span>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="form-label" for="Data">Data do pagamento</label>
+                                    <input class="form-control" type="date" id="Data" name="Data" value="@Model.Data.ToString("yyyy-MM-dd")" required />
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" for="Referencia">Referência <span class="text-body-secondary">(opcional)</span></label>
+                                    <input class="form-control" id="Referencia" name="Referencia" maxlength="100" value="@Model.Referencia" placeholder="N.º da transferência, M-Pesa…" />
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" for="Comprovativo">Comprovativo (PDF, JPG ou PNG, até 5 MB)</label>
+                                    <input class="form-control" type="file" id="Comprovativo" name="Comprovativo" accept="application/pdf,image/jpeg,image/png" required />
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label" for="Mensagem">Mensagem <span class="text-body-secondary">(opcional)</span></label>
+                                    <textarea class="form-control" id="Mensagem" name="Mensagem" rows="2" maxlength="1000">@Model.Mensagem</textarea>
+                                </div>
+                                <div class="col-12 d-flex justify-content-end">
+                                    <button class="btn btn-primary" type="submit"><i class="bi bi-send me-1"></i>Enviar comprovativo</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                }
+            </div>
+            <p class="small text-body-secondary text-center mt-4 mb-0">Este link é pessoal e expira a @Formato.Data(Model.Aberto.Link.ExpiraEm). Documento processado por computador.</p>
+        }
+    </main>
+</body>
+</html>

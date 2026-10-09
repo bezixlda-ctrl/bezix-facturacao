@@ -1,0 +1,66 @@
+@page "{id:int}"
+@model Bezix.Facturacao.Web.Pages.Administracao.Integracoes.WebhookModel
+@{
+    ViewData["Title"] = Model.Subscricao.Nome;
+    var s = Model.Subscricao;
+}
+<div class="cabecalho-pagina">
+    <div>
+        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Integrações</a>
+        <h1 class="mt-1">@s.Nome</h1>
+        <p>Cada evento é enviado por POST em JSON com os cabeçalhos <code>X-Signature</code> (HMAC-SHA256 de <code>timestamp.corpo</code>) e <code>X-Timestamp</code>. Se o destino falhar, repete após 1, 5 e 30 minutos, 2 e 12 horas; com 5 entregas falhadas seguidas, o webhook é desactivado.</p>
+    </div>
+    <form method="post" asp-page-handler="Testar" asp-route-id="@s.Id">
+        <button class="btn btn-outline-secondary" type="submit" disabled="@(!s.Activa)"><i class="bi bi-send-check me-1"></i>Enviar evento de teste</button>
+    </form>
+</div>
+
+<partial name="_ResumoErros" />
+
+@if (Model.SegredoNovo is not null)
+{
+    <div class="alert alert-warning" role="alert">
+        <div class="fw-semibold mb-2"><i class="bi bi-key me-1"></i>Novo segredo de assinatura. O anterior deixou de valer; actualize o sistema de destino. Não volta a ser mostrado.</div>
+        <div class="input-group">
+            <input class="form-control font-monospace" id="segredoNovo" value="@Model.SegredoNovo" readonly aria-label="Segredo" />
+            <button class="btn btn-outline-dark" type="button" data-copiar="#segredoNovo"><i class="bi bi-clipboard me-1"></i>Copiar</button>
+        </div>
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-xl-5">
+        <form method="post" asp-route-id="@s.Id" class="painel">
+            <div class="painel-corpo">
+                @if (!s.Activa && s.MotivoDesactivacao is not null)
+                {
+                    <div class="alert alert-danger small">@s.MotivoDesactivacao@(s.DesactivadaEm is { } d ? $" ({Formato.DataHora(d)})" : "")</div>
+                }
+                <div class="mb-3">
+                    <label class="form-label" asp-for="Nome">Nome</label>
+                    <input class="form-control" asp-for="Nome" maxlength="100" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" asp-for="Url">Endereço (https)</label>
+                    <input class="form-control font-monospace" asp-for="Url" type="url" maxlength="500" required />
+                </div>
+                <partial name="_Eventos" model="Model.Eventos" />
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" asp-for="Activa" />
+                    <label class="form-check-label" asp-for="Activa">Activo</label>
+                </div>
+            </div>
+            <div class="painel-rodape d-flex justify-content-between">
+                <button class="btn btn-link btn-sm text-body-secondary p-0" type="submit" asp-page-handler="Segredo" asp-route-id="@s.Id"
+                        data-confirmar="Gerar um novo segredo? O actual deixa de funcionar imediatamente.">Gerar novo segredo</button>
+                <button class="btn btn-primary" type="submit"><i class="bi bi-check2 me-1"></i>Guardar</button>
+            </div>
+        </form>
+    </div>
+    <div class="col-xl-7">
+        <section class="painel">
+            <div class="painel-cabecalho"><h2>Últimas entregas</h2></div>
+            <partial name="_Entregas" model="Model.VistaEntregas" />
+        </section>
+    </div>
+</div>

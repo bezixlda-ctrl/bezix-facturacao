@@ -1,12 +1,12 @@
 @page
 @model Bezix.Facturacao.Web.Pages.Conta.SegurancaModel
 @{
-    ViewData["Title"] = "Segurança da conta";
+    ViewData["Title"] = "A minha conta";
 }
 <div class="cabecalho-pagina">
     <div>
-        <h1>Segurança da conta</h1>
-        <p>Altere a sua password e proteja a conta com um código do telemóvel.</p>
+        <h1>A minha conta</h1>
+        <p>Altere a sua password, proteja a conta com um código do telemóvel e defina a sua assinatura de email.</p>
     </div>
 </div>
 
@@ -94,6 +94,17 @@
                     </form>
                 }
             </div>
+        </section>
+    </div>
+    <div class="col-lg-5">
+        <section class="painel">
+            <div class="painel-cabecalho"><h2>Assinatura dos emails</h2></div>
+            <form method="post" asp-page-handler="Assinatura" class="painel-corpo">
+                <label class="form-label" asp-for="Assinatura">Texto no fim dos emails que envia a clientes</label>
+                <textarea class="form-control mb-2" asp-for="Assinatura" rows="4" maxlength="2000" placeholder="O seu nome&#10;Cargo · telefone"></textarea>
+                <div class="form-text mb-3">Vazio = a assinatura da empresa (Configurações → Empresa).</div>
+                <button class="btn btn-primary" type="submit">Guardar assinatura</button>
+            </form>
         </section>
     </div>
 </div>

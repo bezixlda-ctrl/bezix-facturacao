@@ -6,15 +6,15 @@ using Microsoft.AspNetCore.Http;
 namespace Bezix.Facturacao.Tests.Integracao;
 
 /// <summary>
-/// Nos pedidos HTTP usa o utilizador real da sessão; fora deles (testes de serviços) usa o utilizador
-/// definido com <see cref="Como"/>, com as permissões do perfil padrão.
+/// Nos pedidos HTTP (e nas tarefas automáticas, em nome do sistema) comporta-se como o utilizador real; fora deles
+/// (testes de serviços) usa o utilizador definido com <see cref="Como"/>, com as permissões do perfil padrão.
 /// </summary>
-public sealed class UtilizadorTeste(IHttpContextAccessor acessor) : IUtilizadorActual
+public sealed class UtilizadorTeste(IHttpContextAccessor acessor, IContextoSistema sistema) : IUtilizadorActual
 {
     public sealed record Ficticio(string Id, string Email, string Nome, IReadOnlySet<string> Permissoes, decimal? DescontoMaximoPct);
 
     private static readonly AsyncLocal<Ficticio?> Actual = new();
-    private readonly UtilizadorActual _real = new(acessor);
+    private readonly UtilizadorActual _real = new(acessor, sistema);
 
     public static IDisposable Como(string perfil, string? id = null)
     {
@@ -25,7 +25,7 @@ public sealed class UtilizadorTeste(IHttpContextAccessor acessor) : IUtilizadorA
         return new Restaurar(() => Actual.Value = anterior);
     }
 
-    private bool Http => acessor.HttpContext is not null;
+    private bool Http => acessor.HttpContext is not null || sistema.Activo;
 
     public string? Id => Http ? _real.Id : Actual.Value?.Id;
     public string? Email => Http ? _real.Email : Actual.Value?.Email;

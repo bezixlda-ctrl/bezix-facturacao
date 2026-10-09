@@ -1,5 +1,7 @@
 using Bezix.Facturacao.Application.Abstracoes;
 using Bezix.Facturacao.Domain.Artigos;
+using Bezix.Facturacao.Domain.Automacao;
+using Bezix.Facturacao.Domain.Integracoes;
 using Bezix.Facturacao.Domain.Auditoria;
 using Bezix.Facturacao.Domain.Clientes;
 using Bezix.Facturacao.Domain.Comunicacao;
@@ -34,6 +36,17 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<EmailFila> EmailsFila => Set<EmailFila>();
     public DbSet<Pagamento> Pagamentos => Set<Pagamento>();
     public DbSet<PagamentoAlocacao> PagamentoAlocacoes => Set<PagamentoAlocacao>();
+    public DbSet<LinkPartilha> LinksPartilha => Set<LinkPartilha>();
+    public DbSet<PagamentoComunicado> PagamentosComunicados => Set<PagamentoComunicado>();
+    public DbSet<PlanoLembretes> PlanosLembretes => Set<PlanoLembretes>();
+    public DbSet<LembreteEnviado> LembretesEnviados => Set<LembreteEnviado>();
+    public DbSet<Recorrencia> Recorrencias => Set<Recorrencia>();
+    public DbSet<ExecucaoTarefa> ExecucoesTarefas => Set<ExecucaoTarefa>();
+    public DbSet<MarcaUnica> MarcasUnicas => Set<MarcaUnica>();
+    public DbSet<ChaveApi> ChavesApi => Set<ChaveApi>();
+    public DbSet<PedidoIdempotente> PedidosIdempotentes => Set<PedidoIdempotente>();
+    public DbSet<WebhookSubscricao> WebhookSubscricoes => Set<WebhookSubscricao>();
+    public DbSet<WebhookEntrega> WebhookEntregas => Set<WebhookEntrega>();
 
     // Triggers que impedem alterar documentos emitidos mesmo por SQL directo (ver migração Fase3Documentos).
     public const string TriggerDocumentos = "TR_Documentos_Imutavel";
@@ -44,6 +57,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
 
     /// <summary>Colação sem distinção de maiúsculas nem acentos: pesquisar "conceicao" encontra "Conceição".</summary>
     public const string ColacaoPesquisa = "Latin1_General_100_CI_AI";
+
+    public void DescartarAlteracoes() => ChangeTracker.Clear();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -86,6 +101,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.Property(x => x.RodapeTexto).HasMaxLength(1000).IsRequired();
             e.Property(x => x.Moeda).HasMaxLength(3).IsRequired();
             e.Property(x => x.ModoArredondamentoIva).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.AssinaturaEmail).HasMaxLength(1000);
+            e.Property(x => x.UrlPublica).HasMaxLength(200);
             e.ToTable(t => t.HasCheckConstraint("CK_Empresa_Unica", $"[Id] = {Empresa.IdUnico}"));
         });
 
@@ -337,6 +354,115 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             });
             e.HasOne(x => x.Documento).WithMany().HasForeignKey(x => x.DocumentoId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(x => x.DocumentoId);
+        });
+
+        b.Entity<LinkPartilha>(e =>
+        {
+            e.ToTable("LinksPartilha");
+            e.Property(x => x.TokenHash).HasMaxLength(64).IsUnicode(false).IsRequired();
+            e.HasIndex(x => x.TokenHash).IsUnique();
+            e.HasIndex(x => x.DocumentoId);
+            e.HasOne<Documento>().WithMany().HasForeignKey(x => x.DocumentoId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        b.Entity<PagamentoComunicado>(e =>
+        {
+            e.ToTable("PagamentosComunicados", t => t.HasCheckConstraint("CK_PagamentosComunicados_Valor", "[Valor] > 0"));
+            e.Property(x => x.Referencia).HasMaxLength(100);
+            e.Property(x => x.Mensagem).HasMaxLength(1000);
+            e.Property(x => x.ComprovativoPath).HasMaxLength(256);
+            e.Property(x => x.ComprovativoTipo).HasMaxLength(50);
+            e.Property(x => x.Estado).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.DecididoPor).HasMaxLength(256);
+            e.Property(x => x.MotivoRejeicao).HasMaxLength(500);
+            e.Property(x => x.Ip).HasMaxLength(64);
+            e.HasOne<Cliente>().WithMany().HasForeignKey(x => x.ClienteId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.Estado, x.CreatedAt });
+        });
+
+        b.Entity<PlanoLembretes>(e =>
+        {
+            e.ToTable("PlanoLembretes");
+            e.Property(x => x.Id).ValueGeneratedNever();
+            e.Property(x => x.DiasDepois).HasMaxLength(50);
+        });
+
+        b.Entity<LembreteEnviado>(e =>
+        {
+            e.ToTable("LembretesEnviados");
+            e.Property(x => x.Tipo).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.EnviadoPor).HasMaxLength(256);
+            e.HasIndex(x => new { x.DocumentoId, x.Tipo });
+        });
+
+        b.Entity<Recorrencia>(e =>
+        {
+            e.ToTable("Recorrencias");
+            e.Property(x => x.Descricao).HasMaxLength(200).IsRequired();
+            e.Property(x => x.Periodicidade).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.UltimoErro).HasMaxLength(1000);
+            e.HasOne<Documento>().WithMany().HasForeignKey(x => x.ModeloDocumentoId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.Activa, x.ProximaData });
+        });
+
+        b.Entity<ExecucaoTarefa>(e =>
+        {
+            e.ToTable("ExecucoesTarefas");
+            e.Property(x => x.Tarefa).HasMaxLength(100).IsRequired();
+            e.Property(x => x.Resultado).HasMaxLength(1000);
+            e.Property(x => x.Erro).HasMaxLength(2000);
+            e.HasIndex(x => x.Inicio);
+        });
+
+        b.Entity<MarcaUnica>(e =>
+        {
+            e.ToTable("MarcasUnicas");
+            e.Property(x => x.Chave).HasMaxLength(200).IsRequired();
+            e.HasIndex(x => x.Chave).IsUnique();
+        });
+
+        b.Entity<ChaveApi>(e =>
+        {
+            e.ToTable("ChavesApi");
+            e.Property(x => x.Nome).HasMaxLength(100).IsRequired();
+            e.Property(x => x.Prefixo).HasMaxLength(20).IsUnicode(false).IsRequired();
+            e.Property(x => x.HashChave).HasMaxLength(64).IsUnicode(false).IsRequired();
+            e.Property(x => x.Escopos).HasMaxLength(500).IsRequired();
+            e.HasIndex(x => x.Prefixo).IsUnique();
+            e.Ignore(x => x.Activa);
+        });
+
+        b.Entity<PedidoIdempotente>(e =>
+        {
+            e.ToTable("PedidosIdempotentes");
+            e.Property(x => x.Chave).HasMaxLength(100).IsRequired();
+            e.Property(x => x.Rota).HasMaxLength(200).IsRequired();
+            e.Property(x => x.HashCorpo).HasMaxLength(64).IsUnicode(false).IsRequired();
+            e.Property(x => x.Resposta).HasColumnType("nvarchar(max)");
+            e.HasIndex(x => new { x.ChaveApiId, x.Chave }).IsUnique();
+            e.HasIndex(x => x.CreatedAt);
+        });
+
+        b.Entity<WebhookSubscricao>(e =>
+        {
+            e.ToTable("WebhookSubscricoes");
+            e.Property(x => x.Nome).HasMaxLength(100).IsRequired();
+            e.Property(x => x.Url).HasMaxLength(500).IsRequired();
+            e.Property(x => x.SegredoCifrado).HasMaxLength(1000).IsRequired();
+            e.Property(x => x.Eventos).HasMaxLength(500).IsRequired();
+            e.Property(x => x.MotivoDesactivacao).HasMaxLength(300);
+        });
+
+        b.Entity<WebhookEntrega>(e =>
+        {
+            e.ToTable("WebhookEntregas");
+            e.Property(x => x.Evento).HasMaxLength(50).IsRequired();
+            e.Property(x => x.Payload).HasColumnType("nvarchar(max)").IsRequired();
+            e.Property(x => x.Estado).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.Resposta).HasMaxLength(1000);
+            e.HasOne(x => x.Subscricao).WithMany().HasForeignKey(x => x.SubscricaoId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => new { x.Estado, x.ProximaTentativa });
+            e.HasIndex(x => new { x.SubscricaoId, x.CreatedAt });
         });
 
         b.Entity<RegistoLog>(e =>

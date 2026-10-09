@@ -1,0 +1,113 @@
+@page "{id:int?}"
+@model Bezix.Facturacao.Web.Pages.Automacao.RecorrenciaModel
+@using Bezix.Facturacao.Domain.Automacao
+@{
+    var nova = Model.Existente is null;
+    ViewData["Title"] = nova ? "Tornar recorrente" : Model.Descricao;
+    var m = Model.Modelo!;
+}
+<div class="cabecalho-pagina">
+    <div>
+        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Automação</a>
+        <h1 class="mt-1">@(nova ? "Tornar recorrente" : "Factura recorrente")</h1>
+        <p>Na data marcada o sistema copia a factura modelo com a data do dia, os preços e as taxas de IVA em vigor. O documento original não muda.</p>
+    </div>
+    @if (!nova && Model.Existente!.Activa)
+    {
+        <form method="post" asp-page-handler="Executar" asp-route-id="@Model.Id"
+              data-confirmar="Gerar agora o próximo documento? A próxima data avança um período.">
+            <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-lightning me-1"></i>Gerar já</button>
+        </form>
+    }
+</div>
+
+<partial name="_ResumoErros" />
+
+<div class="row g-4">
+    <div class="col-xl-7">
+        <form method="post" class="painel" asp-route-id="@Model.Id" asp-route-documentoId="@Model.DocumentoId">
+            <div class="painel-corpo row g-3">
+                <div class="col-12">
+                    <label class="form-label" asp-for="Descricao">Descrição</label>
+                    <input class="form-control" asp-for="Descricao" maxlength="200" required />
+                    <div class="form-text">Para a reconhecer na lista, ex.: “Avença mensal de manutenção”.</div>
+                </div>
+                <div class="col-sm-6">
+                    <label class="form-label" asp-for="Periodicidade">Repetir</label>
+                    <select class="form-select" asp-for="Periodicidade">
+                        <option value="@Periodicidade.Semanal">Todas as semanas</option>
+                        <option value="@Periodicidade.Mensal">Todos os meses</option>
+                        <option value="@Periodicidade.Trimestral">De 3 em 3 meses</option>
+                        <option value="@Periodicidade.Anual">Todos os anos</option>
+                    </select>
+                </div>
+                <div class="col-sm-6">
+                    <label class="form-label" asp-for="ProximaData">Próxima factura em</label>
+                    <input class="form-control" asp-for="ProximaData" type="date" required />
+                </div>
+                <div class="col-sm-6">
+                    <label class="form-label" asp-for="DataFim">Termina em <span class="text-body-secondary">(opcional)</span></label>
+                    <input class="form-control" asp-for="DataFim" type="date" />
+                </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="EmitirAutomaticamente" id="emitirNao" value="false" checked="@(!Model.EmitirAutomaticamente)" />
+                        <label class="form-check-label" for="emitirNao">Criar rascunho para eu rever e emitir</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="EmitirAutomaticamente" id="emitirSim" value="true" checked="@Model.EmitirAutomaticamente" />
+                        <label class="form-check-label" for="emitirSim">Emitir automaticamente</label>
+                    </div>
+                    <div class="form-check ms-4 mt-1">
+                        <input class="form-check-input" type="checkbox" asp-for="EnviarEmail" />
+                        <label class="form-check-label" asp-for="EnviarEmail">Depois de emitir, enviar ao cliente por email</label>
+                    </div>
+                </div>
+                @if (!nova)
+                {
+                    <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" asp-for="Activa" />
+                            <label class="form-check-label" asp-for="Activa">Activa</label>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="painel-rodape d-flex justify-content-end">
+                <button class="btn btn-primary" type="submit"><i class="bi bi-check2 me-1"></i>@(nova ? "Criar recorrência" : "Guardar")</button>
+            </div>
+        </form>
+    </div>
+    <div class="col-xl-5">
+        <section class="painel">
+            <div class="painel-cabecalho"><h2>Factura modelo</h2></div>
+            <div class="painel-corpo">
+                <a asp-page="/Documentos/Detalhe" asp-route-id="@m.Id" class="doc-num text-decoration-none">@(m.NumeroFormatado ?? m.TipoDoc + " rascunho")</a>
+                <div class="mt-1">@m.ClienteNome</div>
+                <ul class="small text-body-secondary mt-2 mb-2 ps-3">
+                    @foreach (var l in m.Linhas.Take(5)) { <li>@l.Descricao</li> }
+                    @if (m.Linhas.Count > 5) { <li>e mais @(m.Linhas.Count - 5) linhas</li> }
+                </ul>
+                <div class="fw-semibold tabular">@Formato.Moeda(m.Total)</div>
+                @if (Model.Existente is { } r)
+                {
+                    <hr />
+                    <dl class="row small mb-0">
+                        <dt class="col-6 fw-normal text-body-secondary">Última execução</dt>
+                        <dd class="col-6 tabular">@(r.UltimaExecucao is { } u ? Formato.DataHora(u) : "Ainda não correu")</dd>
+                        @if (r.UltimoDocumentoId is { } ud)
+                        {
+                            <dt class="col-6 fw-normal text-body-secondary">Último documento</dt>
+                            <dd class="col-6"><a asp-page="/Documentos/Detalhe" asp-route-id="@ud">Abrir</a></dd>
+                        }
+                        @if (r.UltimoErro is not null)
+                        {
+                            <dt class="col-6 fw-normal text-body-secondary">Aviso</dt>
+                            <dd class="col-6 text-danger">@r.UltimoErro</dd>
+                        }
+                    </dl>
+                }
+            </div>
+        </section>
+    </div>
+</div>

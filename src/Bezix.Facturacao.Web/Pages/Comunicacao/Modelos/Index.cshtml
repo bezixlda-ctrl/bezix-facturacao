@@ -1,0 +1,35 @@
+@page
+@model Bezix.Facturacao.Web.Pages.Comunicacao.Modelos.IndexModel
+@{
+    ViewData["Title"] = "Modelos de email";
+}
+<div class="cabecalho-pagina">
+    <div>
+        <a asp-page="/Comunicacao/Emails" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Emails enviados</a>
+        <h1 class="mt-1">Modelos de email</h1>
+        <p>O texto que os clientes recebem. Use variáveis como <code>{cliente.nome}</code> ou <code>{documento.numero}</code>; são trocadas pelos dados reais no envio.</p>
+    </div>
+</div>
+
+@foreach (var g in Model.Modelos.GroupBy(m => Bezix.Facturacao.Web.Pages.Comunicacao.Modelos.IndexModel.Grupo(m.Codigo)))
+{
+    <section class="painel mb-4">
+        <div class="painel-cabecalho"><h2>@g.Key</h2></div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead><tr><th>Modelo</th><th>Assunto</th><th>Anexa PDF</th><th>Estado</th></tr></thead>
+                <tbody>
+                    @foreach (var m in g)
+                    {
+                        <tr>
+                            <td><a asp-page="Editar" asp-route-codigo="@m.Codigo" class="fw-semibold text-decoration-none">@m.Nome</a></td>
+                            <td class="text-body-secondary">@m.Assunto</td>
+                            <td>@(m.AnexarPdf ? "Sim" : "Não")</td>
+                            <td><span class="estado @(m.Activo ? "estado-activo" : "estado-inactivo")">@(m.Activo ? "Activo" : "Inactivo")</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}

@@ -21,6 +21,8 @@ public class DetalheModel(
     ServicoComunicacao comunicacao,
     Application.Recebimentos.ServicoContaCorrente contaCorrente,
     Application.Recebimentos.ServicoRecibos recibos,
+    ServicoLinks links,
+    Application.Automacao.ServicoLembretes lembretes,
     AppDbContext db) : PaginaBase
 {
     [BindProperty(SupportsGet = true)] public int Id { get; set; }
@@ -36,6 +38,11 @@ public class DetalheModel(
     public Application.Recebimentos.SituacaoDocumento? Situacao { get; private set; }
     public List<(int ReciboId, string Numero, DateOnly Data, decimal Valor)> Pagamentos { get; private set; } = [];
     public Application.Recebimentos.PagamentoVista? PagamentoDoRecibo { get; private set; }
+    public DateTime? VistoEm { get; private set; }
+    public List<Domain.Automacao.LembreteEnviado> Lembretes { get; private set; } = [];
+    public bool PodeLembrar => Situacao is { EmAberto: > 0 } && Documento.TipoDoc != TipoDocumento.FR && User.TemPermissao(Permissoes.Comunicacao.Enviar);
+    public bool PodeTornarRecorrente => Documento.Estado == EstadoDocumento.Emitido && Documento.TipoDoc is TipoDocumento.FT or TipoDocumento.FR
+        && User.TemPermissao(Permissoes.Automacao.Gerir);
     public bool PodeRegistarRecibo => Situacao is { EmAberto: > 0 } && User.TemPermissao(Permissoes.Recibos.Registar);
 
     // Envio por email
@@ -158,6 +165,8 @@ public class DetalheModel(
         Convertidos = await documentos.ConvertidosEmAsync(Id);
         Aprovacoes = await emissao.AprovacoesDoDocumentoAsync(Id);
         Emails = await comunicacao.HistoricoDocumentoAsync(Id);
+        VistoEm = await links.VistoEmAsync(Id);
+        Lembretes = await lembretes.HistoricoAsync(Id);
         if (RegrasTipo.OrigemValida(TipoDocumento.NC, d.TipoDoc) && d.Estado == EstadoDocumento.Emitido)
             PorCreditar = await documentos.ValorPorCreditarAsync(Id);
         Situacao = (await contaCorrente.SituacaoAsync([Id])).GetValueOrDefault(Id);

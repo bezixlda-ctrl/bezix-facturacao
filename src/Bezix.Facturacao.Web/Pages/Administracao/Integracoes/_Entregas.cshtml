@@ -1,0 +1,41 @@
+@model Bezix.Facturacao.Web.Pages.Administracao.Integracoes.VistaEntregas
+@using Bezix.Facturacao.Domain.Integracoes
+@if (Model.Entregas.Count == 0)
+{
+    <div class="vazio"><i class="bi bi-broadcast"></i><p class="mb-0">Sem entregas.</p></div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-sm mb-0">
+            <thead><tr><th>Criado</th>@if (Model.MostrarDestino) { <th>Destino</th> }<th>Evento</th><th>Estado</th><th>Resposta</th><th><span class="visually-hidden">Acções</span></th></tr></thead>
+            <tbody>
+                @foreach (var e in Model.Entregas)
+                {
+                    <tr>
+                        <td class="tabular text-nowrap">@Formato.DataHora(e.CreatedAt)</td>
+                        @if (Model.MostrarDestino) { <td><a asp-page="Webhook" asp-route-id="@e.SubscricaoId">@e.Subscricao?.Nome</a></td> }
+                        <td><code class="small">@e.Evento</code></td>
+                        <td class="text-nowrap">
+                            @switch (e.Estado)
+                            {
+                                case EstadoEntrega.Entregue: <span class="estado estado-pago">Entregue</span> break;
+                                case EstadoEntrega.Pendente: <span class="estado estado-rascunho">Pendente@(e.Tentativas > 0 ? $" · {e.Tentativas}ª falhou" : "")</span> break;
+                                default: <span class="estado estado-vencido">Falhou (@e.Tentativas tentativas)</span> break;
+                            }
+                        </td>
+                        <td class="small text-break">@(e.CodigoResposta?.ToString() ?? "—") @(e.Resposta is { Length: > 0 } r ? (r.Length > 120 ? r[..120] + "…" : r) : "")</td>
+                        <td class="text-end">
+                            @if (e.Estado == EstadoEntrega.Falhou)
+                            {
+                                <form method="post" asp-page="@Model.Pagina" asp-page-handler="Reenviar" asp-route-id="@e.SubscricaoId" asp-route-entrega="@e.Id">
+                                    <button class="btn btn-sm btn-outline-secondary" type="submit">Reenviar</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

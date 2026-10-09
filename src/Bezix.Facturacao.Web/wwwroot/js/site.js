@@ -80,4 +80,16 @@
             img.hidden = false;
         });
     });
+
+    // Copiar para a área de transferência: <button data-copiar="#campo">.
+    document.addEventListener("click", function (e) {
+        var botao = e.target.closest("[data-copiar]");
+        if (!botao) return;
+        var campo = document.querySelector(botao.getAttribute("data-copiar"));
+        if (!campo) return;
+        campo.select();
+        (navigator.clipboard ? navigator.clipboard.writeText(campo.value) : Promise.reject()).then(function () {
+            botao.innerHTML = '<i class="bi bi-check2 me-1"></i>Copiado';
+        }, function () { document.execCommand("copy"); });
+    });
 })();

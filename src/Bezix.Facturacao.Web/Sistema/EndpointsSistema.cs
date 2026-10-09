@@ -23,15 +23,14 @@ public static class EndpointsSistema
         // para correr lembretes, recorrentes, webhooks e backups. O Scheduled Task Tool só faz GET e não
         // envia cabeçalhos, por isso o token também é aceite na query string.
         app.MapMethods("/internal/jobs/tick", ["GET", "POST"], async (HttpContext http, Microsoft.Extensions.Options.IOptions<OpcoesJobs> opcoes,
-            Application.Comunicacao.ServicoComunicacao comunicacao, ILogger<OpcoesJobs> log) =>
+            Application.Automacao.ServicoTarefas tarefas, ILogger<OpcoesJobs> log) =>
         {
             if (!TokenValido(http, opcoes.Value.Token)) return Results.NotFound();
 
             var inicio = DateTime.UtcNow;
-            var emails = await comunicacao.ProcessarPendentesAsync(http.RequestAborted);
-            // Fase 5: lembretes, recorrentes, webhooks pendentes, backup lógico.
-            log.LogInformation("jobs/tick executado: {Emails} emails tentados.", emails);
-            return Results.Ok(new { executadoEm = inicio, emailsTentados = emails });
+            var resultados = await tarefas.ExecutarAsync(http.RequestAborted);
+            log.LogInformation("jobs/tick executado: {Resultados}", string.Join("; ", resultados.Select(r => $"{r.Tarefa}: {r.Resultado}")));
+            return Results.Ok(new { executadoEm = inicio, tarefas = resultados });
         }).AllowAnonymous().DisableAntiforgery();
 
         // Logótipo servido a partir de App_Data (fora de wwwroot). Público: aparece no ecrã de entrada

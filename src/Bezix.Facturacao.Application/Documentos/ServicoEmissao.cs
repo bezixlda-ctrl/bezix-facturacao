@@ -4,6 +4,7 @@ using Bezix.Facturacao.Application.Configuracao;
 using Bezix.Facturacao.Domain.Clientes;
 using Bezix.Facturacao.Domain.Configuracao;
 using Bezix.Facturacao.Domain.Documentos;
+using Bezix.Facturacao.Domain.Integracoes;
 using Bezix.Facturacao.Domain.Seguranca;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -24,6 +25,7 @@ public sealed class ServicoEmissao(
     ServicoEmpresa empresas,
     ServicoPdfDocumentos pdfs,
     IServicoAuditoria auditoria,
+    IPublicadorEventos eventos,
     TimeProvider relogio,
     ILogger<ServicoEmissao> log)
 {
@@ -132,6 +134,7 @@ public sealed class ServicoEmissao(
                 doc.NumeroFormatado, Tipo = doc.TipoDoc.ToString(), doc.ClienteNome, doc.ClienteNuit, doc.Moeda, doc.Cambio,
                 doc.Total, doc.TotalMzn, doc.Hash, Aprovado = pendentes.Count > 0,
             });
+            eventos.Publicar(EventosWebhook.DocumentoEmitido, DadosEvento(doc));
             await db.SaveChangesAsync(c);
             return new ResultadoEmissao(ResultadoEmissaoTipo.Emitido, Resultado.Ok(), doc.NumeroFormatado);
         }, ct);
@@ -205,6 +208,13 @@ public sealed class ServicoEmissao(
         }
         return erros.Distinct().ToList();
     }
+
+    public sealed record EventoDocumento(int id, string tipo, string? numero, string estado, DateOnly data, DateOnly? vencimento, int clienteId,
+        string clienteNome, string? clienteNuit, string moeda, decimal subtotal, decimal totalIva, decimal total, int? documentoOrigemId, string? motivoAnulacao = null);
+
+    /// <summary>Dados enviados nos webhooks de documentos (os mesmos campos que a API devolve).</summary>
+    public static EventoDocumento DadosEvento(Documento d) => new(d.Id, d.TipoDoc.ToString(), d.NumeroFormatado, d.Estado.ToString(), d.Data, d.Vencimento,
+        d.ClienteId, d.ClienteNome, d.ClienteNuit, d.Moeda, d.BaseTributavel, d.TotalIva, d.Total, d.DocOrigemId);
 
     // ------------------------------------------------------------------ Aprovações
 
@@ -284,6 +294,7 @@ public sealed class ServicoEmissao(
         doc.AnuladoPor = utilizador.Email;
         doc.MotivoAnulacao = motivo.Trim();
         auditoria.Registar(nameof(Documento), id.ToString(), "Documento.Anular", null, new { doc.NumeroFormatado, Motivo = doc.MotivoAnulacao, doc.Total, doc.Moeda });
+        eventos.Publicar(EventosWebhook.DocumentoAnulado, DadosEvento(doc) with { motivoAnulacao = doc.MotivoAnulacao });
         await db.SaveChangesAsync(ct);
         return Resultado.Ok();
     }

@@ -1,0 +1,17 @@
+@model List<string>
+@using Bezix.Facturacao.Domain.Integracoes
+@using Bezix.Facturacao.Web.Pages.Administracao.Integracoes
+<fieldset class="mb-3">
+    <legend class="form-label fs-6">Eventos</legend>
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" name="Eventos" value="*" id="ev-todos" checked="@Model.Contains("*")" />
+        <label class="form-check-label" for="ev-todos">Todos, incluindo os que vierem a ser criados</label>
+    </div>
+    @foreach (var e in EventosWebhook.Todos)
+    {
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="Eventos" value="@e" id="ev-@e.Replace('.', '-')" checked="@Model.Contains(e)" />
+            <label class="form-check-label" for="ev-@e.Replace('.', '-')">@IndexModel.NomeEvento(e) <code class="small">@e</code></label>
+        </div>
+    }
+</fieldset>

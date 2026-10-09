@@ -4,20 +4,28 @@ using Bezix.Facturacao.Domain.Seguranca;
 
 namespace Bezix.Facturacao.Web.Seguranca;
 
-public sealed class UtilizadorActual(IHttpContextAccessor acessor) : IUtilizadorActual
+public sealed class UtilizadorActual(IHttpContextAccessor acessor, IContextoSistema? sistema = null) : IUtilizadorActual
 {
     private ClaimsPrincipal? Principal => acessor.HttpContext?.User;
+    private bool Sistema => sistema?.Activo == true;
 
-    public string? Id => Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
-    public string? Email => Principal?.Identity?.IsAuthenticated == true ? Principal.FindFirstValue(ClaimTypes.Email) ?? Principal.Identity.Name : null;
+    public string? Id => Sistema ? null : Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+    public string? Email => Sistema ? "sistema" : Principal?.Identity?.IsAuthenticated == true ? Principal.FindFirstValue(ClaimTypes.Email) ?? Principal.Identity.Name : null;
     public string? Ip => acessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
-    public string? Nome => Principal?.Identity?.IsAuthenticated == true ? Principal.NomeVisivel() : null;
+    public string? Nome => Sistema ? "Sistema" : Principal?.Identity?.IsAuthenticated == true ? Principal.NomeVisivel() : null;
 
-    public decimal? DescontoMaximoPct =>
+    public decimal? DescontoMaximoPct => Sistema ? null :
         decimal.TryParse(Principal?.FindFirstValue(ClaimsPrincipalExtensions.ClaimDescontoMaximo), System.Globalization.NumberStyles.Number,
             System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : null;
 
-    public bool TemPermissao(string permissao) => Principal?.TemPermissao(permissao) == true;
+    /// <summary>Em nome do sistema (tarefas automáticas) tem todas as permissões; fica registado como "sistema" na auditoria.</summary>
+    public bool TemPermissao(string permissao) => Sistema || Principal?.TemPermissao(permissao) == true;
+}
+
+/// <summary>Endereço do pedido actual (https://servidor), usado nos links quando não há "URL pública" configurada.</summary>
+public sealed class EnderecoPublico(IHttpContextAccessor acessor) : IEnderecoPublico
+{
+    public string? Base => acessor.HttpContext?.Request is { } r ? $"{r.Scheme}://{r.Host}{r.PathBase}" : null;
 }
 
 public static class ClaimsPrincipalExtensions

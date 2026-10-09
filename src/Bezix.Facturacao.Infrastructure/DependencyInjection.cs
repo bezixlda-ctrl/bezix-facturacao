@@ -1,5 +1,9 @@
 using Bezix.Facturacao.Application.Abstracoes;
 using Bezix.Facturacao.Application.Artigos;
+using Bezix.Facturacao.Application.Automacao;
+using Bezix.Facturacao.Application.Integracoes;
+using Bezix.Facturacao.Application.Painel;
+using Bezix.Facturacao.Infrastructure.Integracoes;
 using Bezix.Facturacao.Application.Clientes;
 using Bezix.Facturacao.Application.Comunicacao;
 using Bezix.Facturacao.Application.Configuracao;
@@ -56,6 +60,18 @@ public static class DependencyInjection
                 : new EnviadorSmtp(opcoes);
         });
         services.AddScoped<IServicoAuditoria, ServicoAuditoria>();
+        services.AddScoped<IContextoSistema, ContextoSistema>();
+        services.AddScoped<IAssinaturas, Assinaturas>();
+        services.AddSingleton<IProtecaoSegredos, ProtecaoSegredos>();
+        services.AddHttpClient(EnviadorWebhookHttp.NomeCliente, c =>
+        {
+            c.Timeout = TimeSpan.FromSeconds(10);
+            c.DefaultRequestHeaders.UserAgent.ParseAdd("Bezix-Facturacao-Webhooks/1.0");
+        });
+        services.AddSingleton<IEnviadorWebhook, EnviadorWebhookHttp>();
+        services.AddSingleton<SinalFilas>();
+        services.AddSingleton<ISinalFilas>(sp => sp.GetRequiredService<SinalFilas>());
+        services.AddHostedService<ProcessadorFilas>();
         services.AddScoped<InicializadorBaseDados>();
 
         services.AddScoped<ServicoEmpresa>();
@@ -72,6 +88,15 @@ public static class DependencyInjection
         services.AddScoped<ServicoComunicacao>();
         services.AddScoped<ServicoContaCorrente>();
         services.AddScoped<ServicoRecibos>();
+        services.AddScoped<ServicoPagamentosComunicados>();
+        services.AddScoped<ServicoLinks>();
+        services.AddScoped<ServicoPainel>();
+        services.AddScoped<ServicoWebhooks>();
+        services.AddScoped<IPublicadorEventos>(sp => sp.GetRequiredService<ServicoWebhooks>());
+        services.AddScoped<ServicoChavesApi>();
+        services.AddScoped<ServicoLembretes>();
+        services.AddScoped<ServicoRecorrencias>();
+        services.AddScoped<ServicoTarefas>();
         services.AddScoped<ServicoUtilizadores>();
         services.AddScoped<ServicoPerfis>();
         return services;

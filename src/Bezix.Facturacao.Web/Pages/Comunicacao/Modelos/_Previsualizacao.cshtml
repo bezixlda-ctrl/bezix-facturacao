@@ -1,0 +1,6 @@
+@model Bezix.Facturacao.Web.Pages.Comunicacao.Modelos.EditarModel
+<div class="previsao-email">
+    <div class="small text-body-secondary mb-1">@(Model.Origem is null ? "Com dados de exemplo" : $"Com os dados de {Model.Origem}")</div>
+    <div class="fw-semibold border-bottom pb-2 mb-2">@Model.AssuntoPrevisto</div>
+    <div class="small">@Html.Raw(Model.CorpoPrevisto)</div>
+</div>

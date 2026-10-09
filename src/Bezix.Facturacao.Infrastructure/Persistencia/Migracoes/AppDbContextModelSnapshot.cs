@@ -133,6 +133,208 @@ namespace Bezix.Facturacao.Infrastructure.Persistencia.Migracoes
                     b.ToTable("Auditoria", (string)null);
                 });
 
+            modelBuilder.Entity("Bezix.Facturacao.Domain.Automacao.ExecucaoTarefa", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Erro")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime>("Fim")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Inicio")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Resultado")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<bool>("Sucesso")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Tarefa")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Inicio");
+
+                    b.ToTable("ExecucoesTarefas", (string)null);
+                });
+
+            modelBuilder.Entity("Bezix.Facturacao.Domain.Automacao.LembreteEnviado", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("DocumentoId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("EmailId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("EnviadoEm")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EnviadoPor")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentoId", "Tipo");
+
+                    b.ToTable("LembretesEnviados", (string)null);
+                });
+
+            modelBuilder.Entity("Bezix.Facturacao.Domain.Automacao.MarcaUnica", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Chave")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Chave")
+                        .IsUnique();
+
+                    b.ToTable("MarcasUnicas", (string)null);
+                });
+
+            modelBuilder.Entity("Bezix.Facturacao.Domain.Automacao.PlanoLembretes", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<int>("DiasAntes")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DiasDepois")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("HoraEnvio")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxAvisos")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("SoDiasUteis")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PlanoLembretes", (string)null);
+                });
+
+            modelBuilder.Entity("Bezix.Facturacao.Domain.Automacao.Recorrencia", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activa")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ClienteId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateOnly?>("DataFim")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Descricao")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("EmitirAutomaticamente")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("EnviarEmail")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("ModeloDocumentoId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Periodicidade")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateOnly>("ProximaData")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("UltimaExecucao")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("UltimoDocumentoId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UltimoErro")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ModeloDocumentoId");
+
+                    b.HasIndex("Activa", "ProximaData");
+
+                    b.ToTable("Recorrencias", (string)null);
+                });
+
             modelBuilder.Entity("Bezix.Facturacao.Domain.Clientes.Actividade", b =>
                 {
                     b.Property<int>("Id")
@@ -381,6 +583,61 @@ namespace Bezix.Facturacao.Infrastructure.Persistencia.Migracoes
                     b.ToTable("EmailFila", (string)null);
                 });
 
+            modelBuilder.Entity("Bezix.Facturacao.Domain.Comunicacao.LinkPartilha", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClienteId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<int>("DocumentoId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ExpiraEm")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("PrimeiraVisita")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("RevogadoEm")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<DateTime?>("UltimaVisita")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Visitas")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentoId");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.ToTable("LinksPartilha", (string)null);
+                });
+
             modelBuilder.Entity("Bezix.Facturacao.Domain.Comunicacao.ModeloComunicacao", b =>
                 {
                     b.Property<int>("Id")
@@ -442,6 +699,88 @@ namespace Bezix.Facturacao.Infrastructure.Persistencia.Migracoes
                     b.ToTable("ModelosComunicacao", (string)null);
                 });
 
+            modelBuilder.Entity("Bezix.Facturacao.Domain.Comunicacao.PagamentoComunicado", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClienteId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ComprovativoPath")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("ComprovativoTipo")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateOnly>("Data")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("DecididoEm")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DecididoPor")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<int?>("DocumentoId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Ip")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Mensagem")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("MotivoRejeicao")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("ReciboId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Referencia")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("Valor")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClienteId");
+
+                    b.HasIndex("Estado", "CreatedAt");
+
+                    b.ToTable("PagamentosComunicados", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_PagamentosComunicados_Valor", "[Valor] > 0");
+                        });
+                });
+
             modelBuilder.Entity("Bezix.Facturacao.Domain.Configuracao.ContaBancaria", b =>
                 {
                     b.Property<int>("Id")
@@ -498,6 +837,10 @@ namespace Bezix.Facturacao.Infrastructure.Persistencia.Migracoes
                     b.Property<int>("Id")
                         .HasColumnType("int");
 
+                    b.Property<string>("AssinaturaEmail")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<string>("Cidade")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -513,6 +856,9 @@ namespace Bezix.Facturacao.Infrastructure.Persistencia.Migracoes
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
+
+                    b.Property<int>("DiasValidadeLink")
+                        .HasColumnType("int");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
@@ -580,6 +926,10 @@ namespace Bezix.Facturacao.Infrastructure.Persistencia.Migracoes
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("UrlPublica")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Id");
 
@@ -1197,6 +1547,220 @@ namespace Bezix.Facturacao.Infrastructure.Persistencia.Migracoes
                         });
                 });
 
+            modelBuilder.Entity("Bezix.Facturacao.Domain.Integracoes.ChaveApi", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("Escopos")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("HashChave")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Prefixo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<DateTime?>("RevogadaEm")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UltimoUso")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Prefixo")
+                        .IsUnique();
+
+                    b.ToTable("ChavesApi", (string)null);
+                });
+
+            modelBuilder.Entity("Bezix.Facturacao.Domain.Integracoes.PedidoIdempotente", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Chave")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("ChaveApiId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CodigoResposta")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("HashCorpo")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("Resposta")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Rota")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("ChaveApiId", "Chave")
+                        .IsUnique();
+
+                    b.ToTable("PedidosIdempotentes", (string)null);
+                });
+
+            modelBuilder.Entity("Bezix.Facturacao.Domain.Integracoes.WebhookEntrega", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<int?>("CodigoResposta")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("EntregueEm")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Estado")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Evento")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("EventoId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ProximaTentativa")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Resposta")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("SubscricaoId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Tentativas")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Estado", "ProximaTentativa");
+
+                    b.HasIndex("SubscricaoId", "CreatedAt");
+
+                    b.ToTable("WebhookEntregas", (string)null);
+                });
+
+            modelBuilder.Entity("Bezix.Facturacao.Domain.Integracoes.WebhookSubscricao", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Activa")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTime?>("DesactivadaEm")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Eventos")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("FalhasSeguidas")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MotivoDesactivacao")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("SegredoCifrado")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("WebhookSubscricoes", (string)null);
+                });
+
             modelBuilder.Entity("Bezix.Facturacao.Domain.Recebimentos.Pagamento", b =>
                 {
                     b.Property<int>("Id")
@@ -1593,6 +2157,15 @@ namespace Bezix.Facturacao.Infrastructure.Persistencia.Migracoes
                     b.ToTable("UtilizadorTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Bezix.Facturacao.Domain.Automacao.Recorrencia", b =>
+                {
+                    b.HasOne("Bezix.Facturacao.Domain.Documentos.Documento", null)
+                        .WithMany()
+                        .HasForeignKey("ModeloDocumentoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Bezix.Facturacao.Domain.Clientes.Actividade", b =>
                 {
                     b.HasOne("Bezix.Facturacao.Domain.Clientes.Cliente", "Cliente")
@@ -1602,6 +2175,24 @@ namespace Bezix.Facturacao.Infrastructure.Persistencia.Migracoes
                         .IsRequired();
 
                     b.Navigation("Cliente");
+                });
+
+            modelBuilder.Entity("Bezix.Facturacao.Domain.Comunicacao.LinkPartilha", b =>
+                {
+                    b.HasOne("Bezix.Facturacao.Domain.Documentos.Documento", null)
+                        .WithMany()
+                        .HasForeignKey("DocumentoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Bezix.Facturacao.Domain.Comunicacao.PagamentoComunicado", b =>
+                {
+                    b.HasOne("Bezix.Facturacao.Domain.Clientes.Cliente", null)
+                        .WithMany()
+                        .HasForeignKey("ClienteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Bezix.Facturacao.Domain.Documentos.Aprovacao", b =>
@@ -1672,6 +2263,17 @@ namespace Bezix.Facturacao.Infrastructure.Persistencia.Migracoes
                         .IsRequired();
 
                     b.Navigation("Origem");
+                });
+
+            modelBuilder.Entity("Bezix.Facturacao.Domain.Integracoes.WebhookEntrega", b =>
+                {
+                    b.HasOne("Bezix.Facturacao.Domain.Integracoes.WebhookSubscricao", "Subscricao")
+                        .WithMany()
+                        .HasForeignKey("SubscricaoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Subscricao");
                 });
 
             modelBuilder.Entity("Bezix.Facturacao.Domain.Recebimentos.Pagamento", b =>

@@ -1,0 +1,147 @@
+@page
+@model Bezix.Facturacao.Web.Pages.Automacao.IndexModel
+@using Bezix.Facturacao.Web.Pages.Automacao
+@{
+    ViewData["Title"] = "Automação";
+}
+<div class="cabecalho-pagina">
+    <div>
+        <h1>Automação</h1>
+        <p>O que o sistema faz sozinho: lembretes de pagamento, facturas recorrentes, repetição de emails e notificações a outros sistemas.</p>
+    </div>
+    @if (Model.PodeGerir)
+    {
+        <form method="post" asp-page-handler="Executar">
+            <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-play-circle me-1"></i>Executar tarefas agora</button>
+        </form>
+    }
+</div>
+
+<partial name="_ResumoErros" />
+
+<div class="row g-4">
+    <div class="col-xl-5">
+        <form method="post" asp-page-handler="Lembretes" class="painel">
+            <div class="painel-cabecalho"><h2>Lembretes de pagamento</h2></div>
+            <fieldset class="painel-corpo row g-3" disabled="@(!Model.PodeGerir)">
+                <div class="col-12">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" asp-for="Activo" />
+                        <label class="form-check-label" asp-for="Activo">Enviar lembretes automaticamente</label>
+                    </div>
+                    <div class="form-text">Só para facturas com email do cliente e valor em aberto. Cada aviso sai uma vez por factura.</div>
+                </div>
+                <div class="col-sm-6">
+                    <label class="form-label" asp-for="DiasAntes">Aviso antes do vencimento</label>
+                    <div class="input-group">
+                        <input class="form-control" asp-for="DiasAntes" type="number" min="0" max="60" />
+                        <span class="input-group-text">dias</span>
+                    </div>
+                    <div class="form-text">0 = não avisar antes.</div>
+                </div>
+                <div class="col-sm-6">
+                    <label class="form-label" asp-for="DiasDepois">Avisos depois do vencimento</label>
+                    <input class="form-control" asp-for="DiasDepois" placeholder="1, 15, 30" />
+                    <div class="form-text">Dias de atraso, separados por vírgulas.</div>
+                </div>
+                <div class="col-sm-6">
+                    <label class="form-label" asp-for="MaxAvisos">Máximo de avisos de atraso</label>
+                    <input class="form-control" asp-for="MaxAvisos" type="number" min="0" max="3" />
+                </div>
+                <div class="col-sm-6">
+                    <label class="form-label" asp-for="HoraEnvio">Enviar a partir das</label>
+                    <div class="input-group">
+                        <input class="form-control" asp-for="HoraEnvio" type="number" min="0" max="23" />
+                        <span class="input-group-text">h (Maputo)</span>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" asp-for="SoDiasUteis" />
+                        <label class="form-check-label" asp-for="SoDiasUteis">Só em dias úteis (segunda a sexta)</label>
+                    </div>
+                </div>
+            </fieldset>
+            @if (Model.PodeGerir)
+            {
+                <div class="painel-rodape d-flex justify-content-between align-items-center gap-2">
+                    @if (User.TemPermissao(Permissoes.Comunicacao.GerirModelos))
+                    {
+                        <a class="small" asp-page="/Comunicacao/Modelos/Index">Editar o texto dos lembretes</a>
+                    }
+                    else { <span></span> }
+                    <button class="btn btn-primary" type="submit"><i class="bi bi-check2 me-1"></i>Guardar plano</button>
+                </div>
+            }
+        </form>
+    </div>
+
+    <div class="col-xl-7">
+        <section class="painel mb-4">
+            <div class="painel-cabecalho"><h2>Facturas recorrentes</h2></div>
+            @if (Model.Recorrencias.Count == 0)
+            {
+                <div class="vazio">
+                    <i class="bi bi-arrow-repeat"></i>
+                    <p class="mb-0">Sem facturas recorrentes. Para criar uma, abra uma factura emitida e escolha <strong>Tornar recorrente</strong>.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead><tr><th>Descrição</th><th>Cliente</th><th>Repete</th><th>Próxima</th><th class="num">Valor</th><th>Estado</th></tr></thead>
+                        <tbody>
+                            @foreach (var v in Model.Recorrencias)
+                            {
+                                var r = v.Recorrencia;
+                                <tr>
+                                    <td>
+                                        <a asp-page="Recorrencia" asp-route-id="@r.Id" class="fw-semibold text-decoration-none">@r.Descricao</a>
+                                        <div class="small text-body-secondary">@(r.EmitirAutomaticamente ? (r.EnviarEmail ? "Emite e envia ao cliente" : "Emite sem enviar") : "Cria rascunho para rever")</div>
+                                        @if (r.UltimoErro is not null) { <div class="small text-danger">@r.UltimoErro</div> }
+                                    </td>
+                                    <td>@v.Cliente</td>
+                                    <td>@IndexModel.Periodicidade(r.Periodicidade)</td>
+                                    <td class="tabular">@(r.Activa ? Formato.Data(r.ProximaData) : "—")</td>
+                                    <td class="num">@Formato.Numero(v.Total)</td>
+                                    <td><span class="estado @(r.Activa ? "estado-activo" : "estado-inactivo")">@(r.Activa ? "Activa" : "Parada")</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+
+        <section class="painel">
+            <div class="painel-cabecalho"><h2>Últimas execuções</h2></div>
+            @if (Model.Historico.Count == 0)
+            {
+                <div class="vazio">
+                    <i class="bi bi-clock"></i>
+                    <p class="mb-0">As tarefas ainda não correram. No servidor, configure uma chamada a <code>/internal/jobs/tick</code> de 5 em 5 minutos (ver instalação).</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>Quando</th><th>Tarefa</th><th>Resultado</th><th class="num">Duração</th></tr></thead>
+                        <tbody>
+                            @foreach (var e in Model.Historico)
+                            {
+                                <tr>
+                                    <td class="tabular text-nowrap">@Formato.DataHora(e.Inicio)</td>
+                                    <td>@e.Tarefa</td>
+                                    <td class="@(e.Sucesso ? "" : "text-danger")">@(e.Sucesso ? e.Resultado : e.Erro)</td>
+                                    <td class="num">@((int)(e.Fim - e.Inicio).TotalMilliseconds) ms</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    </div>
+</div>

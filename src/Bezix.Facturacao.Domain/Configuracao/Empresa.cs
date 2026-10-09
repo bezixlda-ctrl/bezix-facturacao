@@ -39,6 +39,15 @@ public class Empresa : Entidade
     /// os clientes e documentos de que são responsáveis.
     /// </summary>
     public bool RestringirAosProprios { get; set; }
+
+    /// <summary>Assinatura usada nos emails quando o utilizador não tem assinatura própria (variável {assinatura}).</summary>
+    public string? AssinaturaEmail { get; set; }
+
+    /// <summary>Endereço público do sistema (ex.: https://facturacao.bezix.co.mz), usado nos links enviados aos clientes.</summary>
+    public string? UrlPublica { get; set; }
+
+    /// <summary>Dias de validade dos links seguros enviados aos clientes.</summary>
+    public int DiasValidadeLink { get; set; } = 90;
 }
 
 public enum ModoArredondamentoIva

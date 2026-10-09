@@ -48,6 +48,7 @@ public sealed partial class ServicoClientes(
     IUtilizadorActual utilizador,
     ServicoEmpresa empresas,
     IServicoAuditoria auditoria,
+    IPublicadorEventos eventos,
     TimeProvider relogio)
 {
     public const string MensagemNuitDuplicado = "Já existe outro cliente com este NUIT.";
@@ -159,6 +160,7 @@ public sealed partial class ServicoClientes(
         Aplicar(cliente, dados, nuit);
         await db.SaveChangesAsync(ct);
         auditoria.Registar(nameof(Cliente), cliente.Id.ToString(), id is null ? "Cliente.Criar" : "Cliente.Alterar", antes, Instantaneo(cliente));
+        if (id is null) eventos.Publicar(Domain.Integracoes.EventosWebhook.ClienteCriado, DadosEvento(cliente));
         await db.SaveChangesAsync(ct);
         return new(Resultado.Ok(), cliente.Id, duplicados);
     }
@@ -212,6 +214,11 @@ public sealed partial class ServicoClientes(
         await db.SaveChangesAsync(ct);
         return Resultado.Ok();
     }
+
+    public static object DadosEvento(Cliente c) => new
+    {
+        id = c.Id, nome = c.Nome, tipo = c.Tipo.ToString(), nuit = c.Nuit, email = c.Email, telefone = c.Telefone ?? c.Celular, cidade = c.Cidade,
+    };
 
     // ---------- Regras ----------
 

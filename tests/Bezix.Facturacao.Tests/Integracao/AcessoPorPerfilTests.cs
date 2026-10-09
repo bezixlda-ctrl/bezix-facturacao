@@ -46,6 +46,16 @@ public class AcessoPorPerfilTests(AplicacaoFactory app)
         Linha("/Recibos/Novo", PerfisPadrao.Administrador, PerfisPadrao.Gestor, PerfisPadrao.Tesouraria);
         Linha("/ContaCorrente", PerfisPadrao.Todos.Select(p => p.Nome).ToArray());
         Linha("/ContaCorrente/Antiguidade", PerfisPadrao.Todos.Select(p => p.Nome).ToArray());
+
+        // Fase 5: comunicação, automação e integrações
+        Linha("/Comunicacao/Emails", PerfisPadrao.Administrador, PerfisPadrao.Gestor, PerfisPadrao.Facturador, PerfisPadrao.Tesouraria);
+        Linha("/Comunicacao/Modelos", PerfisPadrao.Administrador, PerfisPadrao.Gestor);
+        Linha("/Comunicacao/Modelos/Editar/documento.FT", PerfisPadrao.Administrador, PerfisPadrao.Gestor);
+        Linha("/Recibos/Comunicados", PerfisPadrao.Administrador, PerfisPadrao.Gestor, PerfisPadrao.Tesouraria);
+        Linha("/ContaCorrente/Cobrancas", PerfisPadrao.Administrador, PerfisPadrao.Gestor, PerfisPadrao.Facturador, PerfisPadrao.Tesouraria);
+        Linha("/Automacao", PerfisPadrao.Administrador, PerfisPadrao.Gestor, PerfisPadrao.Facturador, PerfisPadrao.Tesouraria);
+        Linha("/Administracao/Integracoes", PerfisPadrao.Administrador);
+        Linha("/Administracao/Integracoes/Entregas", PerfisPadrao.Administrador);
         return d;
     }
 

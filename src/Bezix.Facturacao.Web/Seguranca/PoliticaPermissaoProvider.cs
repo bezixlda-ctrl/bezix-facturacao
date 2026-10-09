@@ -17,6 +17,11 @@ public sealed class PoliticaPermissaoProvider(IOptions<AuthorizationOptions> opc
     {
         if (Permissoes.Existe(nome))
             return new AuthorizationPolicyBuilder().RequireAuthenticatedUser().RequireClaim(Permissoes.ClaimType, nome).Build();
+
+        // API v1: "escopo:documentos:emitir" exige a chave de API com esse escopo.
+        if (nome.StartsWith("escopo:", StringComparison.Ordinal) && EscoposApi.Existe(nome["escopo:".Length..]))
+            return new AuthorizationPolicyBuilder(Api.AutenticacaoApi.Esquema)
+                .RequireAuthenticatedUser().RequireClaim(Api.AutenticacaoApi.ClaimEscopo, nome["escopo:".Length..]).Build();
         return await base.GetPolicyAsync(nome);
     }
 }

@@ -1,0 +1,56 @@
+@page
+@model Bezix.Facturacao.Web.Pages.ContaCorrente.CobrancasModel
+@{
+    ViewData["Title"] = "Cobranças";
+}
+<div class="cabecalho-pagina">
+    <div>
+        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Conta corrente</a>
+        <h1 class="mt-1">Cobranças</h1>
+        <p>Clientes com facturas vencidas. Escolha a quem enviar o extracto dos últimos 12 meses, com o modelo de email “Extracto”.</p>
+    </div>
+</div>
+
+<form method="post" asp-page-handler="Enviar" asp-route-p="@Model.NumeroPagina" class="painel"
+      data-confirmar="Enviar o extracto de conta corrente aos clientes escolhidos?">
+    @if (Model.Resultado.Total == 0)
+    {
+        <div class="vazio"><i class="bi bi-emoji-smile"></i><p class="mb-0">Nenhum cliente tem facturas vencidas.</p></div>
+    }
+    else
+    {
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 p-3 border-bottom">
+            <div class="form-check mb-0">
+                <input class="form-check-input" type="checkbox" id="todos" />
+                <label class="form-check-label" for="todos">Escolher todos nesta página</label>
+            </div>
+            <button class="btn btn-primary" type="submit"><i class="bi bi-envelope me-1"></i>Enviar extractos</button>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead><tr><th><span class="visually-hidden">Escolher</span></th><th>Cliente</th><th class="num">Vencido</th><th class="num">Saldo total</th><th>Vencida desde</th></tr></thead>
+                <tbody>
+                    @foreach (var c in Model.Resultado.Itens)
+                    {
+                        var dias = c.VencimentoMaisAntigo is { } v ? Model.Hoje.DayNumber - v.DayNumber : 0;
+                        <tr>
+                            <td><input class="form-check-input escolher" type="checkbox" name="Seleccionados" value="@c.ClienteId" aria-label="Escolher @c.Nome" /></td>
+                            <td><a asp-page="Cliente" asp-route-id="@c.ClienteId" class="text-reset fw-semibold">@c.Nome</a><div class="small text-body-secondary">NUIT @(c.Nuit ?? "—")</div></td>
+                            <td class="num text-danger fw-semibold">@Formato.Numero(c.Vencido)</td>
+                            <td class="num">@Formato.Numero(c.Saldo)</td>
+                            <td class="tabular">@(c.VencimentoMaisAntigo is { } d ? Formato.Data(d) : "")<span class="small text-body-secondary d-block">@dias dias</span></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <partial name="_Paginacao" model="Model.Paginacao" />
+    }
+</form>
+
+@section Scripts {
+    <script>
+        document.getElementById('todos')?.addEventListener('change', e =>
+            document.querySelectorAll('.escolher').forEach(c => c.checked = e.target.checked));
+    </script>
+}

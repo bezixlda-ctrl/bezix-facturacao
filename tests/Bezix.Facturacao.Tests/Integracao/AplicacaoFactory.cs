@@ -38,8 +38,15 @@ public sealed partial class AplicacaoFactory : WebApplicationFactory<Program>, I
         builder.UseSetting("Inicializacao:AdministradorNome", "Admin Teste");
         builder.UseSetting("Inicializacao:AdministradorPassword", PasswordTeste);
         builder.UseSetting("Email:PastaLocal", PastaEmails);
-        builder.ConfigureTestServices(s => s.AddScoped<IUtilizadorActual, UtilizadorTeste>());
+        builder.ConfigureTestServices(s =>
+        {
+            s.AddScoped<IUtilizadorActual, UtilizadorTeste>();
+            s.AddSingleton<IEnviadorWebhook>(Webhooks);
+        });
     }
+
+    /// <summary>Recebe os webhooks em vez da rede.</summary>
+    public EnviadorWebhookFalso Webhooks { get; } = new();
 
     /// <summary>Sem servidor SMTP, os emails são gravados aqui como .eml.</summary>
     public string PastaEmails => Path.Combine(_pastaFicheiros, "emails");

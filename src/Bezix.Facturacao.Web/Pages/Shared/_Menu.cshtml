@@ -1,4 +1,5 @@
 @inject Bezix.Facturacao.Application.Documentos.ServicoEmissao Aprovacoes
+@inject Bezix.Facturacao.Application.Recebimentos.ServicoPagamentosComunicados Comunicados
 @{
     var pagina = ViewContext.RouteData.Values["page"] as string ?? "";
     string Activo(string prefixo) => prefixo == "/Index"
@@ -38,8 +39,33 @@
     @if (u.TemAlguma(Permissoes.Recibos.Registar, Permissoes.Documentos.VerTodos))
     {
         <div class="app-nav-grupo">Recebimentos</div>
-        <a asp-page="/Recibos/Index" class="@Activo("/Recibos")" aria-current="@Atual("/Recibos")"><i class="bi bi-receipt"></i>Recibos</a>
-        <a asp-page="/ContaCorrente/Index" class="@Activo("/ContaCorrente")" aria-current="@Atual("/ContaCorrente")"><i class="bi bi-journal-text"></i>Conta corrente</a>
+        <a asp-page="/Recibos/Index" class="@Activo("/Recibos/Index") @Activo("/Recibos/Novo")" aria-current="@Atual("/Recibos/Index")"><i class="bi bi-receipt"></i>Recibos</a>
+        @if (u.TemPermissao(Permissoes.Recibos.ValidarPagamentoComunicado))
+        {
+            var porValidar = await Comunicados.ContarPorValidarAsync();
+            <a asp-page="/Recibos/Comunicados" class="@Activo("/Recibos/Comunicados")" aria-current="@Atual("/Recibos/Comunicados")">
+                <i class="bi bi-inbox"></i>Pagamentos comunicados
+                @if (porValidar > 0) { <span class="badge rounded-pill text-bg-warning ms-auto">@porValidar</span> }
+            </a>
+        }
+        <a asp-page="/ContaCorrente/Index" class="@Activo("/ContaCorrente/Index") @Activo("/ContaCorrente/Cliente") @Activo("/ContaCorrente/Antiguidade")" aria-current="@Atual("/ContaCorrente/Index")"><i class="bi bi-journal-text"></i>Conta corrente</a>
+        @if (u.TemPermissao(Permissoes.Comunicacao.Enviar))
+        {
+            <a asp-page="/ContaCorrente/Cobrancas" class="@Activo("/ContaCorrente/Cobrancas")" aria-current="@Atual("/ContaCorrente/Cobrancas")"><i class="bi bi-telephone-outbound"></i>Cobranças</a>
+        }
+    }
+
+    @if (u.TemAlguma(Permissoes.Comunicacao.Enviar, Permissoes.Comunicacao.GerirModelos))
+    {
+        <div class="app-nav-grupo">Comunicação</div>
+        @if (u.TemPermissao(Permissoes.Comunicacao.Enviar))
+        {
+            <a asp-page="/Comunicacao/Emails" class="@Activo("/Comunicacao/Emails")" aria-current="@Atual("/Comunicacao/Emails")"><i class="bi bi-envelope"></i>Emails enviados</a>
+        }
+        @if (u.TemPermissao(Permissoes.Comunicacao.GerirModelos))
+        {
+            <a asp-page="/Comunicacao/Modelos/Index" class="@Activo("/Comunicacao/Modelos")" aria-current="@Atual("/Comunicacao/Modelos")"><i class="bi bi-pencil-square"></i>Modelos de email</a>
+        }
     }
 
     @if (u.TemAlguma(Permissoes.Relatorios.Vendas, Permissoes.Relatorios.Fiscal, Permissoes.Automacao.Ver))
@@ -51,11 +77,11 @@
         }
         @if (u.TemPermissao(Permissoes.Automacao.Ver))
         {
-            <span class="em-breve"><i class="bi bi-arrow-repeat"></i>Automação<small>em breve</small></span>
+            <a asp-page="/Automacao/Index" class="@Activo("/Automacao")" aria-current="@Atual("/Automacao")"><i class="bi bi-arrow-repeat"></i>Automação</a>
         }
     }
 
-    @if (u.TemAlguma(Permissoes.Configuracoes.Gerir, Permissoes.Configuracoes.VerTaxas, Permissoes.Administracao.Utilizadores, Permissoes.Administracao.VerAuditoria))
+    @if (u.TemAlguma(Permissoes.Configuracoes.Gerir, Permissoes.Configuracoes.VerTaxas, Permissoes.Administracao.Utilizadores, Permissoes.Administracao.VerAuditoria, Permissoes.Administracao.Integracoes))
     {
         <div class="app-nav-grupo">Sistema</div>
         @if (u.TemAlguma(Permissoes.Configuracoes.Gerir, Permissoes.Configuracoes.VerTaxas))
@@ -66,6 +92,10 @@
         {
             <a asp-page="/Administracao/Utilizadores/Index" class="@Activo("/Administracao/Utilizadores")" aria-current="@Atual("/Administracao/Utilizadores")"><i class="bi bi-person-gear"></i>Utilizadores</a>
             <a asp-page="/Administracao/Perfis/Index" class="@Activo("/Administracao/Perfis")" aria-current="@Atual("/Administracao/Perfis")"><i class="bi bi-shield-check"></i>Perfis e permissões</a>
+        }
+        @if (u.TemPermissao(Permissoes.Administracao.Integracoes))
+        {
+            <a asp-page="/Administracao/Integracoes/Index" class="@Activo("/Administracao/Integracoes")" aria-current="@Atual("/Administracao/Integracoes")"><i class="bi bi-plug"></i>Integrações</a>
         }
         @if (u.TemPermissao(Permissoes.Administracao.VerAuditoria))
         {

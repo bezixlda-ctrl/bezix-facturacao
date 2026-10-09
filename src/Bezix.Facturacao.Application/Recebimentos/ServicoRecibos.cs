@@ -4,7 +4,9 @@ using Bezix.Facturacao.Application.Comum;
 using Bezix.Facturacao.Application.Configuracao;
 using Bezix.Facturacao.Application.Documentos;
 using Bezix.Facturacao.Domain.Configuracao;
+using Bezix.Facturacao.Domain.Comunicacao;
 using Bezix.Facturacao.Domain.Documentos;
+using Bezix.Facturacao.Domain.Integracoes;
 using Bezix.Facturacao.Domain.Recebimentos;
 using Bezix.Facturacao.Domain.Seguranca;
 using Microsoft.EntityFrameworkCore;
@@ -21,7 +23,8 @@ public sealed record DadosRecibo(
     MetodoPagamento Metodo,
     string? Referencia,
     string? Observacoes,
-    IReadOnlyList<Alocacao> Alocacoes);
+    IReadOnlyList<Alocacao> Alocacoes,
+    int? PagamentoComunicadoId = null);
 
 public sealed record AlocacaoVista(int DocumentoId, string NumeroFormatado, DateOnly DataDocumento, decimal TotalMzn, decimal Valor, DateOnly Data);
 
@@ -46,6 +49,8 @@ public sealed class ServicoRecibos(
     ServicoPdfDocumentos pdfs,
     IUtilizadorActual utilizador,
     IServicoAuditoria auditoria,
+    IPublicadorEventos eventos,
+    Comunicacao.ServicoComunicacao comunicacao,
     ILogger<ServicoRecibos> log)
 {
     public async Task<(Resultado Resultado, int? ReciboId)> RegistarAsync(DadosRecibo d, CancellationToken ct = default)
@@ -71,6 +76,16 @@ public sealed class ServicoRecibos(
 
             var errosAlocacao = await ValidarAlocacoesAsync(d.ClienteId, d.Alocacoes, c);
             if (errosAlocacao.Count > 0) return (Resultado.Falha([.. errosAlocacao]), null);
+
+            PagamentoComunicado? comunicado = null;
+            if (d.PagamentoComunicadoId is { } pcId)
+            {
+                if (!utilizador.TemPermissao(Permissoes.Recibos.ValidarPagamentoComunicado))
+                    return (Resultado.Falha("O seu perfil não permite validar pagamentos comunicados."), null);
+                comunicado = await db.PagamentosComunicados.SingleOrDefaultAsync(p => p.Id == pcId, c);
+                if (comunicado is null || comunicado.Estado != EstadoPagamentoComunicado.PorValidar || comunicado.ClienteId != d.ClienteId)
+                    return (Resultado.Falha("Este pagamento comunicado já foi tratado ou não é deste cliente."), null);
+            }
 
             var contas = await db.ContasBancarias.AsNoTracking().ToListAsync(c);
             var recibo = new Documento
@@ -108,6 +123,21 @@ public sealed class ServicoRecibos(
             db.Pagamentos.Add(pagamento);
             await db.SaveChangesAsync(c);
 
+            if (comunicado is not null)
+            {
+                comunicado.Estado = EstadoPagamentoComunicado.Validado;
+                comunicado.ReciboId = recibo.Id;
+                comunicado.DecididoPor = utilizador.Email;
+                comunicado.DecididoEm = recibo.EmitidoEm;
+            }
+            eventos.Publicar(EventosWebhook.PagamentoRecebido, new
+            {
+                reciboId = recibo.Id, numero = recibo.NumeroFormatado, clienteId = cliente.Id, clienteNome = cliente.Nome, data = d.Data,
+                valor = d.Valor, moeda = "MZN", metodo = d.Metodo.ToString(), referencia = recibo.ReferenciaPagamento,
+                alocacoes = d.Alocacoes.Where(a => a.Valor > 0).Select(a => new { documentoId = a.DocumentoId, valor = a.Valor }),
+                adiantamento = d.Valor - d.Alocacoes.Sum(a => a.Valor),
+            });
+
             auditoria.Registar(nameof(Documento), recibo.Id.ToString(), "Recibo.Emitir", null, new
             {
                 recibo.NumeroFormatado, cliente.Nome, d.Valor, Metodo = d.Metodo.ToString(), d.Referencia,
@@ -122,6 +152,13 @@ public sealed class ServicoRecibos(
         {
             try { await pdfs.GarantirPdfGuardadoAsync(id, ct); }
             catch (Exception ex) { log.LogError(ex, "Falha a gerar o PDF do recibo {Id}.", id); }
+
+            // Pagamento comunicado pelo cliente: confirma-lhe por email que foi validado, com o recibo.
+            if (d.PagamentoComunicadoId is not null)
+            {
+                try { await comunicacao.EnviarComModeloAsync(id, "pagamento.confirmado", ct); }
+                catch (Exception ex) { log.LogError(ex, "Falha a enviar a confirmação do recibo {Id}.", id); }
+            }
         }
         return resultado;
     }

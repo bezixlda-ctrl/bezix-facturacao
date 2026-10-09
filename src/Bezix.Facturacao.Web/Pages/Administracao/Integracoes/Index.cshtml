@@ -1,0 +1,137 @@
+@page
+@model Bezix.Facturacao.Web.Pages.Administracao.Integracoes.IndexModel
+@using Bezix.Facturacao.Domain.Integracoes
+@using Bezix.Facturacao.Web.Pages.Administracao.Integracoes
+@{
+    ViewData["Title"] = "Integrações";
+}
+<div class="cabecalho-pagina">
+    <div>
+        <h1>Integrações</h1>
+        <p>Ligue outros sistemas (loja online, ERP, contabilidade) à facturação: a API para criar e consultar documentos, os webhooks para ser avisado quando algo acontece.</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="/api/docs" target="_blank"><i class="bi bi-book me-1"></i>Documentação da API</a>
+</div>
+
+<partial name="_ResumoErros" />
+
+@if (Model.SegredoNovo is not null)
+{
+    <div class="alert alert-warning segredo" role="alert">
+        <div class="fw-semibold mb-2"><i class="bi bi-key me-1"></i>@Model.SegredoDescricao</div>
+        <div class="input-group">
+            <input class="form-control font-monospace" id="segredoNovo" value="@Model.SegredoNovo" readonly aria-label="Valor secreto" />
+            <button class="btn btn-outline-dark" type="button" data-copiar="#segredoNovo"><i class="bi bi-clipboard me-1"></i>Copiar</button>
+        </div>
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-xl-6">
+        <section class="painel mb-4">
+            <div class="painel-cabecalho"><h2>Chaves da API</h2></div>
+            @if (Model.Chaves.Count == 0)
+            {
+                <div class="vazio"><i class="bi bi-key"></i><p class="mb-0">Sem chaves. Crie uma por cada sistema que se liga, para a poder revogar sem afectar os outros.</p></div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead><tr><th>Nome</th><th>Permissões</th><th>Último uso</th><th><span class="visually-hidden">Acções</span></th></tr></thead>
+                        <tbody>
+                            @foreach (var c in Model.Chaves)
+                            {
+                                <tr class="@(c.Activa ? "" : "text-body-secondary")">
+                                    <td><div class="fw-semibold">@c.Nome</div><code class="small">bzx_@(c.Prefixo)_…</code></td>
+                                    <td class="small">@string.Join(", ", c.ListaEscopos())</td>
+                                    <td class="small tabular">@(c.UltimoUso is { } u ? Formato.DataHora(u) : "Nunca")</td>
+                                    <td class="text-end">
+                                        @if (c.Activa)
+                                        {
+                                            <form method="post" asp-page-handler="Revogar" asp-route-id="@c.Id" data-confirmar="Revogar a chave “@c.Nome”? O sistema que a usa deixa de conseguir ligar-se.">
+                                                <button class="btn btn-sm btn-outline-danger" type="submit">Revogar</button>
+                                            </form>
+                                        }
+                                        else { <span class="estado estado-inactivo">Revogada</span> }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+
+        <details class="painel" open="@(Model.ModelState.ErrorCount > 0 && Model.NomeChave is not null)">
+            <summary class="painel-cabecalho"><h2>Nova chave</h2><i class="bi bi-chevron-down"></i></summary>
+            <form method="post" asp-page-handler="Chave" class="painel-corpo">
+                <div class="mb-3">
+                    <label class="form-label" asp-for="NomeChave">Nome do sistema</label>
+                    <input class="form-control" asp-for="NomeChave" maxlength="100" placeholder="Loja online" required />
+                </div>
+                <fieldset class="mb-3">
+                    <legend class="form-label fs-6">O que pode fazer</legend>
+                    @foreach (var e in EscoposApi.Todos)
+                    {
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="Escopos" value="@e.Codigo" id="esc-@e.Codigo.Replace(':', '-')" checked="@Model.Escopos.Contains(e.Codigo)" />
+                            <label class="form-check-label" for="esc-@e.Codigo.Replace(':', '-')">@e.Descricao <code class="small">@e.Codigo</code></label>
+                        </div>
+                    }
+                </fieldset>
+                <button class="btn btn-primary" type="submit"><i class="bi bi-plus-lg me-1"></i>Criar chave</button>
+            </form>
+        </details>
+    </div>
+
+    <div class="col-xl-6">
+        <section class="painel mb-4">
+            <div class="painel-cabecalho">
+                <h2>Webhooks</h2>
+                @if (Model.EntregasFalhadas > 0)
+                {
+                    <a class="small text-danger" asp-page="Entregas" asp-route-estado="Falhou">@Model.EntregasFalhadas entregas falhadas (30 dias)</a>
+                }
+                else { <a class="small" asp-page="Entregas">Ver entregas</a> }
+            </div>
+            @if (Model.Webhooks.Count == 0)
+            {
+                <div class="vazio"><i class="bi bi-broadcast"></i><p class="mb-0">Sem webhooks. Cada evento é enviado por POST, assinado com HMAC-SHA256 no cabeçalho X-Signature.</p></div>
+            }
+            else
+            {
+                <ul class="list-unstyled mb-0">
+                    @foreach (var w in Model.Webhooks)
+                    {
+                        <li class="d-flex justify-content-between align-items-start gap-3 px-3 py-2 border-bottom">
+                            <div class="text-break">
+                                <a asp-page="Webhook" asp-route-id="@w.Id" class="fw-semibold text-decoration-none">@w.Nome</a>
+                                <div class="small font-monospace text-body-secondary">@w.Url</div>
+                                <div class="small">@(w.Eventos == "*" ? "Todos os eventos" : string.Join(", ", w.Eventos.Split(' ').Select(IndexModel.NomeEvento)))</div>
+                                @if (!w.Activa && w.MotivoDesactivacao is not null) { <div class="small text-danger">@w.MotivoDesactivacao</div> }
+                            </div>
+                            <span class="estado @(w.Activa ? "estado-activo" : "estado-inactivo")">@(w.Activa ? "Activo" : "Desactivado")</span>
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+
+        <details class="painel" open="@(Model.ModelState.ErrorCount > 0 && Model.NomeWebhook is not null)">
+            <summary class="painel-cabecalho"><h2>Novo webhook</h2><i class="bi bi-chevron-down"></i></summary>
+            <form method="post" asp-page-handler="Webhook" class="painel-corpo">
+                <div class="mb-3">
+                    <label class="form-label" asp-for="NomeWebhook">Nome</label>
+                    <input class="form-control" asp-for="NomeWebhook" maxlength="100" placeholder="ERP" required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" asp-for="UrlWebhook">Endereço (https)</label>
+                    <input class="form-control font-monospace" asp-for="UrlWebhook" type="url" maxlength="500" placeholder="https://erp.exemplo.co.mz/webhooks/facturacao" required />
+                </div>
+                <partial name="_Eventos" model="Model.Eventos" />
+                <button class="btn btn-primary" type="submit"><i class="bi bi-plus-lg me-1"></i>Criar webhook</button>
+            </form>
+        </details>
+    </div>
+</div>

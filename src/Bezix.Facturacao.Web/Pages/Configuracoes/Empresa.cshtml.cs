@@ -29,6 +29,9 @@ public class EmpresaModel(ServicoEmpresa empresas) : PaginaBase
         public decimal LimiteNuitObrigatorio { get; set; }
         public ModoArredondamentoIva ModoArredondamentoIva { get; set; }
         public bool RestringirAosProprios { get; set; }
+        public string? AssinaturaEmail { get; set; }
+        public string? UrlPublica { get; set; }
+        public int DiasValidadeLink { get; set; } = 90;
     }
 
     [BindProperty] public Formulario Dados { get; set; } = new();
@@ -58,6 +61,9 @@ public class EmpresaModel(ServicoEmpresa empresas) : PaginaBase
             LimiteNuitObrigatorio = e.LimiteNuitObrigatorio,
             ModoArredondamentoIva = e.ModoArredondamentoIva,
             RestringirAosProprios = e.RestringirAosProprios,
+            AssinaturaEmail = e.AssinaturaEmail,
+            UrlPublica = e.UrlPublica,
+            DiasValidadeLink = e.DiasValidadeLink,
         };
         await CarregarLogotipoAsync();
     }
@@ -70,7 +76,7 @@ public class EmpresaModel(ServicoEmpresa empresas) : PaginaBase
             var r = await empresas.ActualizarDadosAsync(new DadosEmpresa(
                 d.Nome ?? "", d.Nuit ?? "", d.Slogan, d.Endereco ?? "", d.Cidade, d.Provincia, d.Telefones, d.Email, d.Site,
                 d.CorPrimaria ?? "", d.RodapeTexto ?? "", d.PrazoPagamentoDias, d.LimiteNuitObrigatorio, d.ModoArredondamentoIva,
-                d.RestringirAosProprios));
+                d.RestringirAosProprios, d.AssinaturaEmail, d.UrlPublica, d.DiasValidadeLink));
             if (r.Sucesso) return RedirecionarComSucesso("Dados da empresa guardados.");
             AdicionarErros(r);
         }
