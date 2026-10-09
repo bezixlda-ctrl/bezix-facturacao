@@ -47,7 +47,7 @@ public class Entrar2FAModel(SignInManager<Utilizador> sessoes, UserManager<Utili
         {
             utilizador.UltimoLogin = relogio.GetUtcNow().UtcDateTime;
             await utilizadores.UpdateAsync(utilizador);
-            return LocalRedirect(Url.IsLocalUrl(ReturnUrl) ? ReturnUrl! : "/");
+            return LocalRedirect(Url.IsLocalUrl(ReturnUrl) ? ReturnUrl! : "~/");
         }
         if (r.IsLockedOut)
         {

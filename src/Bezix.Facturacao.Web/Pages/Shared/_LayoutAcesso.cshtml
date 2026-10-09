@@ -28,7 +28,7 @@
             <div class="text-center mb-4">
                 @if (empresa.LogoPath is not null)
                 {
-                    <img src="/marca/logotipo?v=@empresa.UpdatedAt?.Ticks" alt="@empresa.Nome" style="max-height:56px;max-width:220px" />
+                    <img src="@Url.Content("~/marca/logotipo")?v=@empresa.UpdatedAt?.Ticks" alt="@empresa.Nome" style="max-height:56px;max-width:220px" />
                 }
                 else
                 {

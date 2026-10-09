@@ -179,13 +179,19 @@ try
         .AddCheck<VerificacaoEmails>("emails")
         .AddCheck<VerificacaoBackups>("backups");
 
+    // O HSTS vale para o domínio inteiro, não só para esta aplicação: num domínio partilhado com outros sistemas
+    // (ex.: bezixcenter.net/portal) não se estende aos subdomínios, salvo se configurado.
     servicos.AddHsts(o =>
     {
-        o.MaxAge = TimeSpan.FromDays(365);
-        o.IncludeSubDomains = true;
+        o.MaxAge = TimeSpan.FromDays(builder.Configuration.GetValue("Seguranca:HstsDias", 180));
+        o.IncludeSubDomains = builder.Configuration.GetValue("Seguranca:HstsSubdominios", false);
     });
 
     var app = builder.Build();
+
+    // Primeiro do pipeline. Sub-aplicação (ex.: https://bezixcenter.net/facturacao): no IIS o prefixo vem do próprio servidor;
+    // "CaminhoBase" serve para o simular localmente ou atrás de um proxy.
+    if (builder.Configuration["CaminhoBase"] is { Length: > 1 } caminhoBase) app.UsePathBase(caminhoBase);
 
     CultureInfo.DefaultThreadCurrentCulture = Formato.Cultura;
     CultureInfo.DefaultThreadCurrentUICulture = Formato.Cultura;
@@ -240,7 +246,7 @@ try
     app.MapOpenApi("/api/openapi/{documentName}.json").AllowAnonymous();
     app.UseSwaggerUI(o =>
     {
-        o.SwaggerEndpoint("/api/openapi/v1.json", "Bezix Facturação API v1");
+        o.SwaggerEndpoint("../openapi/v1.json", "Bezix Facturação API v1");
         o.RoutePrefix = "api/docs";
         o.DocumentTitle = "Bezix Facturação · API";
     });

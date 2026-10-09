@@ -138,7 +138,7 @@
                 <div class="logotipo-previa mb-3">
                     @if (Model.TemLogotipo)
                     {
-                        <img id="previaLogotipo" src="/marca/logotipo?v=@Model.VersaoLogotipo" alt="Logótipo actual" />
+                        <img id="previaLogotipo" src="@Url.Content("~/marca/logotipo")?v=@Model.VersaoLogotipo" alt="Logótipo actual" />
                     }
                     else
                     {

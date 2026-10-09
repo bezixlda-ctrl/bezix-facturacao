@@ -22,11 +22,22 @@ public class FundacaoTests(AplicacaoFactory app)
             var servico = sp.GetRequiredService<ServicoUtilizadores>();
             var admin = await gestor.FindByEmailAsync("admin@teste.local");
 
-            var r = await servico.ActualizarAsync(admin!.Id, new DadosUtilizador(admin.Nome, admin.Email!, PerfisPadrao.Administrador, Activo: false));
+            // Outros testes criam administradores: para este cenário, o admin tem de ser o único activo.
+            // Os outros são desactivados directamente (sem passar pela regra) e repostos no fim.
+            var outros = (await gestor.GetUsersInRoleAsync(PerfisPadrao.Administrador)).Where(u => u.Id != admin!.Id && u.Activo).ToList();
+            foreach (var u in outros) { u.Activo = false; await gestor.UpdateAsync(u); }
+            try
+            {
+                var r = await servico.ActualizarAsync(admin!.Id, new DadosUtilizador(admin.Nome, admin.Email!, PerfisPadrao.Administrador, Activo: false));
 
-            Assert.False(r.Sucesso);
-            Assert.Contains("último administrador", r.Erros[0]);
-            Assert.True((await gestor.FindByIdAsync(admin.Id))!.Activo);
+                Assert.False(r.Sucesso);
+                Assert.Contains("último administrador", r.Erros[0]);
+                Assert.True((await gestor.FindByIdAsync(admin.Id))!.Activo);
+            }
+            finally
+            {
+                foreach (var u in outros) { u.Activo = true; await gestor.UpdateAsync(u); }
+            }
         });
     }
 

@@ -67,7 +67,7 @@ public class EntrarModel(
         return Page();
     }
 
-    private string UrlSegura() => Url.IsLocalUrl(ReturnUrl) ? ReturnUrl! : "/";
+    private string UrlSegura() => Url.IsLocalUrl(ReturnUrl) ? ReturnUrl! : "~/";
 
     private async Task RegistarAsync(string? utilizadorId, string accao, string? detalhe)
     {

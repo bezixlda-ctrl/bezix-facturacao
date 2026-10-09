@@ -169,6 +169,15 @@ Painel: 109 ms (1,4 s no primeiro pedido após arranque). Antes da alteração, 
 
 Quem gere utilizadores (perfil Administrador) e não tem 2FA activo só consegue abrir "A minha conta" até o activar. Fica ligado por omissão (`Seguranca:DoisPassosObrigatorioAdministradores`) e desligado em desenvolvimento e nos testes. A API (chaves) e a página pública do cliente não são afectadas.
 
+## D26. Instalação em https://bezixcenter.net/facturacao
+
+Decisão do utilizador (09/10/2026): o sistema fica numa pasta do domínio `bezixcenter.net`, que já tem outros sistemas da Bezix (ex.: `/portal/login.php`), e não num domínio próprio.
+
+- A aplicação funciona com qualquer prefixo: todos os endereços (páginas, ficheiros estáticos, pesquisa, logótipo, API e `Location`, Swagger, links enviados aos clientes, redireccionamentos de login e 2FA) incluem o prefixo que o IIS indica. Há um teste automático com `/facturacao`. A opção `CaminhoBase` simula o prefixo localmente ou atrás de um proxy.
+- Os cookies de sessão e antiforgery ficam limitados ao caminho `/facturacao`: não se misturam com os dos outros sistemas.
+- O HSTS deixou de incluir os subdomínios e passou para 180 dias (`Seguranca:HstsSubdominios`, `Seguranca:HstsDias`): como o domínio é partilhado, a facturação não deve impor HTTPS a subdomínios que não controla.
+- Um subdomínio (`facturacao.bezixcenter.net`) continua a ser possível sem alterar a aplicação.
+
 ## Pendentes de confirmação
 
 - ~~QuestPDF~~: confirmado em 09/10/2026 que a receita anual é inferior a 1 M USD; usa-se a licença Community. Rever se a receita passar esse valor.

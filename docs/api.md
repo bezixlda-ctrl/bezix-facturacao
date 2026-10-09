@@ -1,6 +1,6 @@
 # API v1
 
-API REST para ligar outros sistemas (loja online, ERP, contabilidade) à facturação. A documentação interactiva está em `https://[dominio]/api/docs` e o contrato OpenAPI em `/api/openapi/v1.json`. As regras de negócio são as mesmas da interface: numeração, IVA, imutabilidade, aprovações e auditoria (decisão D21).
+API REST para ligar outros sistemas (loja online, ERP, contabilidade) à facturação. A documentação interactiva está em `https://bezixcenter.net/facturacao/api/docs` e o contrato OpenAPI em `/api/openapi/v1.json`. As regras de negócio são as mesmas da interface: numeração, IVA, imutabilidade, aprovações e auditoria (decisão D21).
 
 Todos os valores são em **meticais (MZN)**. Datas no formato `AAAA-MM-DD`.
 

@@ -2,6 +2,7 @@
 # Preencher @chave com uma chave criada em Administração → Integrações (de um ambiente de teste) e @cliente com um id válido.
 # Documentação: docs/api.md · Swagger: {{base}}/api/docs
 
+# Produção: @base = https://bezixcenter.net/facturacao
 @base = http://localhost:5011
 @chave = bzx_coloque_aqui_a_sua_chave
 @cliente = 1

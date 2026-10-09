@@ -23,7 +23,7 @@ public sealed class DoisPassosObrigatorio(RequestDelegate seguinte, IConfigurati
             && !u.HasClaim(ClaimDoisPassos, "1")
             && !Livres.Any(p => http.Request.Path.StartsWithSegments(p.TrimEnd('/'), StringComparison.OrdinalIgnoreCase)))
         {
-            http.Response.Redirect("/Conta/Seguranca?obrigatorio=true");
+            http.Response.Redirect(http.Request.PathBase + "/Conta/Seguranca?obrigatorio=true");
             return Task.CompletedTask;
         }
         return seguinte(http);

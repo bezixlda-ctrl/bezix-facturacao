@@ -37,7 +37,7 @@ public class SegurancaModel(
         if (await utilizadores.GetUserAsync(User) is { TwoFactorEnabled: true } u && !User.HasClaim(Seguranca.DoisPassosObrigatorio.ClaimDoisPassos, "1"))
         {
             await sessoes.RefreshSignInAsync(u);
-            if (Obrigatorio) return LocalRedirect("/");
+            if (Obrigatorio) return LocalRedirect("~/");
         }
         await CarregarAsync();
         return Page();

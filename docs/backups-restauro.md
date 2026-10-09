@@ -42,7 +42,7 @@ Para Amazon S3, deixar `Endpoint` vazio e indicar a região (ex.: `eu-west-1`). 
 No *Scheduled Task Tool* do Winhost, uma segunda tarefa (além do `jobs/tick`), **de hora a hora**:
 
 ```
-https://[dominio]/internal/jobs/backup?token=[Jobs:Token]
+https://bezixcenter.net/facturacao/internal/jobs/backup?token=[Jobs:Token]
 ```
 
 O backup só corre se o último tiver mais de 20 horas (`Backups:IntervaloHoras`). Chamar de hora a hora garante que, se uma tentativa falhar, a seguinte repete. A resposta é JSON com o que foi enviado e apagado.

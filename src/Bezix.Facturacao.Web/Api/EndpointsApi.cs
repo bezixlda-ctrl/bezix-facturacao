@@ -49,8 +49,14 @@ public sealed record PaginaApi<T>(IReadOnlyList<T> Itens, int Total, int Pagina,
 /// <summary>API REST v1: autenticação por chave (Bearer), escopos, 60 pedidos/min por chave, erros em application/problem+json.</summary>
 public static class EndpointsApi
 {
+    private static IHttpContextAccessor? _acessor;
+
+    /// <summary>Prefixo da aplicação no servidor (ex.: "/facturacao"), para os cabeçalhos Location.</summary>
+    private static string Base() => _acessor?.HttpContext?.Request.PathBase.Value ?? "";
+
     public static void MapApiV1(this WebApplication app)
     {
+        _acessor = app.Services.GetRequiredService<IHttpContextAccessor>();
         var api = app.MapGroup("/api/v1")
             .RequireRateLimiting("api")
             .WithTags("API v1")
@@ -78,7 +84,7 @@ public static class EndpointsApi
         {
             var r = await s.GuardarAsync(null, DadosCliente(d), d.AceitarNuitDuplicado);
             if (!r.Resultado.Sucesso) return Validacao(r.Resultado, r.PrecisaConfirmacao ? "Envie \"aceitarNuitDuplicado\": true se for outro cliente com o mesmo NUIT." : null);
-            return TypedResults.Created($"/api/v1/clientes/{r.Id}", Cliente((await s.ObterAsync(r.Id!.Value))!));
+            return TypedResults.Created($"{Base()}/api/v1/clientes/{r.Id}", Cliente((await s.ObterAsync(r.Id!.Value))!));
         }).RequireAuthorization("escopo:" + EscoposApi.ClientesEscrever);
 
         api.MapPut("/clientes/{id:int}", async Task<Results<Ok<ClienteApi>, ProblemHttpResult>> (ServicoClientes s, int id, ClienteEscritaApi d) =>
@@ -108,7 +114,7 @@ public static class EndpointsApi
             var tipo = string.Equals(d.Tipo, "Produto", StringComparison.OrdinalIgnoreCase) ? TipoArtigo.Produto : TipoArtigo.Servico;
             var (r, id) = await s.GuardarAsync(null, new DadosArtigo(d.Codigo ?? "", d.Descricao ?? "", tipo, d.Unidade ?? "un", d.Preco, d.CodigoTaxaIva ?? "NOR"));
             if (!r.Sucesso) return Validacao(r, null);
-            return TypedResults.Created($"/api/v1/artigos/{id}", Artigo((await s.ObterAsync(id!.Value))!));
+            return TypedResults.Created($"{Base()}/api/v1/artigos/{id}", Artigo((await s.ObterAsync(id!.Value))!));
         }).RequireAuthorization("escopo:" + EscoposApi.ArtigosEscrever);
 
         // ---------- Documentos
@@ -157,7 +163,7 @@ public static class EndpointsApi
                 if (e.Tipo == ResultadoEmissaoTipo.Recusado)
                     return Validacao(e.Resultado, $"O rascunho {id} foi criado mas não foi emitido.");
             }
-            return TypedResults.Created($"/api/v1/documentos/{id}", await DocumentoAsync(docs, cc, id!.Value));
+            return TypedResults.Created($"{Base()}/api/v1/documentos/{id}", await DocumentoAsync(docs, cc, id!.Value));
         }).RequireAuthorization("escopo:" + EscoposApi.DocumentosEscrever).AddEndpointFilter<Idempotencia>();
 
         api.MapGet("/documentos/{id:int}", async Task<Results<Ok<DocumentoApi>, ProblemHttpResult>> (ServicoDocumentos docs, ServicoContaCorrente cc, int id) =>
@@ -196,7 +202,7 @@ public static class EndpointsApi
             var (r, id) = await recibos.RegistarAsync(new DadosRecibo(d.ClienteId, d.Data ?? cc.Hoje(), d.Valor, metodo, d.Referencia, d.Observacoes,
                 (d.Alocacoes ?? []).Select(a => new Alocacao(a.DocumentoId, a.Valor)).ToList()));
             if (!r.Sucesso) return Validacao(r, null);
-            return TypedResults.Created($"/api/v1/documentos/{id}", await DocumentoAsync(docs, cc, id!.Value));
+            return TypedResults.Created($"{Base()}/api/v1/documentos/{id}", await DocumentoAsync(docs, cc, id!.Value));
         }).RequireAuthorization("escopo:" + EscoposApi.RecibosEscrever).AddEndpointFilter<Idempotencia>();
     }
 

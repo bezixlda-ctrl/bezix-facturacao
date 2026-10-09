@@ -34,7 +34,7 @@
             <a class="app-marca" asp-page="/Index">
                 @if (empresa.LogoPath is not null)
                 {
-                    <img src="/marca/logotipo?v=@empresa.UpdatedAt?.Ticks" alt="@empresa.Nome" />
+                    <img src="@Url.Content("~/marca/logotipo")?v=@empresa.UpdatedAt?.Ticks" alt="@empresa.Nome" />
                 }
                 else
                 {
@@ -56,7 +56,7 @@
                         <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
                         <label class="visually-hidden" for="pesquisaGlobal">Pesquisar clientes e artigos</label>
                         <input class="form-control" type="search" id="pesquisaGlobal" name="q" placeholder="Pesquisar cliente, NUIT, telefone, artigo" autocomplete="off"
-                               hx-get="/Pesquisa" hx-trigger="input changed delay:250ms, search" hx-target="#resultadosPesquisa" />
+                               hx-get="@Url.Content("~/Pesquisa")" hx-trigger="input changed delay:250ms, search" hx-target="#resultadosPesquisa" />
                         <kbd class="d-none d-md-inline">Ctrl K</kbd>
                         <div id="resultadosPesquisa" class="pesquisa-resultados"></div>
                     </div>

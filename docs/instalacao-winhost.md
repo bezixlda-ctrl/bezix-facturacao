@@ -4,9 +4,28 @@ Guia para o deploy de teste (fase 1) e de produção. Requer o plano **Ultimate*
 
 ## 1. Preparar no painel do Winhost
 
-1. **Site:** criar o site (ou subdomínio de teste, ex.: `teste.bezix.co.mz`). Em *Site Info Manager*, confirmar que o app pool está em **No Managed Code** e em **64 bits**.
-2. **Base de dados:** *MS SQL Manager* → criar uma base de dados SQL Server. Anotar servidor, nome, utilizador e password.
-3. **SSL:** *SSL Manager* → activar o certificado para o domínio. A aplicação força HTTPS e HSTS fora do ambiente de desenvolvimento.
+O sistema fica em **https://bezixcenter.net/facturacao/**, como sub-aplicação do site `bezixcenter.net`, ao lado dos outros sistemas da Bezix (ex.: `https://bezixcenter.net/portal/`). Não precisa de domínio nem de site próprio.
+
+1. **Pasta:** pelo FTP (ou *File Manager*), criar a pasta `facturacao` na raiz do site `bezixcenter.net`.
+2. **Aplicação:** em *Site Manager → Application Starting Point*, marcar `/facturacao` como ponto de partida de aplicação. Sem isto o IIS não arranca o ASP.NET Core nessa pasta e os pedidos caem no site principal.
+3. **App pool:** em *Site Info Manager*, confirmar **64 bits**. O ideal é **No Managed Code**; se o site principal precisar de outra opção (ex.: aplicações ASP.NET clássicas), manter: o ASP.NET Core funciona na mesma.
+   Atenção: o modo *in-process* só permite **uma** aplicação ASP.NET Core por app pool. Se mais tarde for instalado outro sistema ASP.NET Core em `bezixcenter.net`, pedir ao suporte do Winhost um app pool separado para um deles.
+4. **Base de dados:** *MS SQL Manager* → criar uma base de dados SQL Server para a facturação (não usar a dos outros sistemas). Anotar servidor, nome, utilizador e password.
+5. **SSL:** o certificado de `bezixcenter.net` já cobre `/facturacao`. A aplicação força HTTPS.
+6. **Regras de reescrita do site principal:** se o `web.config` da raiz de `bezixcenter.net` tiver regras de *URL Rewrite* que enviam tudo para um `index.php`, excluir a pasta da facturação, por exemplo com esta condição na regra:
+
+   ```xml
+   <add input="{REQUEST_URI}" pattern="^/facturacao(/|$)" negate="true" />
+   ```
+
+   Sem regras desse tipo (como em `/portal/login.php`), não é preciso nada.
+
+**Convivência com os outros sistemas**
+
+- **Cookies:** a sessão (`bezix.sessao`) e o antiforgery ficam limitados ao caminho `/facturacao`: não são enviados ao portal nem aos outros sistemas, e os deles não interferem.
+- **HSTS:** a aplicação pede aos browsers HTTPS obrigatório para `bezixcenter.net` durante 180 dias, **sem** subdomínios (`Seguranca:HstsSubdominios = false`). Só activar os subdomínios quando todos tiverem HTTPS.
+- **Links:** todos os endereços da aplicação (páginas, ficheiros, API, emails para clientes, Swagger) incluem `/facturacao`; há um teste automático que o confirma.
+- **Subdomínio em alternativa:** para usar `facturacao.bezixcenter.net`, criar o subdomínio no painel apontado para a pasta `facturacao` e seguir os mesmos passos. Não é preciso mudar nada na aplicação.
 
 ## 2. Configurar os segredos
 
@@ -30,7 +49,7 @@ Os segredos nunca vão para o repositório. Criar no servidor, na pasta do site,
     "Porta": 587,
     "Utilizador": "[utilizador SMTP]",
     "Password": "[password SMTP]",
-    "Remetente": "facturacao@[dominio]",
+    "Remetente": "facturacao@bezixcenter.net",
     "NomeRemetente": "[Nome da empresa]",
     "Seguranca": "StartTls"
   },
@@ -79,16 +98,16 @@ O pacote de 09/10/2026 foi testado localmente com o executável publicado, em mo
 
 ### Primeira instalação
 
-1. Descompactar o ZIP no computador e enviar o conteúdo para a raiz do site por **FTP** (ou Web Deploy).
+1. Descompactar o ZIP no computador e enviar o conteúdo para a pasta **`/facturacao`** por **FTP** (ou Web Deploy). Nunca para a raiz de `bezixcenter.net`.
 2. Criar no servidor o `appsettings.Production.json` a partir de [appsettings.Production.exemplo.json](appsettings.Production.exemplo.json) (secção 2).
 3. Dar ao utilizador do app pool permissão de **escrita** em `App_Data` (é criada no primeiro arranque; no painel do Winhost, nas permissões de ficheiros do site).
-4. Abrir `https://[dominio]/health` e seguir a verificação da secção 7.
+4. Abrir `https://bezixcenter.net/facturacao/health` e seguir a verificação da secção 7.
 
 ### Actualizações
 
-1. Enviar `artifacts/app_offline.htm` para a raiz do site: a aplicação pára, os ficheiros ficam livres e os utilizadores vêem "O sistema está a ser actualizado".
+1. Enviar `artifacts/app_offline.htm` para a pasta `/facturacao` (**não** para a raiz do domínio, que pararia o site principal): a aplicação pára, os ficheiros ficam livres e os utilizadores vêem "O sistema está a ser actualizado".
 2. Enviar os ficheiros do novo pacote **por cima** dos existentes.
-3. Apagar `app_offline.htm` do servidor. No primeiro pedido, a aplicação arranca e aplica as migrações em falta.
+3. Apagar `/facturacao/app_offline.htm` do servidor. No primeiro pedido, a aplicação arranca e aplica as migrações em falta.
 4. Abrir `/health` e confirmar a versão em `VERSAO.txt`.
 
 **Atenção:** a pasta `App_Data` do servidor guarda logótipos, PDFs emitidos (retenção legal de 10 anos), comprovativos, chaves de cifra e logs. Nunca a apagar nem sobrepor. O pacote não a inclui; no cliente FTP, não usar a opção "apagar ficheiros que não existem localmente". O `appsettings.Production.json` também só existe no servidor.
@@ -104,7 +123,7 @@ No arranque, a aplicação aplica as migrações em falta e cria os dados inicia
 O Winhost não tem processos permanentes. Criar uma tarefa que chama, **a cada 15 minutos**:
 
 ```
-https://[dominio]/internal/jobs/tick?token=[Jobs:Token]
+https://bezixcenter.net/facturacao/internal/jobs/tick?token=[Jobs:Token]
 ```
 
 Esta chamada também aquece o site depois de uma reciclagem do app pool. Corre os emails em fila, as facturas recorrentes, os lembretes de pagamento, os webhooks e a limpeza (decisão D18). O resultado de cada execução aparece em **Automação → Últimas execuções**.
@@ -112,7 +131,7 @@ Esta chamada também aquece o site depois de uma reciclagem do app pool. Corre o
 Criar uma **segunda tarefa**, de hora a hora, para os backups (só fazem backup se o último tiver mais de 20 horas):
 
 ```
-https://[dominio]/internal/jobs/backup?token=[Jobs:Token]
+https://bezixcenter.net/facturacao/internal/jobs/backup?token=[Jobs:Token]
 ```
 
 Os lembretes saem a partir da hora definida no plano (8 h por omissão, hora de Maputo). Com a tarefa de 15 em 15 minutos, saem no máximo 15 minutos depois dessa hora.
@@ -124,7 +143,7 @@ Os lembretes saem a partir da hora definida no plano (8 h por omissão, hora de 
 
 ## 6. Monitorização
 
-Configurar o UptimeRobot (ou semelhante) para verificar `https://[dominio]/health` a cada 5 minutos, com um monitor de **palavra-chave** que alerta quando a resposta não contém `"estado":"Healthy"`:
+Configurar o UptimeRobot (ou semelhante) para verificar `https://bezixcenter.net/facturacao/health` a cada 5 minutos, com um monitor de **palavra-chave** que alerta quando a resposta não contém `"estado":"Healthy"`:
 
 | Verificação | Unhealthy (503) | Degraded (200) |
 |---|---|---|
@@ -136,14 +155,15 @@ Configurar o UptimeRobot (ou semelhante) para verificar `https://[dominio]/healt
 
 ## 7. Verificação depois do deploy
 
-- [ ] `https://[dominio]/health` responde `Healthy`.
+- [ ] `https://bezixcenter.net/facturacao/health` responde `Healthy`.
 - [ ] A página de entrada abre em HTTPS e o cadeado do browser está válido.
 - [ ] Entrar com o primeiro administrador, mudar a password e activar a verificação em dois passos.
 - [ ] Apagar o bloco `Inicializacao` do `appsettings.Production.json`.
 - [ ] Seguir a lista "Preparar o sistema para facturar" no painel (dados fiscais, logótipo, contas, segundo administrador).
 - [ ] A tarefa agendada aparece no log (`App_Data/logs`) como `jobs/tick executado`.
 - [ ] Administração → Backups: **Fazer backup agora**, depois **Verificar** os dois ficheiros; fazer o primeiro teste de restauro ([backups-restauro.md](backups-restauro.md)).
-- [ ] Configurações → Empresa: preencher o endereço público (base dos links enviados aos clientes).
+- [ ] Configurações → Empresa: preencher o endereço público `https://bezixcenter.net/facturacao` (base dos links enviados aos clientes).
+- [ ] Abrir `https://bezixcenter.net/portal/login.php` e confirmar que os outros sistemas continuam a funcionar.
 - [ ] Correr o teste de carga contra o ambiente de teste no Winhost e registar em [carga.md](carga.md).
 - [ ] Confirmar que o runtime self-contained arranca no Winhost (decisão D1).
 
