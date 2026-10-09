@@ -56,17 +56,44 @@ Os segredos nunca vão para o repositório. Criar no servidor, na pasta do site,
 
 ## 3. Publicar
 
-No computador de desenvolvimento (ou descarregar o artefacto `bezix-facturacao-winhost` do CI):
+### Gerar o pacote
 
-```bash
-dotnet publish src/Bezix.Facturacao.Web -p:PublishProfile=Winhost
+No computador de desenvolvimento, com o código no commit a publicar (de preferência no ramo `main`):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\publicar-winhost.ps1
 ```
 
-O resultado fica em `artifacts/publish/winhost` (self-contained, ~135 MB). Enviar o conteúdo para a raiz do site por **FTP** ou **Web Deploy**.
+O script:
 
-**Atenção:** a pasta `App_Data` do servidor guarda logótipos, PDFs emitidos (retenção legal de 10 anos) e logs. Nunca a apagar nem sobrepor. O perfil de publicação já a exclui; no FTP, não usar a opção "apagar ficheiros que não existem localmente".
+1. recusa continuar se houver alterações por gravar (o pacote corresponde sempre a um commit);
+2. corre os testes;
+3. publica em `artifacts/publish/winhost` (self-contained win-x64, ~193 MB);
+4. gera `artifacts/publish/migracoes.sql`;
+5. confirma que o pacote não leva `appsettings.Development.json`, `appsettings.Production.json`, símbolos `.pdb` nem `App_Data`;
+6. cria `artifacts/bezix-facturacao-winhost-<data>-<commit>.zip` (~80 MB) com o `.sha256` ao lado, e copia `artifacts/app_offline.htm`.
 
-Para actualizar com o site parado (evita ficheiros bloqueados): enviar primeiro um ficheiro `app_offline.htm` para a raiz, enviar os ficheiros novos, e apagar o `app_offline.htm`.
+O ficheiro `VERSAO.txt` dentro do pacote indica o commit e a data. Para um pacote de teste com alterações por gravar: `-PermitirAlteracoes`. O CI gera o mesmo conteúdo (artefacto `bezix-facturacao-winhost`).
+
+O pacote de 09/10/2026 foi testado localmente com o executável publicado, em modo Produção: `/health` responde, HTTP redirecciona para HTTPS e os cookies saem com `secure`, `httponly` e `samesite`.
+
+### Primeira instalação
+
+1. Descompactar o ZIP no computador e enviar o conteúdo para a raiz do site por **FTP** (ou Web Deploy).
+2. Criar no servidor o `appsettings.Production.json` a partir de [appsettings.Production.exemplo.json](appsettings.Production.exemplo.json) (secção 2).
+3. Dar ao utilizador do app pool permissão de **escrita** em `App_Data` (é criada no primeiro arranque; no painel do Winhost, nas permissões de ficheiros do site).
+4. Abrir `https://[dominio]/health` e seguir a verificação da secção 7.
+
+### Actualizações
+
+1. Enviar `artifacts/app_offline.htm` para a raiz do site: a aplicação pára, os ficheiros ficam livres e os utilizadores vêem "O sistema está a ser actualizado".
+2. Enviar os ficheiros do novo pacote **por cima** dos existentes.
+3. Apagar `app_offline.htm` do servidor. No primeiro pedido, a aplicação arranca e aplica as migrações em falta.
+4. Abrir `/health` e confirmar a versão em `VERSAO.txt`.
+
+**Atenção:** a pasta `App_Data` do servidor guarda logótipos, PDFs emitidos (retenção legal de 10 anos), comprovativos, chaves de cifra e logs. Nunca a apagar nem sobrepor. O pacote não a inclui; no cliente FTP, não usar a opção "apagar ficheiros que não existem localmente". O `appsettings.Production.json` também só existe no servidor.
+
+**Voltar à versão anterior:** guardar o ZIP de cada versão publicada. Para reverter, repetir os passos com o ZIP anterior. Se a versão nova tiver aplicado uma migração, restaurar também a base de dados do backup anterior à actualização ([backups-restauro.md](backups-restauro.md)); por isso, fazer **Backups → Fazer backup agora** antes de cada actualização.
 
 ## 4. Base de dados
 
