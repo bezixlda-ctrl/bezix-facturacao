@@ -1,5 +1,8 @@
 using Bezix.Facturacao.Application.Abstracoes;
+using Bezix.Facturacao.Application.Artigos;
+using Bezix.Facturacao.Application.Clientes;
 using Bezix.Facturacao.Application.Configuracao;
+using Bezix.Facturacao.Application.Importacao;
 using Bezix.Facturacao.Infrastructure.Identidade;
 using Bezix.Facturacao.Infrastructure.Persistencia;
 using Bezix.Facturacao.Infrastructure.Servicos;
@@ -41,6 +44,9 @@ public static class DependencyInjection
         services.AddScoped<ServicoContasBancarias>();
         services.AddScoped<ServicoTaxasIva>();
         services.AddScoped<ServicoSeries>();
+        services.AddScoped<ServicoClientes>();
+        services.AddScoped<ServicoArtigos>();
+        services.AddScoped<ServicoImportacao>();
         services.AddScoped<ServicoUtilizadores>();
         services.AddScoped<ServicoPerfis>();
         return services;

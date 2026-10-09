@@ -1,0 +1,127 @@
+@model Bezix.Facturacao.Web.Pages.Shared.PaginaImportacao
+@using Bezix.Facturacao.Application.Importacao
+@{
+    var r = Model.Relatorio;
+}
+<div class="cabecalho-pagina">
+    <div>
+        <a href="@Url.Page(Model.PaginaLista)" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> @Model.NomeRegistos</a>
+        <h1 class="mt-1">@Model.Titulo</h1>
+        <p>Primeiro o sistema analisa o ficheiro e mostra o que vai acontecer a cada linha. Só grava depois de confirmar.</p>
+    </div>
+</div>
+
+<partial name="_ResumoErros" />
+
+@if (r is null || !r.PodeImportar)
+{
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <form method="post" asp-page-handler="Analisar" enctype="multipart/form-data" class="painel">
+                <div class="painel-cabecalho"><h2>1. Escolher o ficheiro</h2></div>
+                <div class="painel-corpo">
+                    <label class="form-label" for="Ficheiro">Ficheiro CSV</label>
+                    <input class="form-control mb-3" type="file" id="Ficheiro" name="Ficheiro" accept=".csv,text/csv" required />
+
+                    <fieldset class="mb-3">
+                        <legend class="form-label fs-6">Quando já existe @Model.ChaveDuplicado</legend>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" asp-for="Modo" value="@ModoDuplicados.Ignorar" id="modoIgnorar" />
+                            <label class="form-check-label" for="modoIgnorar">Manter o que já existe e ignorar a linha</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" asp-for="Modo" value="@ModoDuplicados.Actualizar" id="modoActualizar" />
+                            <label class="form-check-label" for="modoActualizar">Actualizar com os dados do ficheiro (colunas vazias não apagam dados)</label>
+                        </div>
+                    </fieldset>
+                    <button type="submit" class="btn btn-primary">Analisar ficheiro</button>
+                </div>
+            </form>
+        </div>
+        <div class="col-lg-5">
+            <section class="painel painel-corpo">
+                <h2 class="mb-2">Como preparar o ficheiro</h2>
+                <ol class="ps-3 mb-3">
+                    <li>Descarregue o modelo e abra-o no Excel.</li>
+                    <li>Uma linha por registo; a primeira linha tem os nomes das colunas.</li>
+                    <li>Guarde como <em>CSV (separado por vírgulas)</em>.</li>
+                </ol>
+                <a class="btn btn-outline-primary" href="@Url.Page(null, "Modelo")"><i class="bi bi-download me-1"></i>Descarregar modelo</a>
+                <p class="small text-body-secondary mt-3 mb-0">Valores podem estar escritos como 1.234,56 ou 1234.56. Colunas com outros nomes são ignoradas e indicadas na análise.</p>
+            </section>
+        </div>
+    </div>
+}
+
+@if (r is not null)
+{
+    @if (r.ErroFicheiro is not null)
+    {
+        <div class="alert alert-danger mt-4"><i class="bi bi-exclamation-triangle me-1"></i>@r.ErroFicheiro</div>
+    }
+    else
+    {
+        <section class="painel mt-4">
+            <div class="painel-cabecalho flex-wrap">
+                <h2>2. Resultado da análise</h2>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="estado estado-pago">@r.Novos novos</span>
+                    @if (r.Actualizados > 0) { <span class="estado estado-emitido">@r.Actualizados a actualizar</span> }
+                    @if (r.Ignorados > 0) { <span class="estado estado-rascunho">@r.Ignorados ignorados</span> }
+                    @if (r.Erros > 0) { <span class="estado estado-vencido">@r.Erros com erros</span> }
+                </div>
+            </div>
+            @if (r.ColunasIgnoradas.Count > 0)
+            {
+                <div class="px-3 pt-3 small text-body-secondary">Colunas não reconhecidas (ignoradas): @string.Join(", ", r.ColunasIgnoradas)</div>
+            }
+            <div class="table-responsive" style="max-height: 60vh">
+                <table class="table relatorio-importacao">
+                    <thead class="sticky-top">
+                        <tr><th class="num">Linha</th><th>Registo</th><th>Resultado</th><th>Detalhe</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var l in r.Linhas.OrderBy(l => l.Estado == EstadoLinha.Erro ? 0 : l.Estado == EstadoLinha.Ignorado ? 1 : 2).ThenBy(l => l.Numero))
+                        {
+                            <tr>
+                                <td class="num">@l.Numero</td>
+                                <td>@l.Identificacao</td>
+                                <td>
+                                    @{
+                                        var (classe, texto) = l.Estado switch
+                                        {
+                                            EstadoLinha.Novo => ("estado-pago", "Novo"),
+                                            EstadoLinha.Actualizar => ("estado-emitido", "Actualizar"),
+                                            EstadoLinha.Ignorado => ("estado-rascunho", "Ignorado"),
+                                            _ => ("estado-vencido", "Erro"),
+                                        };
+                                    }
+                                    <span class="estado @classe">@texto</span>
+                                </td>
+                                <td class="small">@string.Join(" ", l.Mensagens)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="painel-corpo border-top d-flex flex-wrap justify-content-between align-items-center gap-2">
+                @if (r.PodeImportar)
+                {
+                    <span class="small text-body-secondary">As linhas com erro ou ignoradas não são gravadas. Pode corrigi-las no ficheiro e importá-lo outra vez.</span>
+                    <div class="d-flex gap-2">
+                        <a class="btn btn-outline-secondary" href="@Url.Page(null)">Escolher outro ficheiro</a>
+                        <form method="post" asp-page-handler="Importar">
+                            <input type="hidden" asp-for="Token" />
+                            <input type="hidden" asp-for="Modo" />
+                            <button type="submit" class="btn btn-primary">Importar @(r.Novos + r.Actualizados) @Model.NomeRegistos.ToLowerInvariant()</button>
+                        </form>
+                    </div>
+                }
+                else
+                {
+                    <span class="small">Nada para importar: corrija o ficheiro e envie-o outra vez.</span>
+                }
+            </div>
+        </section>
+    }
+}

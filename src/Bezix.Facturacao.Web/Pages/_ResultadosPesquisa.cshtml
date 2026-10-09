@@ -1,0 +1,29 @@
+@model Bezix.Facturacao.Web.Pages.PesquisaModel
+@if (Model.Pesquisou)
+{
+    @if (Model.Clientes.Count == 0 && Model.Artigos.Count == 0)
+    {
+        <div class="p-3 small text-body-secondary">Nada encontrado para "@Model.Q".</div>
+    }
+    @if (Model.Clientes.Count > 0)
+    {
+        <div class="grupo">Clientes</div>
+        @foreach (var c in Model.Clientes)
+        {
+            <a asp-page="/Clientes/Detalhe" asp-route-id="@c.Id"><i class="bi bi-person text-body-secondary"></i><span>@c.Nome</span><small>@c.Nuit</small></a>
+        }
+        @if (Model.Clientes.Count == Bezix.Facturacao.Web.Pages.PesquisaModel.Limite)
+        {
+            <a asp-page="/Clientes/Index" asp-route-Q="@Model.Q" class="small text-primary">Ver todos os clientes encontrados</a>
+        }
+    }
+    @if (Model.Artigos.Count > 0)
+    {
+        <div class="grupo">Artigos</div>
+        @foreach (var a in Model.Artigos)
+        {
+            var url = User.TemPermissao(Permissoes.Artigos.Gerir) ? Url.Page("/Artigos/Editar", new { id = a.Id }) : Url.Page("/Artigos/Index", new { Q = a.Codigo });
+            <a href="@url"><i class="bi bi-box-seam text-body-secondary"></i><span>@a.Descricao</span><small>@a.Codigo</small></a>
+        }
+    }
+}

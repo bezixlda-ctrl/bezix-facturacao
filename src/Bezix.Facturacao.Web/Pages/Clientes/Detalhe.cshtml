@@ -1,0 +1,97 @@
+@page "{id:int}"
+@model Bezix.Facturacao.Web.Pages.Clientes.DetalheModel
+@using Bezix.Facturacao.Domain.Clientes
+@{
+    var c = Model.Cliente;
+    ViewData["Title"] = c.Nome;
+}
+<div class="cabecalho-pagina">
+    <div>
+        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Clientes</a>
+        <h1 class="mt-1 mb-1">@c.Nome</h1>
+        <div class="d-flex flex-wrap gap-2 align-items-center small text-body-secondary">
+            <span>@(c.Tipo == TipoCliente.Empresa ? "Empresa" : "Particular")</span>
+            @if (c.Nuit is not null) { <span class="tabular">NUIT @c.Nuit</span> }
+            else if (c.Tipo == TipoCliente.Empresa) { <span class="estado estado-parcial">Sem NUIT: não é possível facturar</span> }
+            @if (!c.Activo) { <span class="estado estado-inactivo">Inactivo</span> }
+            @foreach (var e in c.ListaEtiquetas())
+            {
+                <a class="badge rounded-pill text-bg-light border fw-semibold text-decoration-none" asp-page="Index" asp-route-Etiqueta="@e">@e</a>
+            }
+        </div>
+    </div>
+    @if (Model.PodeGerir)
+    {
+        <div class="d-flex gap-2">
+            <form method="post" asp-page-handler="Estado" asp-route-activo="@(!c.Activo)"
+                  data-confirmar="@(c.Activo ? "Desactivar este cliente? Deixa de aparecer nas listas e em documentos novos; o histórico mantém-se." : null)">
+                <button type="submit" class="btn btn-outline-secondary">@(c.Activo ? "Desactivar" : "Reactivar")</button>
+            </form>
+            <a class="btn btn-primary" asp-page="Editar" asp-route-id="@c.Id"><i class="bi bi-pencil me-1"></i>Editar</a>
+        </div>
+    }
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5 col-xl-4">
+        <section class="painel mb-4">
+            <div class="painel-cabecalho"><h2>Contactos</h2></div>
+            <dl class="painel-corpo mb-0 ficha">
+                <dt>Endereço</dt>
+                <dd>@(c.Endereco ?? "—")@if (c.Cidade is not null) { <br />@c.Cidade }</dd>
+                <dt>Contacto (Att.)</dt>
+                <dd>@(c.Contacto ?? "—")</dd>
+                <dt>Telefone</dt>
+                <dd class="tabular">@if (c.Telefone is not null) { <a href="tel:@c.Telefone">@c.Telefone</a> } else { <text>—</text> }</dd>
+                <dt>Celular</dt>
+                <dd class="tabular">@if (c.Celular is not null) { <a href="tel:@c.Celular">@c.Celular</a> } else { <text>—</text> }</dd>
+                <dt>Email</dt>
+                <dd>@if (c.Email is not null) { <a href="mailto:@c.Email">@c.Email</a> } else { <text>—</text> }</dd>
+            </dl>
+        </section>
+
+        <section class="painel mb-4">
+            <div class="painel-cabecalho"><h2>Condições</h2></div>
+            <dl class="painel-corpo mb-0 ficha">
+                <dt>Prazo de pagamento</dt>
+                <dd class="tabular">@Model.PrazoEfectivo dias @if (c.PrazoPagamentoDias is null) { <span class="text-body-secondary small">(o da empresa)</span> }</dd>
+                <dt>Limite de crédito</dt>
+                <dd class="tabular">@(c.LimiteCredito is { } l ? Formato.Moeda(l) : "Sem limite")</dd>
+                <dt>Desconto habitual</dt>
+                <dd class="tabular">@Formato.Percentagem(c.DescontoPadraoPct)</dd>
+                <dt>Responsável</dt>
+                <dd>@(Model.NomeResponsavel ?? "—")</dd>
+            </dl>
+        </section>
+
+        <section class="painel mb-4">
+            <div class="painel-cabecalho"><h2>Envio de documentos</h2></div>
+            <dl class="painel-corpo mb-0 ficha">
+                <dt>Facturas para</dt>
+                <dd>@(c.EmailEnvio ?? "Sem email")</dd>
+                @if (c.EmailCc is not null)
+                {
+                    <dt>Em cópia</dt>
+                    <dd>@c.EmailCc</dd>
+                }
+                <dt>Lembretes de pagamento</dt>
+                <dd>@(c.LembretesActivos ? "Activos" : "Desligados para este cliente")</dd>
+            </dl>
+        </section>
+
+        @if (c.Notas is not null)
+        {
+            <section class="painel">
+                <div class="painel-cabecalho"><h2>Notas internas</h2></div>
+                <div class="painel-corpo" style="white-space: pre-line">@c.Notas</div>
+            </section>
+        }
+    </div>
+
+    <div class="col-lg-7 col-xl-8">
+        <section class="painel" id="actividades">
+            <partial name="_Actividades" model="Model" />
+        </section>
+        <p class="small text-body-secondary mt-3"><i class="bi bi-info-circle me-1"></i>Documentos, pagamentos e emails enviados a este cliente aparecem aqui a partir das próximas fases.</p>
+    </div>
+</div>

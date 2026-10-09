@@ -1,0 +1,41 @@
+@page
+@model Bezix.Facturacao.Web.Pages.Artigos.IndexModel
+@using Bezix.Facturacao.Application.Clientes
+@{
+    ViewData["Title"] = "Artigos";
+    var gerir = User.TemPermissao(Permissoes.Artigos.Gerir);
+}
+<div class="cabecalho-pagina">
+    <div>
+        <h1>Artigos</h1>
+        <p>Produtos e serviços que aparecem nas linhas dos documentos.</p>
+    </div>
+    @if (gerir)
+    {
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-primary" asp-page="Importar"><i class="bi bi-upload me-1"></i>Importar CSV</a>
+            <a class="btn btn-primary" asp-page="Editar"><i class="bi bi-plus-lg me-1"></i>Novo artigo</a>
+        </div>
+    }
+</div>
+
+<section class="painel">
+    <form method="get" class="d-flex flex-wrap gap-2 p-3 border-bottom" role="search"
+          hx-get="@Url.Page("/Artigos/Index")" hx-target="#listaArtigos" hx-push-url="true"
+          hx-trigger="input changed delay:300ms from:#Q, change from:select, submit">
+        <div class="flex-grow-1" style="min-width: 220px">
+            <label class="visually-hidden" for="Q">Pesquisar artigos</label>
+            <input class="form-control" type="search" id="Q" name="Q" value="@Model.Q" placeholder="Código ou descrição" autocomplete="off" />
+        </div>
+        <label class="visually-hidden" for="Estado">Estado</label>
+        <select class="form-select w-auto" id="Estado" name="Estado">
+            <option value="@FiltroEstado.Activos" selected="@(Model.Estado == FiltroEstado.Activos)">Activos</option>
+            <option value="@FiltroEstado.Inactivos" selected="@(Model.Estado == FiltroEstado.Inactivos)">Inactivos</option>
+            <option value="@FiltroEstado.Todos" selected="@(Model.Estado == FiltroEstado.Todos)">Todos</option>
+        </select>
+        <noscript><button class="btn btn-outline-primary" type="submit">Pesquisar</button></noscript>
+    </form>
+    <div id="listaArtigos">
+        <partial name="_ListaArtigos" model="Model" />
+    </div>
+</section>

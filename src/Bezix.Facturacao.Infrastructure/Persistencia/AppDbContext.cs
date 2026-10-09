@@ -1,5 +1,7 @@
 using Bezix.Facturacao.Application.Abstracoes;
+using Bezix.Facturacao.Domain.Artigos;
 using Bezix.Facturacao.Domain.Auditoria;
+using Bezix.Facturacao.Domain.Clientes;
 using Bezix.Facturacao.Domain.Configuracao;
 using Bezix.Facturacao.Domain.Documentos;
 using Bezix.Facturacao.Domain.Fiscal;
@@ -17,6 +19,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<TaxaIva> TaxasIva => Set<TaxaIva>();
     public DbSet<Serie> Series => Set<Serie>();
     public DbSet<RegistoAuditoria> Auditoria => Set<RegistoAuditoria>();
+    public DbSet<Cliente> Clientes => Set<Cliente>();
+    public DbSet<Actividade> Actividades => Set<Actividade>();
+    public DbSet<Artigo> Artigos => Set<Artigo>();
+
+    /// <summary>Colação sem distinção de maiúsculas nem acentos: pesquisar "conceicao" encontra "Conceição".</summary>
+    public const string ColacaoPesquisa = "Latin1_General_100_CI_AI";
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -91,6 +99,55 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.Property(x => x.Estado).HasConversion<string>().HasMaxLength(10);
             e.HasIndex(x => new { x.TipoDoc, x.Codigo, x.Ano }).IsUnique();
             e.Ignore(x => x.Descricao);
+        });
+
+        b.Entity<Cliente>(e =>
+        {
+            e.ToTable("Clientes");
+            e.Property(x => x.Nome).HasMaxLength(200).IsRequired().UseCollation(ColacaoPesquisa);
+            e.Property(x => x.Tipo).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.Nuit).HasMaxLength(9).IsUnicode(false);
+            e.Property(x => x.Endereco).HasMaxLength(300);
+            e.Property(x => x.Cidade).HasMaxLength(100);
+            e.Property(x => x.Telefone).HasMaxLength(50);
+            e.Property(x => x.Celular).HasMaxLength(50);
+            e.Property(x => x.TelefonesPesquisa).HasMaxLength(60).IsUnicode(false);
+            e.Property(x => x.Email).HasMaxLength(200);
+            e.Property(x => x.Contacto).HasMaxLength(150).UseCollation(ColacaoPesquisa);
+            e.Property(x => x.DescontoPadraoPct).HasPrecision(5, 2);
+            e.Property(x => x.Notas).HasMaxLength(2000);
+            e.Property(x => x.Etiquetas).HasMaxLength(500);
+            e.Property(x => x.EmailFacturacao).HasMaxLength(200);
+            e.Property(x => x.EmailCc).HasMaxLength(500);
+            e.Property(x => x.ResponsavelId).HasMaxLength(450);
+            e.Ignore(x => x.EmailEnvio);
+            // NUIT não é único: filiais da mesma empresa podem partilhá-lo (o sistema avisa e pede confirmação).
+            e.HasIndex(x => x.Nuit);
+            e.HasIndex(x => new { x.Activo, x.Nome });
+            e.HasIndex(x => x.ResponsavelId);
+            e.HasMany(x => x.Actividades).WithOne(a => a.Cliente).HasForeignKey(a => a.ClienteId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        b.Entity<Actividade>(e =>
+        {
+            e.ToTable("Actividades");
+            e.Property(x => x.Tipo).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.Nota).HasMaxLength(2000).IsRequired();
+            e.Property(x => x.ResponsavelId).HasMaxLength(450);
+            e.Property(x => x.ResponsavelNome).HasMaxLength(150);
+            e.HasIndex(x => new { x.ClienteId, x.Data });
+        });
+
+        b.Entity<Artigo>(e =>
+        {
+            e.ToTable("Artigos");
+            e.Property(x => x.Codigo).HasMaxLength(30).IsRequired();
+            e.Property(x => x.Descricao).HasMaxLength(500).IsRequired().UseCollation(ColacaoPesquisa);
+            e.Property(x => x.Tipo).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.Unidade).HasMaxLength(20).IsRequired();
+            e.Property(x => x.CodigoTaxaIva).HasMaxLength(20).IsRequired();
+            e.HasIndex(x => x.Codigo).IsUnique();
+            e.HasIndex(x => new { x.Activo, x.Codigo });
         });
 
         b.Entity<RegistoLog>(e =>

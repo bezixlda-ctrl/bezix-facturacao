@@ -94,6 +94,13 @@
                         </select>
                     </div>
                     <div class="col-12">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" asp-for="Dados.RestringirAosProprios" role="switch" />
+                            <label class="form-check-label" asp-for="Dados.RestringirAosProprios">Cada utilizador vê só os seus clientes e documentos</label>
+                        </div>
+                        <div class="form-text">Aplica-se a quem não tem a permissão "Ver clientes e documentos de todos os utilizadores" (por omissão, o Facturador).</div>
+                    </div>
+                    <div class="col-12">
                         <label class="form-label" asp-for="Dados.RodapeTexto">Texto do rodapé</label>
                         <textarea class="form-control" asp-for="Dados.RodapeTexto" rows="2"></textarea>
                         <div class="form-text">Deve incluir "Processado por computador". A identificação do software certificado é acrescentada automaticamente.</div>

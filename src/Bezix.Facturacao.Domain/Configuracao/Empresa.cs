@@ -33,6 +33,12 @@ public class Empresa : Entidade
     public decimal LimiteNuitObrigatorio { get; set; }
 
     public ModoArredondamentoIva ModoArredondamentoIva { get; set; } = ModoArredondamentoIva.PorTaxa;
+
+    /// <summary>
+    /// Quando activo, utilizadores sem a permissão Documentos.VerTodos (ex.: Facturador) só vêem
+    /// os clientes e documentos de que são responsáveis.
+    /// </summary>
+    public bool RestringirAosProprios { get; set; }
 }
 
 public enum ModoArredondamentoIva

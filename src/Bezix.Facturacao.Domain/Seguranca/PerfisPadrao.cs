@@ -30,7 +30,7 @@ public static class PerfisPadrao
         new(Facturador, "Cria clientes e emite documentos; NC e descontos altos pedem aprovação", 10m,
         [
             Dashboard.Facturacao,
-            Clientes.Ver, Clientes.Gerir, Artigos.Ver, Artigos.Gerir,
+            Permissoes.Clientes.Ver, Permissoes.Clientes.Gerir, Permissoes.Artigos.Ver, Permissoes.Artigos.Gerir,
             Permissoes.Documentos.Ver, Permissoes.Documentos.Rascunho, Permissoes.Documentos.EmitirFactura,
             Permissoes.Documentos.EmitirFacturaRecibo, Permissoes.Documentos.EmitirNotaDebito,
             Permissoes.Documentos.PedirNotaCredito,
@@ -40,7 +40,7 @@ public static class PerfisPadrao
         new(Tesouraria, "Regista recebimentos, valida pagamentos e faz cobranças", 0m,
         [
             Dashboard.Recebimentos, Dashboard.Saldos,
-            Clientes.Ver, Clientes.Gerir, Artigos.Ver,
+            Permissoes.Clientes.Ver, Permissoes.Clientes.Gerir, Permissoes.Artigos.Ver,
             Permissoes.Documentos.Ver, Permissoes.Documentos.VerTodos, Permissoes.Documentos.EmitirFacturaRecibo,
             Recibos.Registar, Recibos.ValidarPagamentoComunicado,
             Comunicacao.Enviar, Automacao.Ver,
@@ -49,7 +49,7 @@ public static class PerfisPadrao
         new(Contabilista, "Consulta documentos, relatórios fiscais e exportação AT", 0m,
         [
             Dashboard.Facturacao, Dashboard.Recebimentos, Dashboard.Iva,
-            Clientes.Ver, Artigos.Ver,
+            Permissoes.Clientes.Ver, Permissoes.Artigos.Ver,
             Permissoes.Documentos.Ver, Permissoes.Documentos.VerTodos,
             Relatorios.Vendas, Relatorios.Fiscal,
             Configuracoes.VerTaxas, Administracao.VerAuditoria,
@@ -58,7 +58,7 @@ public static class PerfisPadrao
         new(Consulta, "Só consulta", 0m,
         [
             Dashboard.Resumo,
-            Clientes.Ver, Artigos.Ver,
+            Permissoes.Clientes.Ver, Permissoes.Artigos.Ver,
             Permissoes.Documentos.Ver, Permissoes.Documentos.VerTodos,
             Relatorios.Vendas,
         ]),

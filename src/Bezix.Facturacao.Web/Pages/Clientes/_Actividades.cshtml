@@ -1,0 +1,70 @@
+@model Bezix.Facturacao.Web.Pages.Clientes.DetalheModel
+@using Bezix.Facturacao.Domain.Clientes
+<div class="painel-cabecalho"><h2>Actividades</h2></div>
+
+@if (Model.PodeGerir)
+{
+    <form method="post" asp-page-handler="Actividade" asp-route-id="@Model.Id" class="painel-corpo border-bottom"
+          hx-post="@Url.Page("/Clientes/Detalhe", "Actividade", new { id = Model.Id })" hx-target="#actividades">
+        <partial name="_ResumoErros" />
+        <div class="row g-2">
+            <div class="col-sm-4 col-md-3">
+                <label class="form-label small" for="NovoTipo">Tipo</label>
+                <select class="form-select" asp-for="NovoTipo">
+                    @foreach (var t in Enum.GetValues<TipoActividade>())
+                    {
+                        <option value="@t">@Bezix.Facturacao.Web.Pages.Clientes.DetalheModel.Nome(t)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-sm-8 col-md-4">
+                <label class="form-label small" for="NovaData">Data <span class="text-body-secondary">(prazo, se for tarefa)</span></label>
+                <input class="form-control" asp-for="NovaData" type="datetime-local" value="@(Model.NovaData?.ToString("yyyy-MM-ddTHH:mm") ?? Model.AgoraMaputo.ToString("yyyy-MM-ddTHH:mm"))" />
+            </div>
+            <div class="col-md-5">
+                <label class="form-label small" for="NovaNota">Nota</label>
+                <input class="form-control" asp-for="NovaNota" maxlength="2000" placeholder="Ex.: pediu cotação para 20 licenças" required />
+            </div>
+        </div>
+        <div class="d-flex justify-content-end mt-2">
+            <button type="submit" class="btn btn-sm btn-primary">Registar actividade</button>
+        </div>
+    </form>
+}
+
+@if (Model.Actividades.Count == 0)
+{
+    <div class="vazio"><i class="bi bi-clock-history"></i>Sem actividades registadas.</div>
+}
+else
+{
+    <ul class="linha-tempo">
+        @foreach (var a in Model.Actividades)
+        {
+            var tarefaPendente = a.Tipo == TipoActividade.Tarefa && a.ConcluidaEm is null;
+            var atrasada = tarefaPendente && a.Data < DateTime.UtcNow;
+            <li class="@(a.ConcluidaEm is not null ? "concluida" : "")">
+                <span class="icone"><i class="bi @Bezix.Facturacao.Web.Pages.Clientes.DetalheModel.Icone(a.Tipo)"></i></span>
+                <div class="flex-grow-1">
+                    <div class="d-flex flex-wrap gap-2 align-items-baseline">
+                        <strong>@Bezix.Facturacao.Web.Pages.Clientes.DetalheModel.Nome(a.Tipo)</strong>
+                        <span class="small tabular @(atrasada ? "text-danger fw-semibold" : "text-body-secondary")">
+                            @(tarefaPendente ? "até " : "")@Formato.DataHora(a.Data)@(atrasada ? " · em atraso" : "")
+                        </span>
+                        @if (a.ResponsavelNome is not null) { <span class="small text-body-secondary">· @a.ResponsavelNome</span> }
+                    </div>
+                    <p class="mb-0 nota">@a.Nota</p>
+                </div>
+                @if (a.Tipo == TipoActividade.Tarefa && Model.PodeGerir)
+                {
+                    <form method="post" asp-page-handler="Concluir" asp-route-id="@Model.Id" asp-route-actividadeId="@a.Id"
+                          hx-post="@Url.Page("/Clientes/Detalhe", "Concluir", new { id = Model.Id, actividadeId = a.Id })" hx-target="#actividades">
+                        <button type="submit" class="btn btn-sm @(a.ConcluidaEm is null ? "btn-outline-success" : "btn-link text-body-secondary")">
+                            @(a.ConcluidaEm is null ? "Concluir" : "Reabrir")
+                        </button>
+                    </form>
+                }
+            </li>
+        }
+    </ul>
+}

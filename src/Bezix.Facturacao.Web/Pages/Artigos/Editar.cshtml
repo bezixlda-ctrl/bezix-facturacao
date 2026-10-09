@@ -1,0 +1,74 @@
+@page "{id:int?}"
+@model Bezix.Facturacao.Web.Pages.Artigos.EditarModel
+@using Bezix.Facturacao.Application.Artigos
+@using Bezix.Facturacao.Domain.Artigos
+@{
+    ViewData["Title"] = Model.Novo ? "Novo artigo" : Model.Dados.Codigo;
+}
+<div class="cabecalho-pagina">
+    <div>
+        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Artigos</a>
+        <h1 class="mt-1">@(Model.Novo ? "Novo artigo" : "Editar artigo")</h1>
+        @if (!Model.Activo) { <span class="estado estado-inactivo">Inactivo</span> }
+    </div>
+    @if (!Model.Novo)
+    {
+        <form method="post" asp-page-handler="Estado" asp-route-activo="@(!Model.Activo)"
+              data-confirmar="@(Model.Activo ? "Desactivar este artigo? Deixa de aparecer em documentos novos; os documentos emitidos não mudam." : null)">
+            <button type="submit" class="btn btn-outline-secondary">@(Model.Activo ? "Desactivar" : "Reactivar")</button>
+        </form>
+    }
+</div>
+
+<form method="post" class="painel" style="max-width: 820px" novalidate>
+    <div class="painel-corpo">
+        <partial name="_ResumoErros" />
+        <div class="row g-3">
+            <div class="col-sm-4">
+                <label class="form-label" asp-for="Dados.Codigo">Código</label>
+                <input class="form-control text-uppercase tabular" asp-for="Dados.Codigo" maxlength="30" placeholder="SERV-001" required />
+            </div>
+            <div class="col-sm-8">
+                <span class="form-label d-block">Tipo</span>
+                <div class="btn-group" role="group" aria-label="Tipo de artigo">
+                    <input type="radio" class="btn-check" asp-for="Dados.Tipo" value="@TipoArtigo.Servico" id="tipoServico" />
+                    <label class="btn btn-outline-primary" for="tipoServico">Serviço</label>
+                    <input type="radio" class="btn-check" asp-for="Dados.Tipo" value="@TipoArtigo.Produto" id="tipoProduto" />
+                    <label class="btn btn-outline-primary" for="tipoProduto">Produto</label>
+                </div>
+            </div>
+            <div class="col-12">
+                <label class="form-label" asp-for="Dados.Descricao">Descrição</label>
+                <textarea class="form-control" asp-for="Dados.Descricao" rows="2" maxlength="500" required></textarea>
+                <div class="form-text">Texto que aparece na linha da factura. Pode ser ajustado em cada documento.</div>
+            </div>
+            <div class="col-sm-4">
+                <label class="form-label" asp-for="Dados.Unidade">Unidade</label>
+                <input class="form-control" asp-for="Dados.Unidade" maxlength="20" list="unidades" />
+                <datalist id="unidades">
+                    @foreach (var u in ServicoArtigos.UnidadesSugeridas) { <option value="@u"></option> }
+                </datalist>
+            </div>
+            <div class="col-sm-4">
+                <label class="form-label" asp-for="Dados.Preco">Preço unitário (sem IVA)</label>
+                <div class="input-group">
+                    <input class="form-control tabular text-end" asp-for="Dados.Preco" type="text" inputmode="decimal" value="@Formato.Numero(Model.Dados.Preco)" />
+                    <span class="input-group-text">MT</span>
+                </div>
+            </div>
+            <div class="col-sm-4">
+                <label class="form-label" asp-for="Dados.CodigoTaxaIva">IVA</label>
+                <select class="form-select" asp-for="Dados.CodigoTaxaIva">
+                    @foreach (var t in Model.Taxas)
+                    {
+                        <option value="@t.Codigo">@t.Descricao (@Formato.Percentagem(t.Percentagem))</option>
+                    }
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="painel-corpo border-top d-flex justify-content-end gap-2">
+        <a class="btn btn-outline-secondary" asp-page="Index">Cancelar</a>
+        <button type="submit" class="btn btn-primary">@(Model.Novo ? "Criar artigo" : "Guardar artigo")</button>
+    </div>
+</form>

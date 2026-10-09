@@ -1,0 +1,67 @@
+@model Bezix.Facturacao.Web.Pages.Clientes.IndexModel
+@using Bezix.Facturacao.Domain.Clientes
+@if (Model.Resultado.Total == 0)
+{
+    <div class="vazio">
+        @if (Model.Filtrado)
+        {
+            <i class="bi bi-search"></i>
+            <p class="mb-0">Nenhum cliente corresponde à pesquisa.</p>
+        }
+        else
+        {
+            <i class="bi bi-people"></i>
+            <p>Ainda não há clientes. Crie o primeiro ou importe a lista que já tem em Excel.</p>
+            @if (User.TemPermissao(Permissoes.Clientes.Gerir))
+            {
+                <div class="d-flex justify-content-center gap-2">
+                    <a class="btn btn-outline-primary" asp-page="Importar">Importar CSV</a>
+                    <a class="btn btn-primary" asp-page="Editar">Novo cliente</a>
+                </div>
+            }
+        }
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>NUIT</th>
+                    <th class="d-none d-md-table-cell">Cidade</th>
+                    <th class="d-none d-lg-table-cell">Contacto</th>
+                    <th>Telefone</th>
+                    <th class="d-none d-xl-table-cell">Etiquetas</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model.Resultado.Itens)
+                {
+                    <tr>
+                        <td>
+                            <a class="fw-semibold text-decoration-none" asp-page="Detalhe" asp-route-id="@c.Id">@c.Nome</a>
+                            @if (!c.Activo) { <span class="estado estado-inactivo ms-1">Inactivo</span> }
+                            @if (c.Tipo == TipoCliente.Particular) { <span class="small text-body-secondary ms-1">particular</span> }
+                        </td>
+                        <td class="tabular text-nowrap">
+                            @if (c.Nuit is not null) { @c.Nuit }
+                            else if (c.Tipo == TipoCliente.Empresa) { <span class="text-body-secondary small" title="Sem NUIT não é possível emitir facturas a esta empresa">sem NUIT</span> }
+                        </td>
+                        <td class="d-none d-md-table-cell">@c.Cidade</td>
+                        <td class="d-none d-lg-table-cell">@c.Contacto</td>
+                        <td class="tabular text-nowrap">@c.Telefone</td>
+                        <td class="d-none d-xl-table-cell">
+                            @foreach (var e in Cliente.NormalizarEtiquetas(c.Etiquetas))
+                            {
+                                <span class="badge rounded-pill text-bg-light border fw-semibold">@e</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Paginacao" model="Model.Paginacao" />
+}

@@ -21,7 +21,8 @@ public sealed record DadosEmpresa(
     string RodapeTexto,
     int PrazoPagamentoDias,
     decimal LimiteNuitObrigatorio,
-    ModoArredondamentoIva ModoArredondamentoIva);
+    ModoArredondamentoIva ModoArredondamentoIva,
+    bool RestringirAosProprios = false);
 
 public sealed partial class ServicoEmpresa(
     IAppDbContext db,
@@ -68,6 +69,7 @@ public sealed partial class ServicoEmpresa(
         empresa.PrazoPagamentoDias = dados.PrazoPagamentoDias;
         empresa.LimiteNuitObrigatorio = dados.LimiteNuitObrigatorio;
         empresa.ModoArredondamentoIva = dados.ModoArredondamentoIva;
+        empresa.RestringirAosProprios = dados.RestringirAosProprios;
 
         auditoria.Registar(nameof(Empresa), empresa.Id.ToString(), "Configuracao.Alterar", antes, Instantaneo(empresa));
         await db.SaveChangesAsync(ct);
@@ -126,6 +128,7 @@ public sealed partial class ServicoEmpresa(
     {
         e.Nome, e.Nuit, e.Slogan, e.Endereco, e.Cidade, e.Provincia, e.Telefones, e.Email, e.Site,
         e.CorPrimaria, e.RodapeTexto, e.PrazoPagamentoDias, e.LimiteNuitObrigatorio, e.ModoArredondamentoIva,
+        e.RestringirAosProprios,
     };
 
     [GeneratedRegex(@"^\d{9}$")]

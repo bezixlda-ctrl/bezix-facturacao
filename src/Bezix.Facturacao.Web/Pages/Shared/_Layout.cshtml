@@ -47,6 +47,17 @@
                 <button class="btn-icone d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#menuLateral" aria-controls="menuLateral" aria-label="Abrir menu">
                     <i class="bi bi-list"></i>
                 </button>
+                @if (User.TemAlguma(Permissoes.Clientes.Ver, Permissoes.Artigos.Ver))
+                {
+                    <div class="pesquisa-global" role="search">
+                        <i class="bi bi-search" aria-hidden="true"></i>
+                        <label class="visually-hidden" for="pesquisaGlobal">Pesquisar clientes e artigos</label>
+                        <input class="form-control" type="search" id="pesquisaGlobal" name="q" placeholder="Pesquisar cliente, NUIT, telefone, artigo" autocomplete="off"
+                               hx-get="/Pesquisa" hx-trigger="input changed delay:250ms, search" hx-target="#resultadosPesquisa" />
+                        <kbd class="d-none d-md-inline">Ctrl K</kbd>
+                        <div id="resultadosPesquisa" class="pesquisa-resultados"></div>
+                    </div>
+                }
                 <div class="ms-auto d-flex align-items-center gap-2">
                     <button class="btn-icone" type="button" id="alternarTema" aria-label="Mudar entre modo claro e escuro" title="Modo claro/escuro">
                         <i class="bi bi-moon-stars"></i>

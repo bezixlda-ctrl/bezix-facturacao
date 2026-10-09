@@ -1,0 +1,24 @@
+@model Bezix.Facturacao.Web.Pages.Shared.Paginacao
+@if (Model.Total > 0)
+{
+    <nav class="d-flex flex-wrap justify-content-between align-items-center gap-2 px-3 py-2 border-top" aria-label="Paginação">
+        <span class="small text-body-secondary tabular">@Model.Primeiro–@Model.Ultimo de @Model.Total</span>
+        @if (Model.TotalPaginas > 1)
+        {
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item @(Model.Numero <= 1 ? "disabled" : "")">
+                    <a class="page-link" href="@Model.Url(Model.Numero - 1)" hx-get="@Model.Url(Model.Numero - 1)" hx-target="@Model.Alvo" hx-push-url="true" aria-label="Página anterior">‹</a>
+                </li>
+                @for (var p = Math.Max(1, Model.Numero - 2); p <= Math.Min(Model.TotalPaginas, Model.Numero + 2); p++)
+                {
+                    <li class="page-item @(p == Model.Numero ? "active" : "")">
+                        <a class="page-link tabular" href="@Model.Url(p)" hx-get="@Model.Url(p)" hx-target="@Model.Alvo" hx-push-url="true" aria-current="@(p == Model.Numero ? "page" : null)">@p</a>
+                    </li>
+                }
+                <li class="page-item @(Model.Numero >= Model.TotalPaginas ? "disabled" : "")">
+                    <a class="page-link" href="@Model.Url(Model.Numero + 1)" hx-get="@Model.Url(Model.Numero + 1)" hx-target="@Model.Alvo" hx-push-url="true" aria-label="Página seguinte">›</a>
+                </li>
+            </ul>
+        }
+    </nav>
+}

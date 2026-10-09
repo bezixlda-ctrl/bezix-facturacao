@@ -99,7 +99,7 @@ public static class Permissoes
         new(Artigos.Gerir, "Clientes e artigos", "Criar e editar artigos"),
 
         new(Documentos.Ver, "Documentos", "Consultar documentos"),
-        new(Documentos.VerTodos, "Documentos", "Ver documentos de todos os utilizadores (sem esta, só os próprios)"),
+        new(Documentos.VerTodos, "Documentos", "Ver clientes e documentos de todos os utilizadores (sem esta, só os próprios, se a opção estiver activa)"),
         new(Documentos.Rascunho, "Documentos", "Criar cotações, guias e rascunhos"),
         new(Documentos.EmitirFactura, "Documentos", "Emitir facturas e facturas globais"),
         new(Documentos.EmitirFacturaRecibo, "Documentos", "Emitir facturas-recibo"),

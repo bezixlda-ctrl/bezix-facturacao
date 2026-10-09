@@ -25,6 +25,14 @@ public class AcessoPorPerfilTests(AplicacaoFactory app)
         Linha("/Administracao/Perfis", PerfisPadrao.Administrador);
         Linha("/Administracao/Auditoria", PerfisPadrao.Administrador, PerfisPadrao.Gestor, PerfisPadrao.Contabilista);
         Linha("/Conta/Seguranca", PerfisPadrao.Todos.Select(p => p.Nome).ToArray());
+
+        // Fase 2: clientes e artigos ("Criar/editar clientes e artigos": Tesouraria só clientes; Contabilista e Consulta só vêem)
+        Linha("/Clientes", PerfisPadrao.Todos.Select(p => p.Nome).ToArray());
+        Linha("/Clientes/Editar", PerfisPadrao.Administrador, PerfisPadrao.Gestor, PerfisPadrao.Facturador, PerfisPadrao.Tesouraria);
+        Linha("/Clientes/Importar", PerfisPadrao.Administrador, PerfisPadrao.Gestor, PerfisPadrao.Facturador, PerfisPadrao.Tesouraria);
+        Linha("/Artigos", PerfisPadrao.Todos.Select(p => p.Nome).ToArray());
+        Linha("/Artigos/Editar", PerfisPadrao.Administrador, PerfisPadrao.Gestor, PerfisPadrao.Facturador);
+        Linha("/Artigos/Importar", PerfisPadrao.Administrador, PerfisPadrao.Gestor, PerfisPadrao.Facturador);
         return d;
     }
 

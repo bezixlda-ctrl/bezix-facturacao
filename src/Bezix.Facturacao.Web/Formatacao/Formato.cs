@@ -44,13 +44,6 @@ public static class Formato
         DateOnly.FromDateTime(ParaMaputo(relogio.GetUtcNow().UtcDateTime));
 
     /// <summary>Aceita "30.804,10", "30804,10" e "30804.10" (este último só quando não há vírgula).</summary>
-    public static bool TentarLerDecimal(string? texto, out decimal valor)
-    {
-        valor = 0;
-        if (string.IsNullOrWhiteSpace(texto)) return false;
-        var t = texto.Trim().Replace(" ", "").Replace("MT", "", StringComparison.OrdinalIgnoreCase).Replace("%", "");
-        if (!t.Contains(',') && t.Count(ch => ch == '.') == 1 && t.Split('.')[1].Length != 3)
-            t = t.Replace('.', ',');
-        return decimal.TryParse(t, NumberStyles.Number, Cultura, out valor);
-    }
+    public static bool TentarLerDecimal(string? texto, out decimal valor) =>
+        Domain.Comum.Numeros.TentarLerDecimal(texto, out valor);
 }

@@ -29,6 +29,41 @@
         });
     }
 
+    // Pesquisa global: Ctrl+K (ou Cmd+K) foca; Enter abre o primeiro resultado; Esc fecha.
+    var pesquisa = document.getElementById("pesquisaGlobal");
+    var resultados = document.getElementById("resultadosPesquisa");
+    if (pesquisa && resultados) {
+        document.addEventListener("keydown", function (e) {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+                e.preventDefault();
+                pesquisa.focus();
+                pesquisa.select();
+            }
+        });
+        pesquisa.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                var primeiro = resultados.querySelector("a");
+                if (primeiro) { e.preventDefault(); window.location.href = primeiro.href; }
+            } else if (e.key === "Escape") {
+                pesquisa.value = "";
+                resultados.innerHTML = "";
+            } else if (e.key === "ArrowDown") {
+                var link = resultados.querySelector("a");
+                if (link) { e.preventDefault(); link.focus(); }
+            }
+        });
+        resultados.addEventListener("keydown", function (e) {
+            var links = Array.prototype.slice.call(resultados.querySelectorAll("a"));
+            var i = links.indexOf(document.activeElement);
+            if (e.key === "ArrowDown" && i < links.length - 1) { e.preventDefault(); links[i + 1].focus(); }
+            if (e.key === "ArrowUp") { e.preventDefault(); (i > 0 ? links[i - 1] : pesquisa).focus(); }
+            if (e.key === "Escape") { resultados.innerHTML = ""; pesquisa.focus(); }
+        });
+        document.addEventListener("click", function (e) {
+            if (!e.target.closest(".pesquisa-global")) resultados.innerHTML = "";
+        });
+    }
+
     // Confirmação antes de acções definitivas: <button data-confirmar="Texto">.
     document.addEventListener("submit", function (e) {
         var botao = e.submitter;

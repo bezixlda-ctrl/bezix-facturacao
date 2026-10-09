@@ -28,6 +28,7 @@ public class EmpresaModel(ServicoEmpresa empresas) : PaginaBase
         [Range(0, 365)] public int PrazoPagamentoDias { get; set; }
         public decimal LimiteNuitObrigatorio { get; set; }
         public ModoArredondamentoIva ModoArredondamentoIva { get; set; }
+        public bool RestringirAosProprios { get; set; }
     }
 
     [BindProperty] public Formulario Dados { get; set; } = new();
@@ -56,6 +57,7 @@ public class EmpresaModel(ServicoEmpresa empresas) : PaginaBase
             PrazoPagamentoDias = e.PrazoPagamentoDias,
             LimiteNuitObrigatorio = e.LimiteNuitObrigatorio,
             ModoArredondamentoIva = e.ModoArredondamentoIva,
+            RestringirAosProprios = e.RestringirAosProprios,
         };
         await CarregarLogotipoAsync();
     }
@@ -67,7 +69,8 @@ public class EmpresaModel(ServicoEmpresa empresas) : PaginaBase
             var d = Dados;
             var r = await empresas.ActualizarDadosAsync(new DadosEmpresa(
                 d.Nome ?? "", d.Nuit ?? "", d.Slogan, d.Endereco ?? "", d.Cidade, d.Provincia, d.Telefones, d.Email, d.Site,
-                d.CorPrimaria ?? "", d.RodapeTexto ?? "", d.PrazoPagamentoDias, d.LimiteNuitObrigatorio, d.ModoArredondamentoIva));
+                d.CorPrimaria ?? "", d.RodapeTexto ?? "", d.PrazoPagamentoDias, d.LimiteNuitObrigatorio, d.ModoArredondamentoIva,
+                d.RestringirAosProprios));
             if (r.Sucesso) return RedirecionarComSucesso("Dados da empresa guardados.");
             AdicionarErros(r);
         }
