@@ -26,11 +26,20 @@ public enum MarcaPdf
     Rascunho,
 }
 
-public sealed record OpcoesPdf(MarcaPdf Marca, string? Utilizador, bool ValorPorExtenso = true);
+/// <summary>Documento pago por um recibo (impresso no PDF do recibo).</summary>
+public sealed record AlocacaoPdf(string Documento, DateOnly Data, decimal TotalMzn, decimal Valor);
+
+public sealed record OpcoesPdf(MarcaPdf Marca, string? Utilizador, bool ValorPorExtenso = true)
+{
+    /// <summary>Só para recibos: documentos pagos e valor que ficou como adiantamento.</summary>
+    public IReadOnlyList<AlocacaoPdf> Alocacoes { get; init; } = [];
+    public decimal Adiantamento { get; init; }
+}
 
 public interface IGeradorPdf
 {
     byte[] GerarDocumento(Documento documento, DadosEmitente emitente, Moeda moeda, OpcoesPdf opcoes);
+    byte[] GerarExtracto(Recebimentos.Extracto extracto, DadosEmitente emitente, string? utilizador);
 }
 
 public sealed record AnexoEmail(string Nome, byte[] Conteudo, string TipoMime = "application/pdf");

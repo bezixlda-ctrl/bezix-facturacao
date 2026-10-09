@@ -38,8 +38,8 @@
     @if (u.TemAlguma(Permissoes.Recibos.Registar, Permissoes.Documentos.VerTodos))
     {
         <div class="app-nav-grupo">Recebimentos</div>
-        <span class="em-breve"><i class="bi bi-receipt"></i>Recibos<small>em breve</small></span>
-        <span class="em-breve"><i class="bi bi-journal-text"></i>Conta corrente<small>em breve</small></span>
+        <a asp-page="/Recibos/Index" class="@Activo("/Recibos")" aria-current="@Atual("/Recibos")"><i class="bi bi-receipt"></i>Recibos</a>
+        <a asp-page="/ContaCorrente/Index" class="@Activo("/ContaCorrente")" aria-current="@Atual("/ContaCorrente")"><i class="bi bi-journal-text"></i>Conta corrente</a>
     }
 
     @if (u.TemAlguma(Permissoes.Relatorios.Vendas, Permissoes.Relatorios.Fiscal, Permissoes.Automacao.Ver))

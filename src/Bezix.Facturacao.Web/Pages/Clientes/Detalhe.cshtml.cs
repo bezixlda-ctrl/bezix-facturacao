@@ -12,7 +12,7 @@ namespace Bezix.Facturacao.Web.Pages.Clientes;
 
 [Authorize(Policy = Permissoes.Clientes.Ver)]
 public class DetalheModel(ServicoClientes clientes, ServicoEmpresa empresas, ServicoUtilizadores utilizadores,
-    Application.Documentos.ServicoDocumentos documentos, TimeProvider relogio) : PaginaBase
+    Application.Documentos.ServicoDocumentos documentos, Application.Recebimentos.ServicoContaCorrente contaCorrente, TimeProvider relogio) : PaginaBase
 {
     [BindProperty(SupportsGet = true)] public int Id { get; set; }
 
@@ -20,6 +20,7 @@ public class DetalheModel(ServicoClientes clientes, ServicoEmpresa empresas, Ser
     public List<Actividade> Actividades { get; private set; } = [];
     public Application.Comum.Pagina<Application.Documentos.DocumentoResumo>? Documentos { get; private set; }
     public bool PodeFacturar => documentos.PodeEditar(Domain.Documentos.TipoDocumento.FT);
+    public Application.Recebimentos.SaldoCliente? Saldo { get; private set; }
     public int PrazoEfectivo { get; private set; }
     public string? NomeResponsavel { get; private set; }
     public bool PodeGerir => User.TemPermissao(Permissoes.Clientes.Gerir);
@@ -34,6 +35,8 @@ public class DetalheModel(ServicoClientes clientes, ServicoEmpresa empresas, Ser
     public async Task<IActionResult> OnGetAsync()
     {
         if (!await CarregarAsync()) return NotFound();
+        if (User.TemPermissao(Permissoes.Documentos.Ver))
+            Saldo = await contaCorrente.SaldoAsync(Id);
         if (User.TemPermissao(Permissoes.Documentos.Ver))
             Documentos = await documentos.PesquisarAsync(new Application.Documentos.FiltroDocumentos(ClienteId: Id, Tamanho: 10));
         return Page();

@@ -1,0 +1,26 @@
+@model Bezix.Facturacao.Web.Pages.ContaCorrente.IndexModel
+@if (Model.Resultado.Total == 0)
+{
+    <div class="vazio"><i class="bi bi-journal-check"></i>Nenhum cliente com saldo@(Model.SoVencidos ? " vencido" : "").</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead><tr><th>Cliente</th><th>NUIT</th><th class="num">Saldo</th><th class="num">Vencido</th><th>Vencimento mais antigo</th></tr></thead>
+            <tbody>
+                @foreach (var c in Model.Resultado.Itens)
+                {
+                    <tr>
+                        <td><a class="fw-semibold text-decoration-none" asp-page="Cliente" asp-route-id="@c.ClienteId">@c.Nome</a></td>
+                        <td class="tabular">@c.Nuit</td>
+                        <td class="num">@Formato.Numero(c.Saldo)@if (c.Saldo < 0) { <span class="d-block small text-body-secondary">a favor do cliente</span> }</td>
+                        <td class="num @(c.Vencido > 0 ? "text-danger fw-semibold" : "text-body-secondary")">@(c.Vencido > 0 ? Formato.Numero(c.Vencido) : "—")</td>
+                        <td class="tabular">@(c.VencimentoMaisAntigo is { } v ? Formato.Data(v) : "")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Paginacao" model="Model.Paginacao" />
+}

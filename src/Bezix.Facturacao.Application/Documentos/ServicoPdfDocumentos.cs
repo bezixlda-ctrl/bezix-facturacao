@@ -68,7 +68,27 @@ public sealed class ServicoPdfDocumentos(
             ?? new Moeda { Codigo = doc.Moeda, Nome = doc.Moeda, Simbolo = doc.Moeda, NomeSingular = doc.Moeda, NomePlural = doc.Moeda };
         // O utilizador impresso no rodapé é quem emitiu (não quem reimprime), para o PDF ser sempre igual.
         var quem = doc.Emitido ? doc.EmitidoPor : utilizador.Email;
-        return gerador.GerarDocumento(doc, emitente, moeda, new OpcoesPdf(marca, quem));
+        var opcoes = new OpcoesPdf(marca, quem);
+
+        if (doc.TipoDoc == TipoDocumento.RC)
+        {
+            // Só as alocações feitas com o recibo (as de adiantamentos usados mais tarde não mudam o recibo).
+            var limite = (doc.EmitidoEm ?? DateTime.UtcNow).AddMinutes(1);
+            var alocacoes = await db.PagamentoAlocacoes.AsNoTracking()
+                .Where(a => a.Pagamento!.ReciboId == doc.Id && a.CreatedAt <= limite)
+                .OrderBy(a => a.Id)
+                .Select(a => new AlocacaoPdf(a.Documento!.NumeroFormatado!, a.Documento.Data, a.Documento.TotalMzn, a.Valor))
+                .ToListAsync(ct);
+            opcoes = opcoes with { Alocacoes = alocacoes, Adiantamento = doc.Total - alocacoes.Sum(a => a.Valor) };
+        }
+        return gerador.GerarDocumento(doc, emitente, moeda, opcoes);
+    }
+
+    /// <summary>Extracto de conta corrente em PDF (não fica guardado: reflecte o momento em que é pedido).</summary>
+    public async Task<byte[]> ExtractoAsync(Recebimentos.Extracto extracto, CancellationToken ct = default)
+    {
+        var emitente = DadosEmitente.De(await empresas.ObterAsync(ct), await db.ContasBancarias.AsNoTracking().ToListAsync(ct));
+        return gerador.GerarExtracto(extracto, emitente, utilizador.Email);
     }
 
     private Task<Documento?> CarregarAsync(int id, CancellationToken ct) =>

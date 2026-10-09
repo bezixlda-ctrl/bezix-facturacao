@@ -15,7 +15,7 @@ Sistema interno de facturação para a Bezix (Moçambique): documentos fiscais c
 | 1. Fundação | Solução, Identity, perfis e permissões, configurações, logótipo, contas bancárias, séries, taxas, auditoria, CI, deploy | Feito (falta o deploy de teste no Winhost) |
 | 2. Clientes e artigos | Clientes, actividades, artigos, importação CSV, NUIT duplicado, pesquisa global (Ctrl+K) | Feito |
 | 3. Documentos | FT, FR, FG, NC, ND, CT, GR; moeda e câmbio; emissão imutável; hash; aprovações; anulação; PDF; email | Feito |
-| 4. Recibos e conta corrente | | Por fazer |
+| 4. Recibos e conta corrente | Recibos com alocação a várias facturas, adiantamentos, estados de pagamento, extracto (PDF e email), antiguidade de saldos (CSV) | Feito |
 | 5. Dashboard, comunicação, automação, API | | Por fazer |
 | 6. Fiscal e produção | Exportação AT, backups, certificação | Por fazer |
 

@@ -1236,6 +1236,114 @@ namespace Bezix.Facturacao.Infrastructure.Persistencia.Migracoes
                         });
                 });
 
+            modelBuilder.Entity("Bezix.Facturacao.Domain.Recebimentos.Pagamento", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClienteId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateOnly>("Data")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Metodo")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Observacoes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<int>("ReciboId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Referencia")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("Valor")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReciboId")
+                        .IsUnique();
+
+                    b.HasIndex("ClienteId", "Data");
+
+                    b.ToTable("Pagamentos", null, t =>
+                        {
+                            t.HasTrigger("TR_Pagamentos_Imutavel");
+
+                            t.HasCheckConstraint("CK_Pagamentos_Valor", "[Valor] > 0");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
+            modelBuilder.Entity("Bezix.Facturacao.Domain.Recebimentos.PagamentoAlocacao", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateOnly>("Data")
+                        .HasColumnType("date");
+
+                    b.Property<int>("DocumentoId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PagamentoId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("Valor")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentoId");
+
+                    b.HasIndex("PagamentoId");
+
+                    b.ToTable("PagamentoAlocacoes", null, t =>
+                        {
+                            t.HasTrigger("TR_PagamentoAlocacoes_Imutavel");
+
+                            t.HasCheckConstraint("CK_PagamentoAlocacoes_Valor", "[Valor] > 0");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
+                });
+
             modelBuilder.Entity("Bezix.Facturacao.Infrastructure.Identidade.Perfil", b =>
                 {
                     b.Property<string>("Id")
@@ -1605,6 +1713,42 @@ namespace Bezix.Facturacao.Infrastructure.Persistencia.Migracoes
                     b.Navigation("Origem");
                 });
 
+            modelBuilder.Entity("Bezix.Facturacao.Domain.Recebimentos.Pagamento", b =>
+                {
+                    b.HasOne("Bezix.Facturacao.Domain.Clientes.Cliente", null)
+                        .WithMany()
+                        .HasForeignKey("ClienteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Bezix.Facturacao.Domain.Documentos.Documento", "Recibo")
+                        .WithMany()
+                        .HasForeignKey("ReciboId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Recibo");
+                });
+
+            modelBuilder.Entity("Bezix.Facturacao.Domain.Recebimentos.PagamentoAlocacao", b =>
+                {
+                    b.HasOne("Bezix.Facturacao.Domain.Documentos.Documento", "Documento")
+                        .WithMany()
+                        .HasForeignKey("DocumentoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Bezix.Facturacao.Domain.Recebimentos.Pagamento", "Pagamento")
+                        .WithMany("Alocacoes")
+                        .HasForeignKey("PagamentoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Documento");
+
+                    b.Navigation("Pagamento");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Bezix.Facturacao.Infrastructure.Identidade.Perfil", null)
@@ -1668,6 +1812,11 @@ namespace Bezix.Facturacao.Infrastructure.Persistencia.Migracoes
                     b.Navigation("Linhas");
 
                     b.Navigation("Origens");
+                });
+
+            modelBuilder.Entity("Bezix.Facturacao.Domain.Recebimentos.Pagamento", b =>
+                {
+                    b.Navigation("Alocacoes");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,0 +1,91 @@
+@page
+@model Bezix.Facturacao.Web.Pages.ContaCorrente.AntiguidadeModel
+@{
+    ViewData["Title"] = "Antiguidade de saldos";
+    var t = Model.Total;
+    var vencidoTotal = t.Vencido;
+}
+<div class="cabecalho-pagina">
+    <div>
+        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Conta corrente</a>
+        <h1 class="mt-1">Antiguidade de saldos</h1>
+        <p>Valores em aberto em @Formato.Data(Model.Data), por dias de atraso face ao vencimento. Em meticais.</p>
+    </div>
+    <form method="get" class="d-flex flex-wrap gap-2 align-items-end">
+        <div>
+            <label class="form-label small" for="Referencia">Data de referência</label>
+            <input class="form-control" type="date" id="Referencia" name="Referencia" value="@Model.Data.ToString("yyyy-MM-dd")" />
+        </div>
+        <div>
+            <label class="form-label small" for="Q">Cliente</label>
+            <input class="form-control" type="search" id="Q" name="Q" value="@Model.Q" placeholder="Nome ou NUIT" />
+        </div>
+        <button class="btn btn-outline-primary" type="submit">Actualizar</button>
+        <a class="btn btn-outline-secondary" href="@Url.Page("/ContaCorrente/Antiguidade", "Csv", new { Referencia = Model.Data.ToString("yyyy-MM-dd"), Model.Q })"><i class="bi bi-filetype-csv me-1"></i>Excel (CSV)</a>
+    </form>
+</div>
+
+@if (Model.Linhas.Count > 0)
+{
+    <div class="row g-3 mb-4">
+        @foreach (var (rotulo, valor, classe) in new[] { ("0–30 dias", t.Ate30, "indicador-facturas"), ("31–60 dias", t.De31a60, "indicador-clientes"), ("61–90 dias", t.De61a90, "indicador-recibos"), ("Mais de 90 dias", t.Mais90, "indicador-vencido") })
+        {
+            <div class="col-6 col-lg-3">
+                <div class="indicador @classe">
+                    <span class="rotulo">@rotulo</span>
+                    <span class="valor">@Formato.Numero(valor)</span>
+                    <span class="nota">@(vencidoTotal > 0 ? Formato.Percentagem(Math.Round(valor / vencidoTotal * 100, 1)) + " do vencido" : "MT")</span>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<section class="painel">
+    @if (Model.Linhas.Count == 0)
+    {
+        <div class="vazio"><i class="bi bi-check2-all"></i>Não há valores em aberto.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr><th>Cliente</th><th class="num">A vencer</th><th class="num">0–30</th><th class="num">31–60</th><th class="num">61–90</th><th class="num">&gt; 90</th><th class="num">Créditos</th><th class="num">Saldo</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var l in Model.Linhas)
+                    {
+                        <tr>
+                            <td><a class="text-decoration-none fw-semibold" asp-page="Cliente" asp-route-id="@l.ClienteId">@l.ClienteNome</a></td>
+                            <td class="num">@Valor(l.AVencer)</td>
+                            <td class="num">@Valor(l.Ate30)</td>
+                            <td class="num">@Valor(l.De31a60)</td>
+                            <td class="num">@Valor(l.De61a90)</td>
+                            <td class="num @(l.Mais90 > 0 ? "text-danger fw-semibold" : "")">@Valor(l.Mais90)</td>
+                            <td class="num">@Valor(l.Creditos)</td>
+                            <td class="num fw-semibold">@Formato.Numero(l.Saldo)</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr class="fw-bold">
+                        <td>Total</td>
+                        <td class="num">@Formato.Numero(t.AVencer)</td>
+                        <td class="num">@Formato.Numero(t.Ate30)</td>
+                        <td class="num">@Formato.Numero(t.De31a60)</td>
+                        <td class="num">@Formato.Numero(t.De61a90)</td>
+                        <td class="num">@Formato.Numero(t.Mais90)</td>
+                        <td class="num">@Formato.Numero(t.Creditos)</td>
+                        <td class="num">@Formato.Numero(t.Saldo)</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        <p class="small text-body-secondary px-3 py-2 mb-0">"Créditos" são adiantamentos e notas de crédito ainda não aplicados a facturas; abatem ao saldo.</p>
+    }
+</section>
+
+@functions {
+    private static string Valor(decimal v) => v == 0 ? "" : Formato.Numero(v);
+}

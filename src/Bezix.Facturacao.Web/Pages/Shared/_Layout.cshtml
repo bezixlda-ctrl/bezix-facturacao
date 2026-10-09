@@ -76,7 +76,7 @@
                                 }
                                 @if (User.TemPermissao(Permissoes.Recibos.Registar))
                                 {
-                                    <li><span class="dropdown-item disabled"><i class="bi bi-receipt me-2"></i>Novo recibo <small>(fase 4)</small></span></li>
+                                    <li><a class="dropdown-item" asp-page="/Recibos/Novo"><i class="bi bi-receipt me-2"></i>Novo recibo</a></li>
                                 }
                                 @if (User.TemPermissao(Permissoes.Clientes.Gerir))
                                 {

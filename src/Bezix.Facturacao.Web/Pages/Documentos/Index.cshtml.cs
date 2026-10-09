@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Bezix.Facturacao.Web.Pages.Documentos;
 
 [Authorize(Policy = Permissoes.Documentos.Ver)]
-public class IndexModel(ServicoDocumentos documentos) : PaginaBase
+public class IndexModel(ServicoDocumentos documentos, Application.Recebimentos.ServicoContaCorrente contaCorrente) : PaginaBase
 {
     [BindProperty(SupportsGet = true)] public string? Q { get; set; }
     [BindProperty(SupportsGet = true)] public TipoDocumento? Tipo { get; set; }
@@ -21,11 +21,13 @@ public class IndexModel(ServicoDocumentos documentos) : PaginaBase
 
     public Pagina<DocumentoResumo> Resultado { get; private set; } = new([], 0, 1, Pagina<DocumentoResumo>.TamanhoPadrao);
     public IReadOnlyList<TipoDocumento> TiposNovos { get; private set; } = [];
+    public Dictionary<int, Application.Recebimentos.SituacaoDocumento> Situacao { get; private set; } = [];
     public bool Filtrado => !string.IsNullOrWhiteSpace(Q) || Tipo is not null || Estado is not null || ClienteId is not null || De is not null || Ate is not null;
 
     public async Task<IActionResult> OnGetAsync()
     {
         Resultado = await documentos.PesquisarAsync(new FiltroDocumentos(Tipo, Estado, ClienteId, Q, De, Ate, NumeroPagina));
+        Situacao = await contaCorrente.SituacaoAsync(Resultado.Itens.Select(d => d.Id).ToList());
         TiposNovos = documentos.TiposEditaveis().Where(t => !RegrasTipo.ExigeOrigem(t)).ToList();
         if (Request.Headers.ContainsKey("HX-Request") && !Request.Headers.ContainsKey("HX-History-Restore-Request"))
             return Partial("_ListaDocumentos", this);

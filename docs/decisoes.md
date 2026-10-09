@@ -90,6 +90,17 @@ O número é atribuído numa transacção com a série bloqueada (`UPDLOCK, HOLD
 
 Desconto efectivo (linhas + global, face ao valor bruto) acima do limite do perfil, ou NC pedida por quem só a pode pedir, põe o documento em "Aguarda aprovação". O gestor **aprova e emite** num só passo, ou rejeita com motivo (o documento volta a rascunho). Quem pediu pode cancelar o pedido.
 
+## D17. Recibos e conta corrente em meticais — fase 4
+
+Decisão do utilizador (09/10/2026): **recibos, conta corrente, extractos e antiguidade de saldos são em meticais**. Facturas em moeda estrangeira entram pelo contravalor em MZN gravado na emissão; o recibo aloca meticais a esse contravalor (diferenças de câmbio no recebimento não são tratadas automaticamente na v1).
+
+- **Conta corrente** calculada a partir dos documentos emitidos (os anulados não contam): débitos FT, FG, ND e FR; créditos NC, RC e FR. Não há tabela de movimentos separada: não pode ficar dessincronizada.
+- **Estado de pagamento** de cada FT/FG/ND: em aberto = total MZN − alocações de recibos não anulados − NC emitidas. Mostra-se Pago, Parcial, Vencido ou Emitido.
+- **Recibo**: um pagamento, alocado a uma ou várias facturas; o excesso fica como adiantamento, que se aloca mais tarde a outras facturas (sem novo recibo). Corre com a série RC bloqueada, para dois recibos simultâneos não pagarem a mesma factura duas vezes.
+- **Pagamentos e alocações** são imutáveis (triggers SQL). Um recibo errado anula-se; as suas alocações deixam de contar e as facturas voltam a ficar em aberto.
+- **Anulação**: uma factura com pagamentos não se anula (anula-se primeiro o recibo ou emite-se NC).
+- **Antiguidade**: dias de atraso face ao vencimento (ou à data, se não houver vencimento), com a coluna "A vencer" para o que ainda não venceu e "Créditos" para adiantamentos e NC por aplicar, de forma que as colunas somam o saldo.
+
 ## Pendentes de confirmação
 
 - ~~QuestPDF~~: confirmado em 09/10/2026 que a receita anual é inferior a 1 M USD; usa-se a licença Community. Rever se a receita passar esse valor.

@@ -6,6 +6,7 @@ using Bezix.Facturacao.Domain.Comunicacao;
 using Bezix.Facturacao.Domain.Configuracao;
 using Bezix.Facturacao.Domain.Documentos;
 using Bezix.Facturacao.Domain.Fiscal;
+using Bezix.Facturacao.Domain.Recebimentos;
 using Bezix.Facturacao.Infrastructure.Identidade;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -32,11 +33,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<Aprovacao> Aprovacoes => Set<Aprovacao>();
     public DbSet<ModeloComunicacao> ModelosComunicacao => Set<ModeloComunicacao>();
     public DbSet<EmailFila> EmailsFila => Set<EmailFila>();
+    public DbSet<Pagamento> Pagamentos => Set<Pagamento>();
+    public DbSet<PagamentoAlocacao> PagamentoAlocacoes => Set<PagamentoAlocacao>();
 
     // Triggers que impedem alterar documentos emitidos mesmo por SQL directo (ver migração Fase3Documentos).
     public const string TriggerDocumentos = "TR_Documentos_Imutavel";
     public const string TriggerLinhas = "TR_DocumentoLinhas_Imutavel";
     public const string TriggerIvaResumo = "TR_DocumentoIvaResumos_Imutavel";
+    public const string TriggerPagamentos = "TR_Pagamentos_Imutavel";
+    public const string TriggerAlocacoes = "TR_PagamentoAlocacoes_Imutavel";
 
     /// <summary>Colação sem distinção de maiúsculas nem acentos: pesquisar "conceicao" encontra "Conceição".</summary>
     public const string ColacaoPesquisa = "Latin1_General_100_CI_AI";
@@ -313,6 +318,34 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.HasIndex(x => new { x.Estado, x.ProximaTentativa });
             e.HasIndex(x => x.DocumentoId);
             e.HasIndex(x => x.ClienteId);
+        });
+
+        b.Entity<Pagamento>(e =>
+        {
+            e.ToTable("Pagamentos", t =>
+            {
+                t.HasTrigger(TriggerPagamentos);
+                t.HasCheckConstraint("CK_Pagamentos_Valor", "[Valor] > 0");
+            });
+            e.Property(x => x.Metodo).HasConversion<string>().HasMaxLength(20);
+            e.Property(x => x.Referencia).HasMaxLength(100);
+            e.Property(x => x.Observacoes).HasMaxLength(2000);
+            e.HasOne(x => x.Recibo).WithMany().HasForeignKey(x => x.ReciboId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Cliente>().WithMany().HasForeignKey(x => x.ClienteId).OnDelete(DeleteBehavior.Restrict);
+            e.HasMany(x => x.Alocacoes).WithOne(a => a.Pagamento).HasForeignKey(a => a.PagamentoId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => x.ReciboId).IsUnique();
+            e.HasIndex(x => new { x.ClienteId, x.Data });
+        });
+
+        b.Entity<PagamentoAlocacao>(e =>
+        {
+            e.ToTable("PagamentoAlocacoes", t =>
+            {
+                t.HasTrigger(TriggerAlocacoes);
+                t.HasCheckConstraint("CK_PagamentoAlocacoes_Valor", "[Valor] > 0");
+            });
+            e.HasOne(x => x.Documento).WithMany().HasForeignKey(x => x.DocumentoId).OnDelete(DeleteBehavior.Restrict);
+            e.HasIndex(x => x.DocumentoId);
         });
 
         b.Entity<RegistoLog>(e =>

@@ -14,6 +14,18 @@ public static class Vista
         _ => ("estado-rascunho", e.ToString()),
     };
 
+    /// <summary>Para documentos emitidos a débito, o estado mostrado é o de pagamento (Pago, Parcial, Vencido).</summary>
+    public static (string Classe, string Texto) Estado(EstadoDocumento e, Application.Recebimentos.SituacaoDocumento? s) =>
+        e == EstadoDocumento.Emitido && s is not null
+            ? s.Estado switch
+            {
+                Domain.Recebimentos.EstadoPagamento.Pago => ("estado-pago", "Pago"),
+                Domain.Recebimentos.EstadoPagamento.Parcial => ("estado-parcial", "Parcial"),
+                Domain.Recebimentos.EstadoPagamento.Vencido => ("estado-vencido", "Vencido"),
+                _ => ("estado-emitido", "Emitido"),
+            }
+            : Estado(e);
+
     public static string Icone(TipoDocumento t) => t switch
     {
         TipoDocumento.FT => "bi-file-earmark-text",

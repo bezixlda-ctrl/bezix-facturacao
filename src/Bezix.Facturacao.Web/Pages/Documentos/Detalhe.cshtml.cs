@@ -19,6 +19,8 @@ public class DetalheModel(
     ServicoEmissao emissao,
     ServicoPdfDocumentos pdfs,
     ServicoComunicacao comunicacao,
+    Application.Recebimentos.ServicoContaCorrente contaCorrente,
+    Application.Recebimentos.ServicoRecibos recibos,
     AppDbContext db) : PaginaBase
 {
     [BindProperty(SupportsGet = true)] public int Id { get; set; }
@@ -31,6 +33,10 @@ public class DetalheModel(
     public List<RegistoAuditoria> Historico { get; private set; } = [];
     public EmailPreparado? EmailProposto { get; private set; }
     public decimal? PorCreditar { get; private set; }
+    public Application.Recebimentos.SituacaoDocumento? Situacao { get; private set; }
+    public List<(int ReciboId, string Numero, DateOnly Data, decimal Valor)> Pagamentos { get; private set; } = [];
+    public Application.Recebimentos.PagamentoVista? PagamentoDoRecibo { get; private set; }
+    public bool PodeRegistarRecibo => Situacao is { EmAberto: > 0 } && User.TemPermissao(Permissoes.Recibos.Registar);
 
     // Envio por email
     [BindProperty] public string? Para { get; set; }
@@ -154,6 +160,9 @@ public class DetalheModel(
         Emails = await comunicacao.HistoricoDocumentoAsync(Id);
         if (RegrasTipo.OrigemValida(TipoDocumento.NC, d.TipoDoc) && d.Estado == EstadoDocumento.Emitido)
             PorCreditar = await documentos.ValorPorCreditarAsync(Id);
+        Situacao = (await contaCorrente.SituacaoAsync([Id])).GetValueOrDefault(Id);
+        if (Situacao is not null) Pagamentos = await recibos.PagamentosDoDocumentoAsync(Id);
+        if (d.TipoDoc == TipoDocumento.RC) PagamentoDoRecibo = await recibos.PagamentoDoReciboAsync(Id);
         if (User.TemPermissao(Permissoes.Administracao.VerAuditoria))
             Historico = await db.Auditoria.AsNoTracking()
                 .Where(a => a.Entidade == nameof(Domain.Documentos.Documento) && a.EntidadeId == Id.ToString())

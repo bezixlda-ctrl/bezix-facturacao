@@ -1,0 +1,173 @@
+@page "{id:int}"
+@model Bezix.Facturacao.Web.Pages.ContaCorrente.ClienteModel
+@{
+    var x = Model.Extracto;
+    ViewData["Title"] = $"Conta corrente · {x.ClienteNome}";
+    var pdf = Url.Page("/ContaCorrente/Cliente", "Pdf", new { id = Model.Id, De = x.De.ToString("yyyy-MM-dd"), Ate = x.Ate.ToString("yyyy-MM-dd") });
+}
+<div class="cabecalho-pagina">
+    <div>
+        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Conta corrente</a>
+        <h1 class="mt-1 mb-1">@x.ClienteNome</h1>
+        <p class="mt-0"><a asp-page="/Clientes/Detalhe" asp-route-id="@Model.Id">Ficha do cliente</a> @if (x.ClienteNuit is not null) { <span class="tabular">· NUIT @x.ClienteNuit</span> }</p>
+    </div>
+    @if (Model.PodeRegistar)
+    {
+        <a class="btn btn-primary" asp-page="/Recibos/Novo" asp-route-clienteId="@Model.Id"><i class="bi bi-cash-coin me-1"></i>Registar recibo</a>
+    }
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-4">
+        <div class="painel painel-corpo h-100">
+            <div class="small text-body-secondary">Saldo</div>
+            <div class="fs-4 fw-bold tabular">@Formato.Moeda(Model.Saldo.Saldo)</div>
+            <div class="small text-body-secondary">@(Model.Saldo.Saldo > 0 ? "a receber" : Model.Saldo.Saldo < 0 ? "a favor do cliente" : "conta saldada")</div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="painel painel-corpo h-100">
+            <div class="small text-body-secondary">Vencido</div>
+            <div class="fs-4 fw-bold tabular @(Model.Saldo.Vencido > 0 ? "text-danger" : "")">@Formato.Moeda(Model.Saldo.Vencido)</div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="painel painel-corpo h-100">
+            <div class="small text-body-secondary">Adiantamentos por usar</div>
+            <div class="fs-4 fw-bold tabular">@Formato.Moeda(Model.Saldo.AdiantamentoPorAlocar)</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-xl-7">
+        <section class="painel mb-4">
+            <div class="painel-cabecalho flex-wrap">
+                <h2>Extracto</h2>
+                <form method="get" class="d-flex flex-wrap gap-2 align-items-center">
+                    <label class="visually-hidden" for="De">De</label>
+                    <input class="form-control form-control-sm w-auto" type="date" id="De" name="De" value="@x.De.ToString("yyyy-MM-dd")" />
+                    <span class="small">a</span>
+                    <label class="visually-hidden" for="Ate">Até</label>
+                    <input class="form-control form-control-sm w-auto" type="date" id="Ate" name="Ate" value="@x.Ate.ToString("yyyy-MM-dd")" />
+                    <button class="btn btn-sm btn-outline-primary" type="submit">Ver</button>
+                    <a class="btn btn-sm btn-outline-secondary" href="@pdf" target="_blank"><i class="bi bi-printer me-1"></i>PDF</a>
+                </form>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead><tr><th>Data</th><th>Documento</th><th>Descrição</th><th class="num">Débito</th><th class="num">Crédito</th><th class="num">Saldo</th></tr></thead>
+                    <tbody>
+                        <tr class="text-body-secondary"><td colspan="5">Saldo em @Formato.Data(x.De.AddDays(-1))</td><td class="num">@Formato.Numero(x.SaldoInicial)</td></tr>
+                        @foreach (var m in x.Movimentos)
+                        {
+                            <tr>
+                                <td class="tabular">@Formato.Data(m.Data)</td>
+                                <td><a asp-page="/Documentos/Detalhe" asp-route-id="@m.DocumentoId" class="doc-num text-decoration-none">@m.Documento</a></td>
+                                <td class="small">@m.Descricao</td>
+                                <td class="num">@(m.Debito == 0 ? "" : Formato.Numero(m.Debito))</td>
+                                <td class="num">@(m.Credito == 0 ? "" : Formato.Numero(m.Credito))</td>
+                                <td class="num">@Formato.Numero(m.Saldo)</td>
+                            </tr>
+                        }
+                        @if (x.Movimentos.Count == 0) { <tr><td colspan="6" class="text-body-secondary">Sem movimentos neste período.</td></tr> }
+                    </tbody>
+                    <tfoot>
+                        <tr class="fw-bold">
+                            <td colspan="3">Saldo em @Formato.Data(x.Ate)</td>
+                            <td class="num">@Formato.Numero(x.TotalDebitos)</td>
+                            <td class="num">@Formato.Numero(x.TotalCreditos)</td>
+                            <td class="num">@Formato.Numero(x.SaldoFinal)</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </section>
+
+        @if (Model.PodeEnviar && Model.Email is { } email)
+        {
+            <section class="painel">
+                <details>
+                    <summary class="painel-cabecalho"><h2 class="mb-0"><i class="bi bi-envelope me-2"></i>Enviar extracto por email</h2></summary>
+                    <form method="post" asp-page-handler="Enviar" asp-route-id="@Model.Id" asp-route-De="@x.De.ToString("yyyy-MM-dd")" asp-route-Ate="@x.Ate.ToString("yyyy-MM-dd")" class="painel-corpo row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="Para">Para</label>
+                            <input class="form-control" id="Para" name="Para" value="@email.Para" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="Cc">Cc</label>
+                            <input class="form-control" id="Cc" name="Cc" value="@email.Cc" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="Assunto">Assunto</label>
+                            <input class="form-control" id="Assunto" name="Assunto" value="@email.Assunto" required />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="Corpo">Mensagem</label>
+                            <textarea class="form-control" id="Corpo" name="Corpo" rows="7">@email.Corpo</textarea>
+                            <div class="form-text">Vai em anexo o extracto em PDF do período indicado acima.</div>
+                        </div>
+                        <div class="col-12 d-flex justify-content-end">
+                            <button class="btn btn-primary" type="submit"><i class="bi bi-send me-1"></i>Enviar extracto</button>
+                        </div>
+                    </form>
+                </details>
+            </section>
+        }
+    </div>
+
+    <div class="col-xl-5">
+        <section class="painel mb-4">
+            <div class="painel-cabecalho"><h2>Em aberto</h2></div>
+            @if (Model.Abertos.Count == 0)
+            {
+                <div class="vazio py-4">Nada por pagar.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead><tr><th>Documento</th><th>Vencimento</th><th class="num">Em aberto</th></tr></thead>
+                        <tbody>
+                            @foreach (var a in Model.Abertos)
+                            {
+                                <tr>
+                                    <td><a asp-page="/Documentos/Detalhe" asp-route-id="@a.Id" class="doc-num text-decoration-none">@a.NumeroFormatado</a></td>
+                                    <td class="tabular @(a.DiasAtraso > 0 ? "text-danger fw-semibold" : "")">@(a.Vencimento is { } v ? Formato.Data(v) : "—")@if (a.DiasAtraso > 0) { <span class="small"> · @a.DiasAtraso d</span> }</td>
+                                    <td class="num">@Formato.Numero(a.EmAberto)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+
+        @foreach (var p in Model.Adiantamentos)
+        {
+            <section class="painel mb-4">
+                <div class="painel-cabecalho">
+                    <h2>Adiantamento</h2>
+                    <span class="small">de <a asp-page="/Documentos/Detalhe" asp-route-id="@p.ReciboId">recibo</a> · por usar <strong class="tabular">@Formato.Moeda(p.PorAlocar)</strong></span>
+                </div>
+                @if (Model.PodeRegistar && Model.Abertos.Count > 0)
+                {
+                    <form method="post" asp-page-handler="Alocar" asp-route-id="@Model.Id" class="painel-corpo">
+                        <input type="hidden" name="PagamentoId" value="@p.Id" />
+                        <p class="small text-body-secondary">Aplicar este adiantamento a facturas em aberto:</p>
+                        @for (var i = 0; i < Model.Abertos.Count; i++)
+                        {
+                            var a = Model.Abertos[i];
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <input type="hidden" name="Alocacoes[@i].DocumentoId" value="@a.Id" />
+                                <label class="flex-grow-1 small doc-num" for="aloc-@p.Id-@a.Id">@a.NumeroFormatado <span class="text-body-secondary fw-normal">(falta @Formato.Numero(a.EmAberto))</span></label>
+                                <input class="form-control form-control-sm text-end tabular" style="width: 130px" id="aloc-@p.Id-@a.Id" name="Alocacoes[@i].Valor" inputmode="decimal" placeholder="0,00" />
+                            </div>
+                        }
+                        <div class="d-flex justify-content-end"><button class="btn btn-sm btn-primary" type="submit">Alocar</button></div>
+                    </form>
+                }
+            </section>
+        }
+    </div>
+</div>

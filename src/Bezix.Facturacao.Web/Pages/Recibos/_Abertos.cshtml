@@ -1,0 +1,78 @@
+@model Bezix.Facturacao.Web.Pages.Recibos.NovoModel
+<div class="painel-cabecalho">
+    <h2>Facturas em aberto</h2>
+    @if (Model.Abertos.Count > 0)
+    {
+        <button type="button" class="btn btn-sm btn-outline-primary" id="distribuir">Repartir pelas mais antigas</button>
+    }
+</div>
+@if (Model.ClienteId <= 0)
+{
+    <div class="vazio"><i class="bi bi-person"></i>Escolha o cliente para ver as facturas por pagar.</div>
+}
+else
+{
+    @if (Model.Adiantamento > 0)
+    {
+        <div class="alert alert-info m-3 mb-0 small">
+            Este cliente já tem <strong class="tabular">@Formato.Moeda(Model.Adiantamento)</strong> de adiantamento por usar.
+            <a asp-page="/ContaCorrente/Cliente" asp-route-id="@Model.ClienteId">Alocar o adiantamento</a> em vez de registar um recibo novo, se for o caso.
+        </div>
+    }
+    @if (Model.Abertos.Count == 0)
+    {
+        <div class="vazio">
+            <i class="bi bi-check2-all"></i>
+            Não há facturas em aberto. Um recibo agora fica todo como adiantamento.
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table" id="tabelaAbertos">
+                <thead>
+                    <tr><th>Documento</th><th>Data</th><th>Vencimento</th><th class="num">Total (MZN)</th><th class="num">Em aberto</th><th class="num" style="width: 160px">A pagar agora</th></tr>
+                </thead>
+                <tbody>
+                    @for (var i = 0; i < Model.Abertos.Count; i++)
+                    {
+                        var a = Model.Abertos[i];
+                        <tr>
+                            <td>
+                                <a asp-page="/Documentos/Detalhe" asp-route-id="@a.Id" target="_blank" class="doc-num">@a.NumeroFormatado</a>
+                                @if (a.Moeda != "MZN") { <span class="d-block small text-body-secondary tabular">@Formato.Numero(a.Total) @a.Moeda</span> }
+                            </td>
+                            <td class="tabular">@Formato.Data(a.Data)</td>
+                            <td class="tabular @(a.DiasAtraso > 0 ? "text-danger fw-semibold" : "")">
+                                @(a.Vencimento is { } v ? Formato.Data(v) : "—")
+                                @if (a.DiasAtraso > 0) { <span class="d-block small">há @a.DiasAtraso dias</span> }
+                            </td>
+                            <td class="num">@Formato.Numero(a.TotalMzn)</td>
+                            <td class="num fw-semibold">@Formato.Numero(a.EmAberto)</td>
+                            <td>
+                                <input type="hidden" name="Alocacoes[@i].DocumentoId" value="@a.Id" />
+                                <input class="form-control form-control-sm text-end tabular valor-alocar" name="Alocacoes[@i].Valor" inputmode="decimal"
+                                       data-aberto="@a.EmAberto.ToString(System.Globalization.CultureInfo.InvariantCulture)"
+                                       value="@(Model.ValorAlocado(a.Id) is { } va && va > 0 ? Formato.Numero(va) : "")" aria-label="Valor a pagar de @a.NumeroFormatado" />
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    <div class="painel-corpo border-top d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <dl class="totais mb-0 flex-grow-1" style="max-width: 360px">
+            <dt>Recebido</dt><dd id="resumoRecebido">—</dd>
+            <dt>Alocado a facturas</dt><dd id="resumoAlocado">—</dd>
+            <dt>Fica como adiantamento</dt><dd id="resumoAdiantamento">—</dd>
+        </dl>
+        <div class="text-end">
+            <div class="small text-danger mb-2 d-none" id="avisoExcesso">O valor alocado passa o valor recebido.</div>
+            <button type="submit" class="btn btn-primary btn-lg" id="emitirRecibo"
+                    data-confirmar="Emitir o recibo? Fica numerado e não pode ser alterado (só anulado).">
+                <i class="bi bi-check2-circle me-1"></i>Emitir recibo
+            </button>
+        </div>
+    </div>
+}

@@ -166,6 +166,10 @@ public sealed class InicializadorBaseDados(
                 Corpo = "Exmo(a). {cliente.contacto},\n\nEnviamos em anexo a nota de débito {documento.numero}, de {documento.data}, no valor de {documento.total}, com vencimento a {documento.vencimento}." + contas + assinatura },
             new() { Codigo = "documento.CT", Nome = "Envio de cotação", Assunto = "Cotação {documento.numero} · {empresa.nome}",
                 Corpo = "Exmo(a). {cliente.contacto},\n\nConforme solicitado, enviamos em anexo a cotação {documento.numero}, no valor de {documento.total}, válida até {documento.vencimento}.\n\nPara avançar, basta confirmar por resposta a este email." + assinatura },
+            new() { Codigo = "documento.RC", Nome = "Envio de recibo", Assunto = "Recibo {documento.numero} · {empresa.nome}",
+                Corpo = "Exmo(a). {cliente.contacto},\n\nConfirmamos a recepção do seu pagamento de {documento.total}. Enviamos em anexo o recibo {documento.numero}, de {documento.data}.\n\nObrigado pela preferência." + assinatura },
+            new() { Codigo = "extracto", Nome = "Envio de extracto de conta corrente", Assunto = "Extracto de conta corrente · {empresa.nome}",
+                Corpo = "Exmo(a). {cliente.contacto},\n\nEnviamos em anexo o extracto da sua conta corrente de {extracto.periodo}.\n\nSaldo a esta data: {saldo.final}, dos quais {saldo.vencido} já vencidos." + contas + assinatura },
             new() { Codigo = "documento.GR", Nome = "Envio de guia de remessa", Assunto = "Guia de remessa {documento.numero} · {empresa.nome}",
                 Corpo = "Exmo(a). {cliente.contacto},\n\nEnviamos em anexo a guia de remessa {documento.numero}, de {documento.data}, referente à mercadoria entregue." + assinatura },
         ];

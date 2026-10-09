@@ -37,7 +37,7 @@ else
             <tbody>
                 @foreach (var d in Model.Resultado.Itens)
                 {
-                    var (classe, texto) = Vista.Estado(d.Estado);
+                    var (classe, texto) = Vista.Estado(d.Estado, Model.Situacao.GetValueOrDefault(d.Id));
                     <tr>
                         <td class="text-nowrap">
                             <a class="text-decoration-none" asp-page="Detalhe" asp-route-id="@d.Id">
@@ -56,6 +56,10 @@ else
                         <td class="tabular d-none d-md-table-cell">@(d.Vencimento is { } v ? Formato.Data(v) : "")</td>
                         <td class="num">
                             @Formato.Numero(d.Total) <span class="text-body-secondary small">@d.Moeda</span>
+                            @if (Model.Situacao.GetValueOrDefault(d.Id) is { EmAberto: > 0 } s && s.EmAberto < s.TotalMzn)
+                            {
+                                <span class="d-block small text-body-secondary">em aberto @Formato.Numero(s.EmAberto) MZN</span>
+                            }
                         </td>
                         <td><span class="estado @classe">@texto</span></td>
                     </tr>

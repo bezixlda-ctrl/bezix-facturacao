@@ -1,0 +1,40 @@
+@page
+@model Bezix.Facturacao.Web.Pages.ContaCorrente.IndexModel
+@{
+    ViewData["Title"] = "Conta corrente";
+}
+<div class="cabecalho-pagina">
+    <div>
+        <h1>Conta corrente</h1>
+        <p>Saldo de cada cliente em meticais: facturas e notas de débito menos notas de crédito e recibos. Os clientes com valores vencidos aparecem primeiro.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary" asp-page="Antiguidade"><i class="bi bi-hourglass-split me-1"></i>Antiguidade de saldos</a>
+        @if (User.TemPermissao(Permissoes.Recibos.Registar))
+        {
+            <a class="btn btn-primary" asp-page="/Recibos/Novo"><i class="bi bi-cash-coin me-1"></i>Registar recibo</a>
+        }
+    </div>
+</div>
+
+<section class="painel">
+    <form method="get" class="d-flex flex-wrap gap-3 align-items-center p-3 border-bottom" role="search"
+          hx-get="@Url.Page("/ContaCorrente/Index")" hx-target="#listaSaldos" hx-push-url="true"
+          hx-trigger="input changed delay:300ms from:#Q, change from:input[type=checkbox], submit">
+        <div class="flex-grow-1" style="min-width: 200px">
+            <label class="visually-hidden" for="Q">Pesquisar clientes</label>
+            <input class="form-control" type="search" id="Q" name="Q" value="@Model.Q" placeholder="Nome ou NUIT" autocomplete="off" />
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="SoVencidos" name="SoVencidos" value="true" checked="@Model.SoVencidos" />
+            <label class="form-check-label" for="SoVencidos">Só com valores vencidos</label>
+        </div>
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="Todos" name="Todos" value="true" checked="@Model.Todos" />
+            <label class="form-check-label" for="Todos">Incluir saldos a zero</label>
+        </div>
+    </form>
+    <div id="listaSaldos">
+        <partial name="_ListaSaldos" model="Model" />
+    </div>
+</section>

@@ -18,6 +18,7 @@ public sealed class ServicoEmissao(
     IAppDbContext db,
     ITransacoes transacoes,
     IBloqueioSerie bloqueio,
+    NumeradorDocumentos numerador,
     IUtilizadorActual utilizador,
     ServicoDocumentos documentos,
     ServicoEmpresa empresas,
@@ -116,21 +117,7 @@ public sealed class ServicoEmissao(
             await db.SaveChangesAsync(c);
 
             // 2.º numerar e encadear.
-            var hashAnterior = await db.Documentos.AsNoTracking()
-                .Where(d => d.SerieId == serie.Id && d.Numero != null)
-                .OrderByDescending(d => d.Numero)
-                .Select(d => d.Hash)
-                .FirstOrDefaultAsync(c);
-
-            doc.Numero = serie.ProximoNumero;
-            doc.NumeroFormatado = Serie.FormatarNumero(serie.TipoDoc, serie.Codigo, serie.Ano, serie.ProximoNumero);
-            doc.EmitidoEm = TruncarSegundos(relogio.GetUtcNow().UtcDateTime);
-            doc.EmitidoPor = utilizador.Email ?? "sistema";
-            doc.HashAnterior = hashAnterior;
-            doc.Hash = HashDocumento.Calcular(doc);
-            doc.Estado = EstadoDocumento.Emitido;
-            serie.ProximoNumero++;
-            serie.UltimaData = doc.Data;
+            await numerador.NumerarAsync(doc, serie, c);
 
             var pendentes = await db.Aprovacoes.Where(a => a.DocumentoId == id && a.Estado == EstadoAprovacao.Pendente).ToListAsync(c);
             foreach (var a in pendentes)
@@ -282,6 +269,11 @@ public sealed class ServicoEmissao(
             .Select(d => d.NumeroFormatado ?? "uma nota a aguardar aprovação").ToListAsync(ct);
         if (correccoes.Count > 0) return Resultado.Falha($"Não é possível anular: tem notas associadas ({string.Join(", ", correccoes)}).");
 
+        var recibos = await db.PagamentoAlocacoes.AsNoTracking()
+            .Where(a => a.DocumentoId == id && a.Pagamento!.Recibo!.Estado == EstadoDocumento.Emitido)
+            .Select(a => a.Pagamento!.Recibo!.NumeroFormatado).Distinct().ToListAsync(ct);
+        if (recibos.Count > 0) return Resultado.Falha($"Não é possível anular: tem pagamentos ({string.Join(", ", recibos)}). Anule primeiro o recibo ou emita uma nota de crédito.");
+
         var convertidos = await db.DocumentosOrigem.AsNoTracking().Where(o => o.OrigemId == id)
             .Join(db.Documentos, o => o.DocumentoId, d => d.Id, (o, d) => d)
             .Where(d => d.Estado == EstadoDocumento.Emitido).Select(d => d.NumeroFormatado).ToListAsync(ct);
@@ -295,6 +287,4 @@ public sealed class ServicoEmissao(
         await db.SaveChangesAsync(ct);
         return Resultado.Ok();
     }
-
-    private static DateTime TruncarSegundos(DateTime d) => new(d.Ticks - d.Ticks % TimeSpan.TicksPerSecond, DateTimeKind.Utc);
 }

@@ -45,7 +45,11 @@ public sealed class GeradorPdfQuestPdf(IArmazenamentoFicheiros ficheiros) : IGer
                 page.DefaultTextStyle(t => t.FontSize(9).FontColor("#1B2430"));
 
                 page.Header().Element(c => Cabecalho(c, doc, emitente, logo, cor));
-                page.Content().PaddingTop(14).Element(c => Conteudo(c, doc, emitente, moeda, opcoes, cor));
+                page.Content().PaddingTop(14).Element(c =>
+                {
+                    if (doc.TipoDoc == TipoDocumento.RC) ConteudoRecibo(c, doc, emitente, moeda, opcoes, cor);
+                    else Conteudo(c, doc, emitente, moeda, opcoes, cor);
+                });
                 page.Footer().Element(c => Rodape(c, doc, emitente, opcoes));
 
                 var marca = opcoes.Marca switch
@@ -258,6 +262,156 @@ public sealed class GeradorPdfQuestPdf(IArmazenamentoFicheiros ficheiros) : IGer
             if (doc.Estado == EstadoDocumento.Anulado)
                 col.Item().PaddingTop(10).Text($"Documento anulado em {doc.AnuladoEm:dd/MM/yyyy}. Motivo: {doc.MotivoAnulacao}").FontColor("#C8372D").SemiBold();
         });
+    }
+
+    /// <summary>Recibo: quantia recebida, por extenso, método e documentos pagos.</summary>
+    private static void ConteudoRecibo(IContainer c, Documento doc, DadosEmitente e, Moeda moeda, OpcoesPdf opcoes, Color cor)
+    {
+        c.Column(col =>
+        {
+            col.Item().Text(doc.NumeroFormatado is null ? "Recibo" : $"Recibo n.º {doc.NumeroFormatado}").Bold().FontSize(14).FontColor(cor);
+            col.Item().PaddingTop(6).Text(t =>
+            {
+                t.Span("Recebemos de ");
+                t.Span(doc.ClienteNome).SemiBold();
+                t.Span($" (NUIT {doc.ClienteNuit ?? "—"}) a quantia de ");
+                t.Span($"{N(doc.Total)} MZN").Bold();
+                t.Span($" ({PorExtenso.Valor(doc.Total, moeda.NomeSingular, moeda.NomePlural, moeda.CentimoSingular, moeda.CentimoPlural)})");
+                t.Span(doc.MetodoPagamento is { } m ? $", por {MetodoPagamentoInfo.Nome(m).ToLowerInvariant()}" : "");
+                t.Span(doc.ReferenciaPagamento is null ? "" : $" (ref. {doc.ReferenciaPagamento})");
+                t.Span($", em {D(doc.Data)}.");
+            });
+
+            if (opcoes.Alocacoes.Count > 0)
+            {
+                col.Item().PaddingTop(12).Text("Para pagamento de:").SemiBold();
+                col.Item().PaddingTop(4).Table(t =>
+                {
+                    t.ColumnsDefinition(cd => { cd.RelativeColumn(2); cd.RelativeColumn(1); cd.RelativeColumn(1.4f); cd.RelativeColumn(1.4f); });
+                    t.Header(h =>
+                    {
+                        IContainer Cab(IContainer x) => x.Background(cor).PaddingVertical(5).PaddingHorizontal(4);
+                        h.Cell().Element(Cab).Text("Documento").FontColor(Colors.White).SemiBold();
+                        h.Cell().Element(Cab).Text("Data").FontColor(Colors.White).SemiBold();
+                        h.Cell().Element(Cab).AlignRight().Text("Valor do documento").FontColor(Colors.White).SemiBold();
+                        h.Cell().Element(Cab).AlignRight().Text("Valor pago").FontColor(Colors.White).SemiBold();
+                    });
+                    foreach (var a in opcoes.Alocacoes)
+                    {
+                        IContainer Cel(IContainer x) => x.BorderBottom(0.5f).BorderColor("#E2E7EE").PaddingVertical(4).PaddingHorizontal(4);
+                        t.Cell().Element(Cel).Text(a.Documento);
+                        t.Cell().Element(Cel).Text(D(a.Data));
+                        t.Cell().Element(Cel).AlignRight().Text(N(a.TotalMzn));
+                        t.Cell().Element(Cel).AlignRight().Text(N(a.Valor));
+                    }
+                });
+            }
+
+            col.Item().PaddingTop(10).AlignRight().Width(240).Column(dir =>
+            {
+                if (opcoes.Adiantamento > 0)
+                {
+                    dir.Item().BorderBottom(0.5f).BorderColor("#E2E7EE").PaddingVertical(3).Row(r =>
+                    {
+                        r.RelativeItem().Text("Alocado a documentos");
+                        r.AutoItem().Text(N(doc.Total - opcoes.Adiantamento));
+                    });
+                    dir.Item().BorderBottom(0.5f).BorderColor("#E2E7EE").PaddingVertical(3).Row(r =>
+                    {
+                        r.RelativeItem().Text("Adiantamento (crédito do cliente)");
+                        r.AutoItem().Text(N(opcoes.Adiantamento));
+                    });
+                }
+                dir.Item().PaddingTop(4).Background(cor).Padding(6).Row(r =>
+                {
+                    r.RelativeItem().Text("TOTAL RECEBIDO (MZN)").Bold().FontColor(Colors.White).FontSize(11);
+                    r.AutoItem().Text(N(doc.Total)).Bold().FontColor(Colors.White).FontSize(11);
+                });
+            });
+
+            if (!string.IsNullOrWhiteSpace(doc.Observacoes))
+                col.Item().PaddingTop(8).Text(t => { t.Span("Observações: ").SemiBold(); t.Span(doc.Observacoes); });
+            if (doc.Estado == EstadoDocumento.Anulado)
+                col.Item().PaddingTop(10).Text($"Recibo anulado em {doc.AnuladoEm:dd/MM/yyyy}. Motivo: {doc.MotivoAnulacao}").FontColor("#C8372D").SemiBold();
+        });
+    }
+
+    public byte[] GerarExtracto(Application.Recebimentos.Extracto x, DadosEmitente emitente, string? utilizador)
+    {
+        var cor = Color.FromHex(emitente.CorPrimaria);
+        var logo = CarregarLogotipo(emitente.LogoPath);
+        var cabecalho = new Documento
+        {
+            TipoDoc = TipoDocumento.FT, ClienteId = x.ClienteId, ClienteNome = x.ClienteNome, ClienteNuit = x.ClienteNuit,
+        };
+
+        return Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Size(PageSizes.A4);
+                page.MarginHorizontal(36);
+                page.MarginVertical(32);
+                page.DefaultTextStyle(t => t.FontSize(9).FontColor("#1B2430"));
+                page.Header().Element(c => Cabecalho(c, cabecalho, emitente, logo, cor));
+                page.Content().PaddingTop(14).Column(col =>
+                {
+                    col.Item().Text("Extracto de conta corrente").Bold().FontSize(14).FontColor(cor);
+                    col.Item().Text($"Período de {D(x.De)} a {D(x.Ate)} · valores em MZN").FontColor("#5B6676");
+
+                    col.Item().PaddingTop(10).Table(t =>
+                    {
+                        t.ColumnsDefinition(cd =>
+                        {
+                            cd.ConstantColumn(58); cd.ConstantColumn(92); cd.RelativeColumn(); cd.ConstantColumn(72); cd.ConstantColumn(72); cd.ConstantColumn(78);
+                        });
+                        t.Header(h =>
+                        {
+                            IContainer Cab(IContainer c) => c.Background(cor).PaddingVertical(5).PaddingHorizontal(4);
+                            h.Cell().Element(Cab).Text("Data").FontColor(Colors.White).SemiBold();
+                            h.Cell().Element(Cab).Text("Documento").FontColor(Colors.White).SemiBold();
+                            h.Cell().Element(Cab).Text("Descrição").FontColor(Colors.White).SemiBold();
+                            h.Cell().Element(Cab).AlignRight().Text("Débito").FontColor(Colors.White).SemiBold();
+                            h.Cell().Element(Cab).AlignRight().Text("Crédito").FontColor(Colors.White).SemiBold();
+                            h.Cell().Element(Cab).AlignRight().Text("Saldo").FontColor(Colors.White).SemiBold();
+                        });
+                        IContainer Cel(IContainer c) => c.BorderBottom(0.5f).BorderColor("#E2E7EE").PaddingVertical(4).PaddingHorizontal(4);
+                        t.Cell().ColumnSpan(5).Element(Cel).Text("Saldo anterior").SemiBold();
+                        t.Cell().Element(Cel).AlignRight().Text(N(x.SaldoInicial)).SemiBold();
+                        foreach (var m in x.Movimentos)
+                        {
+                            t.Cell().Element(Cel).Text(D(m.Data));
+                            t.Cell().Element(Cel).Text(m.Documento);
+                            t.Cell().Element(Cel).Text(m.Descricao);
+                            t.Cell().Element(Cel).AlignRight().Text(m.Debito == 0 ? "" : N(m.Debito));
+                            t.Cell().Element(Cel).AlignRight().Text(m.Credito == 0 ? "" : N(m.Credito));
+                            t.Cell().Element(Cel).AlignRight().Text(N(m.Saldo));
+                        }
+                        t.Cell().ColumnSpan(3).Element(Cel).AlignRight().Text("Totais do período").SemiBold();
+                        t.Cell().Element(Cel).AlignRight().Text(N(x.TotalDebitos)).SemiBold();
+                        t.Cell().Element(Cel).AlignRight().Text(N(x.TotalCreditos)).SemiBold();
+                        t.Cell().Element(Cel).Text("");
+                    });
+
+                    col.Item().PaddingTop(10).AlignRight().Width(240).Background(cor).Padding(6).Row(r =>
+                    {
+                        r.RelativeItem().Text($"SALDO EM {D(x.Ate)}").Bold().FontColor(Colors.White).FontSize(11);
+                        r.AutoItem().Text(N(x.SaldoFinal)).Bold().FontColor(Colors.White).FontSize(11);
+                    });
+                    col.Item().PaddingTop(4).AlignRight().Text(x.SaldoFinal > 0 ? "Saldo a nosso favor" : x.SaldoFinal < 0 ? "Saldo a seu favor" : "Conta saldada")
+                        .FontSize(8).FontColor("#5B6676");
+
+                    if (emitente.Contas.Count > 0 && x.SaldoFinal > 0)
+                        col.Item().PaddingTop(14).Column(c =>
+                        {
+                            c.Item().Text("Pagamento por transferência").SemiBold().FontColor(cor);
+                            foreach (var conta in emitente.Contas)
+                                c.Item().Text(string.Join("   ", new[] { conta.Banco, $"Conta {conta.NumeroConta}", conta.Nib is null ? null : $"NIB {conta.Nib}" }.Where(v => v is not null))).FontSize(8.5f);
+                        });
+                });
+                page.Footer().Element(c => Rodape(c, new Documento(), emitente, new OpcoesPdf(MarcaPdf.Nenhuma, utilizador)));
+            });
+        }).GeneratePdf();
     }
 
     private static void Rodape(IContainer c, Documento doc, DadosEmitente e, OpcoesPdf opcoes)

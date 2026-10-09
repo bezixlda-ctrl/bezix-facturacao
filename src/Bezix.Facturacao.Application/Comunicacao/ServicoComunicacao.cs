@@ -24,6 +24,7 @@ public sealed partial class ServicoComunicacao(
     IArmazenamentoFicheiros ficheiros,
     ServicoEmpresa empresas,
     ServicoPdfDocumentos pdfs,
+    Recebimentos.ServicoContaCorrente contaCorrente,
     IUtilizadorActual utilizador,
     IServicoAuditoria auditoria,
     TimeProvider relogio,
@@ -109,6 +110,71 @@ public sealed partial class ServicoComunicacao(
             ? Resultado.Ok()
             : Resultado.Falha($"O email ficou na fila e vai ser repetido automaticamente. Erro: {estado.ErroUltimo}");
     }
+
+    public const string CodigoModeloExtracto = "extracto";
+
+    /// <summary>Email proposto para enviar o extracto de conta corrente de um período.</summary>
+    public async Task<EmailPreparado?> PrepararExtractoAsync(int clienteId, DateOnly de, DateOnly ate, CancellationToken ct = default)
+    {
+        var extracto = await contaCorrente.ExtractoAsync(clienteId, de, ate, ct);
+        if (extracto is null) return null;
+        var cliente = await db.Clientes.AsNoTracking().SingleAsync(c => c.Id == clienteId, ct);
+        var saldo = await contaCorrente.SaldoAsync(clienteId, ct);
+        var modelo = await db.ModelosComunicacao.AsNoTracking().SingleOrDefaultAsync(m => m.Codigo == CodigoModeloExtracto && m.Activo, ct);
+        var empresa = await empresas.ObterAsync(ct);
+        var contas = await db.ContasBancarias.AsNoTracking().Where(c => c.MostrarNoDocumento).OrderBy(c => c.Ordem).ToListAsync(ct);
+
+        var v = new Dictionary<string, string>
+        {
+            ["cliente.nome"] = cliente.Nome,
+            ["cliente.contacto"] = cliente.Contacto ?? cliente.Nome,
+            ["extracto.periodo"] = $"{de:dd/MM/yyyy} a {ate:dd/MM/yyyy}",
+            ["saldo.final"] = Valor(extracto.SaldoFinal) + " MZN",
+            ["saldo.vencido"] = Valor(saldo.Vencido) + " MZN",
+            ["empresa.nome"] = empresa.Nome,
+            ["empresa.contas"] = string.Join("\n", contas.Select(c => $"{c.Banco}: {c.NumeroConta}" + (c.Nib is null ? "" : $" · NIB {c.Nib}"))),
+            ["utilizador.nome"] = utilizador.Nome ?? "",
+        };
+        var assunto = Substituir(modelo?.Assunto ?? "Extracto de conta corrente · {empresa.nome}", v);
+        var corpo = Substituir(modelo?.Corpo ?? "Exmo(a). {cliente.contacto},\n\nEnviamos em anexo o extracto de {extracto.periodo}. Saldo: {saldo.final}.\n\nCumprimentos,\n{empresa.nome}", v);
+        var cc = string.Join(", ", new[] { modelo?.Cc, cliente.EmailCc }.Where(x => !string.IsNullOrWhiteSpace(x)));
+        return new EmailPreparado(cliente.EmailEnvio ?? "", cc.Length == 0 ? null : cc, assunto, corpo, true);
+    }
+
+    public async Task<Resultado> EnviarExtractoAsync(int clienteId, DateOnly de, DateOnly ate, EmailPreparado email, CancellationToken ct = default)
+    {
+        var extracto = await contaCorrente.ExtractoAsync(clienteId, de, ate, ct);
+        if (extracto is null) return Resultado.Falha("Cliente não encontrado.");
+        var destinatarios = Lista(email.Para);
+        if (destinatarios.Count == 0) return Resultado.Falha("Indique o email do destinatário.");
+        if (destinatarios.Concat(Lista(email.Cc)).Any(e => !Clientes.ServicoClientes.EmailValido(e))) return Resultado.Falha("Um dos emails não é válido.");
+
+        var pdf = await pdfs.ExtractoAsync(extracto, ct);
+        var caminho = await ficheiros.GuardarAsync("extractos", ".pdf", pdf, ct);
+        var item = new EmailFila
+        {
+            Para = string.Join(", ", destinatarios),
+            Cc = Lista(email.Cc) is { Count: > 0 } lista ? string.Join(", ", lista) : null,
+            Assunto = email.Assunto.Trim(),
+            Corpo = email.Corpo,
+            Anexos = $"{caminho}|Extracto_{de:yyyyMMdd}-{ate:yyyyMMdd}.pdf",
+            ClienteId = clienteId,
+            ModeloCodigo = CodigoModeloExtracto,
+            ProximaTentativa = relogio.GetUtcNow().UtcDateTime,
+        };
+        db.EmailsFila.Add(item);
+        auditoria.Registar("Cliente", clienteId.ToString(), "Extracto.Enviar", null, new { De = de, Ate = ate, item.Para, extracto.SaldoFinal });
+        await db.SaveChangesAsync(ct);
+
+        await TentarEnviarAsync(item.Id, ct);
+        var estado = await db.EmailsFila.AsNoTracking().Where(e => e.Id == item.Id).Select(e => new { e.Estado, e.ErroUltimo }).SingleAsync(ct);
+        return estado.Estado == EstadoEmail.Enviado
+            ? Resultado.Ok()
+            : Resultado.Falha($"O email ficou na fila e vai ser repetido automaticamente. Erro: {estado.ErroUltimo}");
+    }
+
+    public Task<List<EmailFila>> HistoricoClienteAsync(int clienteId, CancellationToken ct = default) =>
+        db.EmailsFila.AsNoTracking().Where(e => e.ClienteId == clienteId).OrderByDescending(e => e.Id).Take(20).ToListAsync(ct);
 
     public Task<List<EmailFila>> HistoricoDocumentoAsync(int documentoId, CancellationToken ct = default) =>
         db.EmailsFila.AsNoTracking().Where(e => e.DocumentoId == documentoId).OrderByDescending(e => e.Id).ToListAsync(ct);

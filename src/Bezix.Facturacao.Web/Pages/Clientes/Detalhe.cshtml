@@ -93,6 +93,27 @@
     </div>
 
     <div class="col-lg-7 col-xl-8">
+        @if (Model.Saldo is { } saldo)
+        {
+            <a class="painel painel-corpo d-flex flex-wrap gap-4 align-items-center text-decoration-none text-reset mb-4" asp-page="/ContaCorrente/Cliente" asp-route-id="@c.Id">
+                <div>
+                    <div class="small text-body-secondary">Saldo</div>
+                    <div class="fs-5 fw-bold tabular">@Formato.Moeda(saldo.Saldo)</div>
+                </div>
+                <div>
+                    <div class="small text-body-secondary">Vencido</div>
+                    <div class="fs-5 fw-bold tabular @(saldo.Vencido > 0 ? "text-danger" : "")">@Formato.Moeda(saldo.Vencido)</div>
+                </div>
+                @if (saldo.AdiantamentoPorAlocar > 0)
+                {
+                    <div>
+                        <div class="small text-body-secondary">Adiantamento</div>
+                        <div class="fs-5 fw-bold tabular">@Formato.Moeda(saldo.AdiantamentoPorAlocar)</div>
+                    </div>
+                }
+                <span class="ms-auto small">Conta corrente e extracto <i class="bi bi-chevron-right"></i></span>
+            </a>
+        }
         @if (Model.Documentos is { } docs)
         {
             <section class="painel mb-4">
@@ -128,6 +149,6 @@
         <section class="painel" id="actividades">
             <partial name="_Actividades" model="Model" />
         </section>
-        <p class="small text-body-secondary mt-3"><i class="bi bi-info-circle me-1"></i>Pagamentos e conta corrente aparecem aqui na próxima fase.</p>
+
     </div>
 </div>

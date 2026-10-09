@@ -41,6 +41,12 @@ public class AcessoPorPerfilTests(AplicacaoFactory app)
         Linha("/Documentos/Editar?tipo=CT", PerfisPadrao.Administrador, PerfisPadrao.Gestor, PerfisPadrao.Facturador);
         Linha("/Documentos/Aprovacoes", PerfisPadrao.Administrador, PerfisPadrao.Gestor);
         Linha("/Configuracoes/Moedas", PerfisPadrao.Administrador, PerfisPadrao.Contabilista);
+
+        // Fase 4: "Registar recibos e alocar": Administrador, Gestor e Tesouraria
+        Linha("/Recibos", PerfisPadrao.Todos.Select(p => p.Nome).ToArray());
+        Linha("/Recibos/Novo", PerfisPadrao.Administrador, PerfisPadrao.Gestor, PerfisPadrao.Tesouraria);
+        Linha("/ContaCorrente", PerfisPadrao.Todos.Select(p => p.Nome).ToArray());
+        Linha("/ContaCorrente/Antiguidade", PerfisPadrao.Todos.Select(p => p.Nome).ToArray());
         return d;
     }
 
