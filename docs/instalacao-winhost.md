@@ -24,9 +24,20 @@ Os segredos nunca vão para o repositório. Criar no servidor, na pasta do site,
   },
   "Jobs": {
     "Token": "[texto aleatório com 32 ou mais caracteres]"
+  },
+  "Email": {
+    "Servidor": "[smtp do Winhost, SendGrid ou Brevo]",
+    "Porta": 587,
+    "Utilizador": "[utilizador SMTP]",
+    "Password": "[password SMTP]",
+    "Remetente": "facturacao@[dominio]",
+    "NomeRemetente": "[Nome da empresa]",
+    "Seguranca": "StartTls"
   }
 }
 ```
+
+- Sem `Email:Servidor`, os emails não saem: ficam gravados como ficheiros `.eml` em `App_Data/emails` (útil para testes). Os emails que falham ficam na fila e são repetidos pelo `jobs/tick` (1, 5 e 30 min, 2 h e 12 h).
 
 - O primeiro administrador só é criado se a base de dados ainda não tiver utilizadores. Depois de entrar e mudar a password, **apagar o bloco `Inicializacao`** do ficheiro.
 - Para gerar o token: `[Convert]::ToBase64String((1..32 | % { Get-Random -Max 256 }) -as [byte[]])` no PowerShell, ou um gerador de passwords.

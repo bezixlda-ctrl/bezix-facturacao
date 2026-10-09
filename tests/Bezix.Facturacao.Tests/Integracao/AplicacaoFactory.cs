@@ -3,7 +3,9 @@ using System.Text.RegularExpressions;
 using Bezix.Facturacao.Domain.Seguranca;
 using Bezix.Facturacao.Infrastructure.Identidade;
 using Bezix.Facturacao.Infrastructure.Persistencia;
+using Bezix.Facturacao.Application.Abstracoes;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -35,7 +37,12 @@ public sealed partial class AplicacaoFactory : WebApplicationFactory<Program>, I
         builder.UseSetting("Inicializacao:AdministradorEmail", "admin@teste.local");
         builder.UseSetting("Inicializacao:AdministradorNome", "Admin Teste");
         builder.UseSetting("Inicializacao:AdministradorPassword", PasswordTeste);
+        builder.UseSetting("Email:PastaLocal", PastaEmails);
+        builder.ConfigureTestServices(s => s.AddScoped<IUtilizadorActual, UtilizadorTeste>());
     }
+
+    /// <summary>Sem servidor SMTP, os emails são gravados aqui como .eml.</summary>
+    public string PastaEmails => Path.Combine(_pastaFicheiros, "emails");
 
     public Task InitializeAsync()
     {

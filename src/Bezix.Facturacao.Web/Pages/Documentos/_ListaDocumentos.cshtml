@@ -1,0 +1,67 @@
+@model Bezix.Facturacao.Web.Pages.Documentos.IndexModel
+@using Bezix.Facturacao.Domain.Documentos
+@using Bezix.Facturacao.Web.Pages.Documentos
+@if (Model.Resultado.Total == 0)
+{
+    <div class="vazio">
+        @if (Model.Filtrado)
+        {
+            <i class="bi bi-search"></i>
+            <p class="mb-0">Nenhum documento corresponde aos filtros.</p>
+        }
+        else
+        {
+            <i class="bi bi-file-earmark-text"></i>
+            <p>Ainda não há documentos.</p>
+            @if (Model.TiposNovos.Contains(TipoDocumento.FT))
+            {
+                <a class="btn btn-primary" asp-page="Editar" asp-route-tipo="FT">Criar a primeira factura</a>
+            }
+        }
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Documento</th>
+                    <th>Cliente</th>
+                    <th>Data</th>
+                    <th class="d-none d-md-table-cell">Vencimento</th>
+                    <th class="num">Total</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var d in Model.Resultado.Itens)
+                {
+                    var (classe, texto) = Vista.Estado(d.Estado);
+                    <tr>
+                        <td class="text-nowrap">
+                            <a class="text-decoration-none" asp-page="Detalhe" asp-route-id="@d.Id">
+                                @if (d.NumeroFormatado is not null)
+                                {
+                                    <span class="doc-num"><span class="tipo">@d.Tipo</span> @d.NumeroFormatado[3..]</span>
+                                }
+                                else
+                                {
+                                    <span class="doc-num"><span class="tipo">@d.Tipo</span> <span class="text-body-secondary fw-semibold">rascunho</span></span>
+                                }
+                            </a>
+                        </td>
+                        <td><a class="text-reset text-decoration-none" asp-page="/Clientes/Detalhe" asp-route-id="@d.ClienteId">@d.ClienteNome</a></td>
+                        <td class="tabular">@Formato.Data(d.Data)</td>
+                        <td class="tabular d-none d-md-table-cell">@(d.Vencimento is { } v ? Formato.Data(v) : "")</td>
+                        <td class="num">
+                            @Formato.Numero(d.Total) <span class="text-body-secondary small">@d.Moeda</span>
+                        </td>
+                        <td><span class="estado @classe">@texto</span></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Paginacao" model="Model.Paginacao" />
+}

@@ -59,6 +59,32 @@
                     </div>
                 }
                 <div class="ms-auto d-flex align-items-center gap-2">
+                    @if (User.TemAlguma(Permissoes.Documentos.Rascunho, Permissoes.Documentos.EmitirFactura, Permissoes.Documentos.EmitirFacturaRecibo, Permissoes.Recibos.Registar, Permissoes.Clientes.Gerir))
+                    {
+                        <div class="dropdown">
+                            <button class="btn btn-primary d-inline-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-plus-lg"></i><span class="d-none d-md-inline">Novo</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                @if (User.TemAlguma(Permissoes.Documentos.Rascunho, Permissoes.Documentos.EmitirFactura))
+                                {
+                                    <li><a class="dropdown-item" asp-page="/Documentos/Editar" asp-route-tipo="FT"><i class="bi bi-file-earmark-text me-2"></i>Nova factura</a></li>
+                                }
+                                @if (User.TemAlguma(Permissoes.Documentos.Rascunho, Permissoes.Documentos.EmitirFacturaRecibo))
+                                {
+                                    <li><a class="dropdown-item" asp-page="/Documentos/Editar" asp-route-tipo="FR"><i class="bi bi-file-earmark-check me-2"></i>Nova factura-recibo</a></li>
+                                }
+                                @if (User.TemPermissao(Permissoes.Recibos.Registar))
+                                {
+                                    <li><span class="dropdown-item disabled"><i class="bi bi-receipt me-2"></i>Novo recibo <small>(fase 4)</small></span></li>
+                                }
+                                @if (User.TemPermissao(Permissoes.Clientes.Gerir))
+                                {
+                                    <li><a class="dropdown-item" asp-page="/Clientes/Editar"><i class="bi bi-person-plus me-2"></i>Novo cliente</a></li>
+                                }
+                            </ul>
+                        </div>
+                    }
                     <button class="btn-icone" type="button" id="alternarTema" aria-label="Mudar entre modo claro e escuro" title="Modo claro/escuro">
                         <i class="bi bi-moon-stars"></i>
                     </button>

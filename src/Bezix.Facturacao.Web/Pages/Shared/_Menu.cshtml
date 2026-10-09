@@ -1,3 +1,4 @@
+@inject Bezix.Facturacao.Application.Documentos.ServicoEmissao Aprovacoes
 @{
     var pagina = ViewContext.RouteData.Values["page"] as string ?? "";
     string Activo(string prefixo) => prefixo == "/Index"
@@ -14,7 +15,15 @@
         <div class="app-nav-grupo">Vendas</div>
         @if (u.TemPermissao(Permissoes.Documentos.Ver))
         {
-            <span class="em-breve"><i class="bi bi-file-earmark-text"></i>Documentos<small>em breve</small></span>
+            <a asp-page="/Documentos/Index" class="@Activo("/Documentos/Index") @Activo("/Documentos/Editar") @Activo("/Documentos/Detalhe")" aria-current="@Atual("/Documentos/Index")"><i class="bi bi-file-earmark-text"></i>Documentos</a>
+            @if (u.TemPermissao(Permissoes.Documentos.Aprovar))
+            {
+                var pendentes = await Aprovacoes.ContarPendentesAsync();
+                <a asp-page="/Documentos/Aprovacoes" class="@Activo("/Documentos/Aprovacoes")" aria-current="@Atual("/Documentos/Aprovacoes")">
+                    <i class="bi bi-patch-check"></i>Aprovações
+                    @if (pendentes > 0) { <span class="badge rounded-pill text-bg-warning ms-auto">@pendentes</span> }
+                </a>
+            }
         }
         @if (u.TemPermissao(Permissoes.Clientes.Ver))
         {

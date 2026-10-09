@@ -1,0 +1,11 @@
+@model IReadOnlyList<Bezix.Facturacao.Application.Clientes.ClienteLinha>
+@if (Model.Count == 0)
+{
+    <div class="p-3 small text-body-secondary">Nenhum cliente encontrado. <a asp-page="/Clientes/Editar" target="_blank">Criar cliente</a></div>
+}
+@foreach (var c in Model)
+{
+    <a href="#" class="escolher-cliente" data-id="@c.Id">
+        <i class="bi bi-person text-body-secondary"></i><span>@c.Nome</span><small>@(c.Nuit ?? "sem NUIT")</small>
+    </a>
+}

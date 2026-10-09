@@ -67,10 +67,35 @@ As colunas `Clientes.Nome`, `Clientes.Contacto` e `Artigos.Descricao` usam a col
 
 Opção em Configurações → Empresa. Quando activa, quem não tem a permissão `Documentos.VerTodos` (por omissão, o Facturador) só vê os clientes de que é responsável; na fase 3 aplica-se também aos documentos. O responsável é quem cria o cliente; quem tem `Documentos.VerTodos` pode mudá-lo.
 
+## D13. Documentos em moeda estrangeira — fase 3
+
+Pedido do utilizador em 09/10/2026: a facturação permite escolher a moeda. Cada documento tem **moeda** (MZN, USD, EUR, ZAR; outras criam-se em Configurações → Moedas) e **câmbio** (MZN por 1 unidade, 6 casas decimais). O câmbio é proposto a partir da tabela de câmbios (Configurações → Moedas e câmbios) e pode ser ajustado em cada documento.
+
+O documento guarda os totais na moeda escolhida e também o **contravalor em MZN** (base, IVA e total, também por taxa). O PDF mostra o câmbio e o contravalor. Os mapas de IVA e a exportação AT (fases 5 e 6) usam os valores em MZN. NC e ND ficam obrigatoriamente na moeda e no câmbio do documento corrigido.
+
+**A confirmar com o contabilista:** se a lei exige que o IVA de documentos em moeda estrangeira seja expresso em meticais no próprio documento (o sistema já o imprime) e qual o câmbio de referência obrigatório (Banco de Moçambique do dia da emissão?).
+
+## D14. Imutabilidade em duas camadas — fase 3
+
+1. **Aplicação:** um interceptor do EF recusa qualquer alteração a documentos emitidos e às suas linhas, excepto a anulação (estado, motivo, data, utilizador) e o caminho do PDF. A tentativa fica na auditoria (`Documento.TentativaAlteracao`).
+2. **Base de dados:** triggers em `Documentos`, `DocumentoLinhas` e `DocumentoIvaResumos` recusam o mesmo por SQL directo (erros 50001–50003).
+
+A cadeia de hashes (SHA-256 sobre data, hora de emissão, número, total e hash anterior) permite detectar alterações feitas por fora destas duas barreiras.
+
+## D15. Numeração e PDF
+
+O número é atribuído numa transacção com a série bloqueada (`UPDLOCK, HOLDLOCK`); testado com 12 emissões em simultâneo na mesma série (números 1 a 12, sem duplicados nem saltos). O PDF é gerado e guardado **depois** do commit, para a série não ficar bloqueada durante a geração; se falhar, é gerado (idêntico) no primeiro pedido de impressão. A 2.ª via e os anulados regeneram-se a partir dos dados congelados no documento, com a marca correspondente.
+
+## D16. Aprovações
+
+Desconto efectivo (linhas + global, face ao valor bruto) acima do limite do perfil, ou NC pedida por quem só a pode pedir, põe o documento em "Aguarda aprovação". O gestor **aprova e emite** num só passo, ou rejeita com motivo (o documento volta a rascunho). Quem pediu pode cancelar o pedido.
+
 ## Pendentes de confirmação
 
-- **QuestPDF (fase 3):** licença Community gratuita só para empresas com receita anual abaixo de 1 M USD. Confirmar a receita da Bezix; acima disso é preciso licença paga.
+- ~~QuestPDF~~: confirmado em 09/10/2026 que a receita anual é inferior a 1 M USD; usa-se a licença Community. Rever se a receita passar esse valor.
 - **Motivo de isenção por omissão:** o texto "Isento nos termos do artigo 9 do Código do IVA" é provisório. Confirmar com o contabilista.
+- **Moeda estrangeira:** ver D13.
+- **NUIT de particulares:** com o limite a 0 (valor por omissão), o NUIT só é exigido a empresas. Definir o limite em Configurações → Empresa quando a AT o indicar.
 - **Limite do NUIT obrigatório**, regras da factura global e requisitos de certificação: aguardam resposta da AT ([oficio-AT.md](oficio-AT.md)).
 - **Limpeza de importações abandonadas (fase 5):** ficheiros CSV analisados mas não importados ficam em `App_Data/uploads/importacoes`. O `jobs/tick` deve apagar os que tenham mais de 24 horas.
 - **2FA obrigatório para administradores:** por agora é recomendado (lista de primeiros passos no painel). Tornar obrigatório na fase 6, depois de todos os administradores o terem activado.

@@ -1,0 +1,132 @@
+@page
+@model Bezix.Facturacao.Web.Pages.Configuracoes.MoedasModel
+@{
+    ViewData["Title"] = "Moedas e câmbios";
+    var estrangeiras = Model.Moedas.Where(m => !m.IsBase && m.Activa).ToList();
+}
+<div class="cabecalho-pagina">
+    <div>
+        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Configurações</a>
+        <h1 class="mt-1">Moedas e câmbios</h1>
+        <p>Os documentos podem ser emitidos em qualquer moeda activa. O IVA e os totais ficam também em meticais (contravalor), pelo câmbio do documento.</p>
+    </div>
+</div>
+
+<partial name="_ResumoErros" />
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <section class="painel mb-4">
+            <div class="painel-cabecalho"><h2>Moedas</h2></div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead><tr><th>Código</th><th>Nome</th><th>Por extenso</th><th>Estado</th>@if (Model.PodeGerir) { <th></th> }</tr></thead>
+                    <tbody>
+                        @foreach (var m in Model.Moedas)
+                        {
+                            <tr>
+                                <td class="fw-bold">@m.Codigo</td>
+                                <td>@m.Nome @if (m.IsBase) { <span class="small text-body-secondary">(base)</span> }</td>
+                                <td class="small">um @m.NomeSingular, dois @m.NomePlural</td>
+                                <td><span class="estado @(m.Activa ? "estado-activo" : "estado-inactivo")">@(m.Activa ? "Activa" : "Inactiva")</span></td>
+                                @if (Model.PodeGerir)
+                                {
+                                    <td class="text-end">
+                                        @if (!m.IsBase)
+                                        {
+                                            <form method="post" asp-page-handler="Estado" asp-route-codigo="@m.Codigo" asp-route-activa="@(!m.Activa)">
+                                                <button class="btn btn-sm btn-outline-secondary" type="submit">@(m.Activa ? "Desactivar" : "Activar")</button>
+                                            </form>
+                                        }
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        @if (Model.PodeGerir)
+        {
+            <form method="post" asp-page-handler="Criar" class="painel" novalidate>
+                <div class="painel-cabecalho"><h2>Nova moeda</h2></div>
+                <div class="painel-corpo row g-3">
+                    <div class="col-4 col-md-3">
+                        <label class="form-label" for="Nova_Codigo">Código ISO</label>
+                        <input class="form-control text-uppercase" asp-for="Nova.Codigo" maxlength="3" placeholder="GBP" />
+                    </div>
+                    <div class="col-8 col-md-6">
+                        <label class="form-label" for="Nova_Nome">Nome</label>
+                        <input class="form-control" asp-for="Nova.Nome" placeholder="Libra esterlina" />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label" for="Nova_Simbolo">Símbolo</label>
+                        <input class="form-control" asp-for="Nova.Simbolo" maxlength="10" placeholder="£" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="Nova_NomeSingular">No singular (extenso)</label>
+                        <input class="form-control" asp-for="Nova.NomeSingular" placeholder="libra" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="Nova_NomePlural">No plural (extenso)</label>
+                        <input class="form-control" asp-for="Nova.NomePlural" placeholder="libras" />
+                    </div>
+                </div>
+                <div class="painel-corpo border-top d-flex justify-content-end">
+                    <button class="btn btn-primary" type="submit">Criar moeda</button>
+                </div>
+            </form>
+        }
+    </div>
+
+    <div class="col-lg-6">
+        @if (Model.PodeGerir && estrangeiras.Count > 0)
+        {
+            <form method="post" asp-page-handler="Cambio" class="painel mb-4" novalidate>
+                <div class="painel-cabecalho"><h2>Registar câmbio</h2></div>
+                <div class="painel-corpo row g-3 align-items-end">
+                    <div class="col-4">
+                        <label class="form-label" for="CambioMoeda">Moeda</label>
+                        <select class="form-select" asp-for="CambioMoeda">
+                            @foreach (var m in estrangeiras) { <option value="@m.Codigo">@m.Codigo</option> }
+                        </select>
+                    </div>
+                    <div class="col-4">
+                        <label class="form-label" for="CambioData">A partir de</label>
+                        <input class="form-control" asp-for="CambioData" type="date" />
+                    </div>
+                    <div class="col-4">
+                        <label class="form-label" for="CambioValor">MZN por 1</label>
+                        <input class="form-control tabular text-end" asp-for="CambioValor" type="text" inputmode="decimal" value="" placeholder="63,85" />
+                    </div>
+                    <div class="col-12 d-flex justify-content-between align-items-center">
+                        <span class="small text-body-secondary">Proposto nos documentos novos dessa moeda; pode ser ajustado em cada documento.</span>
+                        <button class="btn btn-primary" type="submit">Registar</button>
+                    </div>
+                </div>
+            </form>
+        }
+        <section class="painel">
+            <div class="painel-cabecalho"><h2>Câmbios registados</h2></div>
+            @if (Model.Cambios.Count == 0)
+            {
+                <div class="vazio">Ainda não há câmbios registados.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead><tr><th>Data</th><th>Moeda</th><th class="num">MZN por 1</th></tr></thead>
+                        <tbody>
+                            @foreach (var c in Model.Cambios)
+                            {
+                                <tr><td class="tabular">@Formato.Data(c.Data)</td><td>@c.Moeda</td><td class="num">@c.Valor.ToString("#,##0.######", Formato.Cultura)</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    </div>
+</div>

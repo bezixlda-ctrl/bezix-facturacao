@@ -33,6 +33,14 @@ public class AcessoPorPerfilTests(AplicacaoFactory app)
         Linha("/Artigos", PerfisPadrao.Todos.Select(p => p.Nome).ToArray());
         Linha("/Artigos/Editar", PerfisPadrao.Administrador, PerfisPadrao.Gestor, PerfisPadrao.Facturador);
         Linha("/Artigos/Importar", PerfisPadrao.Administrador, PerfisPadrao.Gestor, PerfisPadrao.Facturador);
+
+        // Fase 3: documentos ("Emitir FT, FR, FG": Tesouraria só FR; Contabilista e Consulta só consultam)
+        Linha("/Documentos", PerfisPadrao.Todos.Select(p => p.Nome).ToArray());
+        Linha("/Documentos/Editar?tipo=FT", PerfisPadrao.Administrador, PerfisPadrao.Gestor, PerfisPadrao.Facturador);
+        Linha("/Documentos/Editar?tipo=FR", PerfisPadrao.Administrador, PerfisPadrao.Gestor, PerfisPadrao.Facturador, PerfisPadrao.Tesouraria);
+        Linha("/Documentos/Editar?tipo=CT", PerfisPadrao.Administrador, PerfisPadrao.Gestor, PerfisPadrao.Facturador);
+        Linha("/Documentos/Aprovacoes", PerfisPadrao.Administrador, PerfisPadrao.Gestor);
+        Linha("/Configuracoes/Moedas", PerfisPadrao.Administrador, PerfisPadrao.Contabilista);
         return d;
     }
 

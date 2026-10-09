@@ -1,4 +1,4 @@
-using static Bezix.Facturacao.Domain.Seguranca.Permissoes;
+
 
 namespace Bezix.Facturacao.Domain.Seguranca;
 
@@ -24,43 +24,43 @@ public static class PerfisPadrao
 
         new(Gestor, "Gere vendas, cobranças e aprovações; não altera configurações nem utilizadores", null,
             Permissoes.Todas.Select(p => p.Codigo)
-                .Except([Configuracoes.Gerir, Configuracoes.VerTaxas, Administracao.Utilizadores, Administracao.Integracoes])
+                .Except([Permissoes.Configuracoes.Gerir, Permissoes.Configuracoes.VerTaxas, Permissoes.Administracao.Utilizadores, Permissoes.Administracao.Integracoes])
                 .ToList()),
 
         new(Facturador, "Cria clientes e emite documentos; NC e descontos altos pedem aprovação", 10m,
         [
-            Dashboard.Facturacao,
+            Permissoes.Dashboard.Facturacao,
             Permissoes.Clientes.Ver, Permissoes.Clientes.Gerir, Permissoes.Artigos.Ver, Permissoes.Artigos.Gerir,
             Permissoes.Documentos.Ver, Permissoes.Documentos.Rascunho, Permissoes.Documentos.EmitirFactura,
             Permissoes.Documentos.EmitirFacturaRecibo, Permissoes.Documentos.EmitirNotaDebito,
             Permissoes.Documentos.PedirNotaCredito,
-            Comunicacao.Enviar, Relatorios.Vendas, Automacao.Ver,
+            Permissoes.Comunicacao.Enviar, Permissoes.Relatorios.Vendas, Permissoes.Automacao.Ver,
         ]),
 
         new(Tesouraria, "Regista recebimentos, valida pagamentos e faz cobranças", 0m,
         [
-            Dashboard.Recebimentos, Dashboard.Saldos,
+            Permissoes.Dashboard.Recebimentos, Permissoes.Dashboard.Saldos,
             Permissoes.Clientes.Ver, Permissoes.Clientes.Gerir, Permissoes.Artigos.Ver,
             Permissoes.Documentos.Ver, Permissoes.Documentos.VerTodos, Permissoes.Documentos.EmitirFacturaRecibo,
-            Recibos.Registar, Recibos.ValidarPagamentoComunicado,
-            Comunicacao.Enviar, Automacao.Ver,
+            Permissoes.Recibos.Registar, Permissoes.Recibos.ValidarPagamentoComunicado,
+            Permissoes.Comunicacao.Enviar, Permissoes.Automacao.Ver,
         ]),
 
         new(Contabilista, "Consulta documentos, relatórios fiscais e exportação AT", 0m,
         [
-            Dashboard.Facturacao, Dashboard.Recebimentos, Dashboard.Iva,
+            Permissoes.Dashboard.Facturacao, Permissoes.Dashboard.Recebimentos, Permissoes.Dashboard.Iva,
             Permissoes.Clientes.Ver, Permissoes.Artigos.Ver,
             Permissoes.Documentos.Ver, Permissoes.Documentos.VerTodos,
-            Relatorios.Vendas, Relatorios.Fiscal,
-            Configuracoes.VerTaxas, Administracao.VerAuditoria,
+            Permissoes.Relatorios.Vendas, Permissoes.Relatorios.Fiscal,
+            Permissoes.Configuracoes.VerTaxas, Permissoes.Administracao.VerAuditoria,
         ]),
 
         new(Consulta, "Só consulta", 0m,
         [
-            Dashboard.Resumo,
+            Permissoes.Dashboard.Resumo,
             Permissoes.Clientes.Ver, Permissoes.Artigos.Ver,
             Permissoes.Documentos.Ver, Permissoes.Documentos.VerTodos,
-            Relatorios.Vendas,
+            Permissoes.Relatorios.Vendas,
         ]),
     ];
 }

@@ -32,6 +32,14 @@ public sealed class FabricaClaims(
     {
         var id = await base.GenerateClaimsAsync(user);
         id.AddClaim(new Claim(ClaimsPrincipalExtensions.ClaimNome, user.Nome));
+
+        // Limite de desconto do perfil (o utilizador tem um perfil). Sem claim = sem limite.
+        foreach (var nome in await UserManager.GetRolesAsync(user))
+        {
+            var perfil = await RoleManager.FindByNameAsync(nome);
+            if (perfil?.DescontoMaximoPct is { } max)
+                id.AddClaim(new Claim(ClaimsPrincipalExtensions.ClaimDescontoMaximo, max.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+        }
         return id;
     }
 }

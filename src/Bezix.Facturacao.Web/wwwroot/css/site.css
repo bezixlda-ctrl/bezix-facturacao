@@ -412,3 +412,26 @@ code.json { white-space: pre-wrap; word-break: break-all; font-size: .78rem; col
 .relatorio-importacao td { vertical-align: top; }
 .pesquisa-global input::-webkit-search-cancel-button { display: none; }
 .pesquisa-global input:not(:placeholder-shown) ~ kbd { display: none !important; }
+
+/* ---------- Documentos ---------- */
+
+.doc-num-grande { font-size: 1.5rem; letter-spacing: -.01em; }
+
+.totais { display: grid; grid-template-columns: 1fr auto; row-gap: .4rem; column-gap: 1rem; font-variant-numeric: tabular-nums; }
+.totais dt { font-weight: 500; color: var(--bz-texto-suave); }
+.totais dd { margin: 0; text-align: right; }
+.totais .total {
+    padding-top: .6rem; margin-top: .25rem; border-top: 1px solid var(--bz-borda);
+    font-size: 1.25rem; font-weight: 800; color: var(--bz-texto);
+}
+.totais dd.total small { font-size: .8rem; color: var(--bz-texto-suave); font-weight: 600; }
+
+.linhas-documento > :not(caption) > * > * { padding: .4rem .35rem; vertical-align: top; }
+.linhas-documento > thead > tr > th:first-child, .linhas-documento > tbody > tr > td:first-child { padding-left: 1rem; }
+.linhas-documento textarea { min-height: 31px; resize: vertical; }
+.linhas-documento .total-linha { padding-top: .65rem !important; font-weight: 600; }
+
+details > summary.painel-cabecalho { cursor: pointer; list-style: none; }
+details > summary.painel-cabecalho::-webkit-details-marker { display: none; }
+details[open] > summary.painel-cabecalho { border-bottom: 1px solid var(--bz-borda); }
+details:not([open]) > summary.painel-cabecalho { border-bottom: 0; }

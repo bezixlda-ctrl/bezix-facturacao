@@ -6,6 +6,11 @@ public interface IUtilizadorActual
     string? Id { get; }
     string? Email { get; }
     string? Ip { get; }
+    string? Nome { get; }
+
+    /// <summary>Desconto máximo sem aprovação definido no perfil; null = sem limite.</summary>
+    decimal? DescontoMaximoPct { get; }
+
     bool TemPermissao(string permissao);
 }
 

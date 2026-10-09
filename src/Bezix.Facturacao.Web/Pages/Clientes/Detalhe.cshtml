@@ -20,14 +20,18 @@
             }
         </div>
     </div>
-    @if (Model.PodeGerir)
+    @if (Model.PodeGerir || Model.PodeFacturar)
     {
         <div class="d-flex gap-2">
+            @if (Model.PodeFacturar && c.Activo)
+            {
+                <a class="btn btn-primary order-last" asp-page="/Documentos/Editar" asp-route-tipo="FT" asp-route-clienteId="@c.Id"><i class="bi bi-plus-lg me-1"></i>Nova factura</a>
+            }
             <form method="post" asp-page-handler="Estado" asp-route-activo="@(!c.Activo)"
                   data-confirmar="@(c.Activo ? "Desactivar este cliente? Deixa de aparecer nas listas e em documentos novos; o histórico mantém-se." : null)">
                 <button type="submit" class="btn btn-outline-secondary">@(c.Activo ? "Desactivar" : "Reactivar")</button>
             </form>
-            <a class="btn btn-primary" asp-page="Editar" asp-route-id="@c.Id"><i class="bi bi-pencil me-1"></i>Editar</a>
+            <a class="btn btn-outline-primary" asp-page="Editar" asp-route-id="@c.Id"><i class="bi bi-pencil me-1"></i>Editar</a>
         </div>
     }
 </div>
@@ -89,9 +93,41 @@
     </div>
 
     <div class="col-lg-7 col-xl-8">
+        @if (Model.Documentos is { } docs)
+        {
+            <section class="painel mb-4">
+                <div class="painel-cabecalho">
+                    <h2>Documentos</h2>
+                    @if (docs.Total > docs.Itens.Count) { <a class="small" asp-page="/Documentos/Index" asp-route-ClienteId="@c.Id">Ver todos (@docs.Total)</a> }
+                </div>
+                @if (docs.Total == 0)
+                {
+                    <div class="vazio py-4">Ainda não há documentos para este cliente.</div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <tbody>
+                                @foreach (var d in docs.Itens)
+                                {
+                                    var (ce, te) = Bezix.Facturacao.Web.Pages.Documentos.Vista.Estado(d.Estado);
+                                    <tr>
+                                        <td><a asp-page="/Documentos/Detalhe" asp-route-id="@d.Id" class="doc-num text-decoration-none"><span class="tipo">@d.Tipo</span> @(d.NumeroFormatado?[3..] ?? "rascunho")</a></td>
+                                        <td class="tabular">@Formato.Data(d.Data)</td>
+                                        <td class="num">@Formato.Numero(d.Total) <small class="text-body-secondary">@d.Moeda</small></td>
+                                        <td><span class="estado @ce">@te</span></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </section>
+        }
         <section class="painel" id="actividades">
             <partial name="_Actividades" model="Model" />
         </section>
-        <p class="small text-body-secondary mt-3"><i class="bi bi-info-circle me-1"></i>Documentos, pagamentos e emails enviados a este cliente aparecem aqui a partir das próximas fases.</p>
+        <p class="small text-body-secondary mt-3"><i class="bi bi-info-circle me-1"></i>Pagamentos e conta corrente aparecem aqui na próxima fase.</p>
     </div>
 </div>

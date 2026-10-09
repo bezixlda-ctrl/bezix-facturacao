@@ -1,0 +1,43 @@
+@model Bezix.Facturacao.Web.Pages.Documentos.EditarModel
+@{
+    var c = Model.Calculo;
+    var moeda = Model.Dados.Moeda;
+}
+@if (c is not null)
+{
+    <dl class="totais mb-0">
+        <dt>Subtotal</dt><dd>@Formato.Numero(c.Subtotal)</dd>
+        @if (c.DescontoGlobal != 0)
+        {
+            <dt>Desconto (@Formato.Percentagem(c.DescontoGlobalPct))</dt><dd>−@Formato.Numero(c.DescontoGlobal)</dd>
+        }
+        <dt>Base tributável</dt><dd>@Formato.Numero(c.BaseTributavel)</dd>
+        @foreach (var t in c.IvaPorTaxa)
+        {
+            <dt>IVA @Formato.Percentagem(t.TaxaPct)</dt><dd>@Formato.Numero(t.Iva)</dd>
+        }
+        <dt class="total">Total</dt><dd class="total">@Formato.Numero(c.Total) <small>@moeda</small></dd>
+    </dl>
+
+    @if (moeda != Bezix.Facturacao.Domain.Configuracao.Moeda.Base && c.Total > 0)
+    {
+        <p class="small text-body-secondary mt-2 mb-0 tabular">Contravalor: @Formato.Moeda(c.TotalMzn) (IVA @Formato.Moeda(c.TotalIvaMzn))</p>
+    }
+    @if (Model.LimiteDesconto is { } limite && c.DescontoEfectivoPct > limite)
+    {
+        <div class="alert alert-warning small py-2 mt-3 mb-0">
+            O desconto total (@Formato.Percentagem(c.DescontoEfectivoPct)) passa o limite do seu perfil (@Formato.Percentagem(limite)): ao emitir, o documento vai para aprovação de um gestor.
+        </div>
+    }
+    @if (c.Erros.Count > 0)
+    {
+        <ul class="small text-danger mt-3 mb-0 ps-3">
+            @foreach (var e in c.Erros) { <li>@e</li> }
+        </ul>
+    }
+    <script type="application/json" id="totaisLinhas">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(new
+    {
+        linhas = c.Linhas.Select(l => Formato.Numero(l.TotalLinha)),
+        total = Formato.Numero(c.Total) + " " + moeda,
+    }))</script>
+}

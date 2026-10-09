@@ -11,6 +11,11 @@ public sealed class UtilizadorActual(IHttpContextAccessor acessor) : IUtilizador
     public string? Id => Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
     public string? Email => Principal?.Identity?.IsAuthenticated == true ? Principal.FindFirstValue(ClaimTypes.Email) ?? Principal.Identity.Name : null;
     public string? Ip => acessor.HttpContext?.Connection.RemoteIpAddress?.ToString();
+    public string? Nome => Principal?.Identity?.IsAuthenticated == true ? Principal.NomeVisivel() : null;
+
+    public decimal? DescontoMaximoPct =>
+        decimal.TryParse(Principal?.FindFirstValue(ClaimsPrincipalExtensions.ClaimDescontoMaximo), System.Globalization.NumberStyles.Number,
+            System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : null;
 
     public bool TemPermissao(string permissao) => Principal?.TemPermissao(permissao) == true;
 }
@@ -18,6 +23,7 @@ public sealed class UtilizadorActual(IHttpContextAccessor acessor) : IUtilizador
 public static class ClaimsPrincipalExtensions
 {
     public const string ClaimNome = "nome";
+    public const string ClaimDescontoMaximo = "desconto_max";
 
     public static bool TemPermissao(this ClaimsPrincipal u, string permissao) =>
         u.HasClaim(Permissoes.ClaimType, permissao);

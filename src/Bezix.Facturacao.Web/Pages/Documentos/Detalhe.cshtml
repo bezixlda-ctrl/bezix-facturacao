@@ -1,0 +1,350 @@
+@page "{id:int}"
+@model Bezix.Facturacao.Web.Pages.Documentos.DetalheModel
+@using Bezix.Facturacao.Domain.Documentos
+@using Bezix.Facturacao.Domain.Comunicacao
+@using Bezix.Facturacao.Web.Pages.Documentos
+@{
+    var d = Model.Documento;
+    var nome = TipoDocumentoInfo.Nome(d.TipoDoc);
+    ViewData["Title"] = d.NumeroFormatado ?? $"{nome} (rascunho)";
+    var (classe, texto) = Vista.Estado(d.Estado);
+    var pdfUrl = Url.Page("/Documentos/Detalhe", "Pdf", new { id = d.Id });
+}
+<div class="cabecalho-pagina">
+    <div>
+        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Documentos</a>
+        <div class="d-flex flex-wrap align-items-center gap-3 mt-1">
+            <h1 class="mb-0">
+                @if (d.NumeroFormatado is not null)
+                {
+                    <span class="doc-num doc-num-grande"><span class="tipo">@d.TipoDoc</span> @d.NumeroFormatado[3..]</span>
+                }
+                else
+                {
+                    @nome <span class="text-body-secondary fw-semibold">(rascunho)</span>
+                }
+            </h1>
+            <span class="estado @classe">@texto</span>
+        </div>
+        <p class="mt-1">@nome · <a asp-page="/Clientes/Detalhe" asp-route-id="@d.ClienteId">@d.ClienteNome</a> · @Formato.Data(d.Data)</p>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+        @if (d.Emitido)
+        {
+            <a class="btn btn-outline-primary" href="@pdfUrl" target="_blank"><i class="bi bi-printer me-1"></i>Imprimir</a>
+            <a class="btn btn-outline-primary" href="@Url.Page("/Documentos/Detalhe", "Pdf", new { id = d.Id, descarregar = true })"><i class="bi bi-download me-1"></i>PDF</a>
+        }
+        @if (Model.PodeEditar)
+        {
+            <a class="btn btn-outline-primary" href="@pdfUrl" target="_blank"><i class="bi bi-eye me-1"></i>Pré-visualizar</a>
+            <a class="btn btn-outline-primary" asp-page="Editar" asp-route-id="@d.Id"><i class="bi bi-pencil me-1"></i>Editar</a>
+            <form method="post" asp-page-handler="Emitir" asp-route-id="@d.Id"
+                  data-confirmar="Emitir é definitivo: o documento recebe número e deixa de poder ser alterado. Emitir agora?">
+                <button class="btn btn-primary" type="submit"><i class="bi bi-check2-circle me-1"></i>Emitir</button>
+            </form>
+        }
+        @if (d.Estado == EstadoDocumento.Emitido || d.Estado == EstadoDocumento.Anulado)
+        {
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Mais</button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="@Url.Page("/Documentos/Detalhe", "Pdf", new { id = d.Id, via = true })" target="_blank"><i class="bi bi-files me-2"></i>Imprimir 2.ª via</a></li>
+                    @if (Model.ConversoesPossiveis.Any() || Model.PodeCriarNc || Model.PodeCriarNd) { <li><hr class="dropdown-divider" /></li> }
+                    @foreach (var t in Model.ConversoesPossiveis)
+                    {
+                        <li>
+                            <form method="post" asp-page-handler="Converter" asp-route-id="@d.Id" asp-route-destino="@t">
+                                <button class="dropdown-item" type="submit"><i class="bi @Vista.Icone(t) me-2"></i>Converter em @TipoDocumentoInfo.Nome(t).ToLowerInvariant()</button>
+                            </form>
+                        </li>
+                    }
+                    @if (Model.PodeCriarNc)
+                    {
+                        <li>
+                            <form method="post" asp-page-handler="Correccao" asp-route-id="@d.Id" asp-route-tipo="NC">
+                                <button class="dropdown-item" type="submit"><i class="bi bi-file-earmark-minus me-2"></i>Criar nota de crédito</button>
+                            </form>
+                        </li>
+                    }
+                    @if (Model.PodeCriarNd)
+                    {
+                        <li>
+                            <form method="post" asp-page-handler="Correccao" asp-route-id="@d.Id" asp-route-tipo="ND">
+                                <button class="dropdown-item" type="submit"><i class="bi bi-file-earmark-plus me-2"></i>Criar nota de débito</button>
+                            </form>
+                        </li>
+                    }
+                    @if (RegrasTipo.Editaveis.Contains(d.TipoDoc) && !RegrasTipo.ExigeOrigem(d.TipoDoc))
+                    {
+                        <li>
+                            <form method="post" asp-page-handler="Duplicar" asp-route-id="@d.Id">
+                                <button class="dropdown-item" type="submit"><i class="bi bi-copy me-2"></i>Duplicar como rascunho</button>
+                            </form>
+                        </li>
+                    }
+                    @if (Model.PodeAnular)
+                    {
+                        <li><hr class="dropdown-divider" /></li>
+                        <li><button class="dropdown-item text-danger" type="button" data-bs-toggle="modal" data-bs-target="#modalAnular"><i class="bi bi-x-octagon me-2"></i>Anular</button></li>
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+</div>
+
+@if (d.Estado == EstadoDocumento.AguardaAprovacao)
+{
+    <div class="alert alert-warning">
+        <div class="fw-bold mb-1"><i class="bi bi-hourglass-split me-1"></i>A aguardar aprovação</div>
+        @foreach (var a in Model.Aprovacoes.Where(a => a.Estado == EstadoAprovacao.Pendente))
+        {
+            <div>
+                @(a.Tipo == TipoAprovacao.Desconto ? "Desconto acima do limite do perfil" : "Nota de crédito pedida")
+                por @a.PedidoPorNome em @Formato.DataHora(a.CreatedAt)@(a.Justificacao is null ? "." : $": “{a.Justificacao}”")
+            </div>
+        }
+        <div class="d-flex flex-wrap gap-2 mt-3">
+            @if (Model.PodeAprovar)
+            {
+                <form method="post" asp-page-handler="Aprovar" asp-route-id="@d.Id" data-confirmar="Aprovar e emitir este documento agora?">
+                    <button class="btn btn-primary" type="submit">Aprovar e emitir</button>
+                </form>
+                <form method="post" asp-page-handler="Rejeitar" asp-route-id="@d.Id" class="d-flex gap-2">
+                    <label class="visually-hidden" for="nota">Motivo da rejeição</label>
+                    <input class="form-control" id="nota" name="nota" placeholder="Motivo da rejeição" maxlength="500" />
+                    <button class="btn btn-outline-danger text-nowrap" type="submit">Rejeitar</button>
+                </form>
+            }
+            else
+            {
+                <form method="post" asp-page-handler="CancelarPedido" asp-route-id="@d.Id">
+                    <button class="btn btn-outline-secondary" type="submit">Cancelar pedido e voltar a editar</button>
+                </form>
+            }
+        </div>
+    </div>
+}
+@if (d.Estado == EstadoDocumento.Anulado)
+{
+    <div class="alert alert-danger"><i class="bi bi-x-octagon me-1"></i>Anulado em @Formato.DataHora(d.AnuladoEm!.Value) por @d.AnuladoPor. Motivo: @d.MotivoAnulacao</div>
+}
+@if (Model.Aprovacoes.LastOrDefault(a => a.Estado == EstadoAprovacao.Rejeitada) is { } rejeitada && d.Estado == EstadoDocumento.Rascunho)
+{
+    <div class="alert alert-secondary"><i class="bi bi-arrow-counterclockwise me-1"></i>Pedido de aprovação devolvido por @rejeitada.DecididoPorNome: @rejeitada.NotaDecisao</div>
+}
+
+<div class="row g-4">
+    <div class="col-xl-8">
+        <section class="painel mb-4">
+            <div class="painel-corpo row g-3 small">
+                <div class="col-sm-6">
+                    <div class="text-body-secondary">Cliente</div>
+                    <div class="fw-semibold">@d.ClienteNome</div>
+                    <div>NUIT @(d.ClienteNuit ?? "—")</div>
+                    @if (d.ClienteEndereco is not null) { <div>@d.ClienteEndereco@(d.ClienteCidade is null ? "" : ", " + d.ClienteCidade)</div> }
+                </div>
+                <div class="col-sm-3">
+                    <div class="text-body-secondary">Data</div>
+                    <div class="fw-semibold tabular">@Formato.Data(d.Data)</div>
+                    @if (d.Vencimento is { } v)
+                    {
+                        <div class="text-body-secondary mt-2">@(d.TipoDoc == TipoDocumento.CT ? "Válida até" : "Vencimento")</div>
+                        <div class="fw-semibold tabular">@Formato.Data(v)</div>
+                    }
+                </div>
+                <div class="col-sm-3">
+                    <div class="text-body-secondary">Moeda</div>
+                    <div class="fw-semibold">@d.Moeda</div>
+                    @if (d.EmMoedaEstrangeira) { <div class="tabular">1 @d.Moeda = @d.Cambio.ToString("#,##0.######", Formato.Cultura) MZN</div> }
+                </div>
+                @if (d.DocOrigem is { } origem)
+                {
+                    <div class="col-12"><span class="text-body-secondary">Corrige</span> <a asp-page="Detalhe" asp-route-id="@origem.Id" class="doc-num">@origem.NumeroFormatado</a> · @d.MotivoCorreccao</div>
+                }
+                @if (d.Origens.Count > 0)
+                {
+                    <div class="col-12"><span class="text-body-secondary">Origem</span>
+                        @foreach (var o in d.Origens) { <a asp-page="Detalhe" asp-route-id="@o.OrigemId" class="doc-num me-2">@(o.Origem?.NumeroFormatado ?? "#" + o.OrigemId)</a> }
+                    </div>
+                }
+                @if (d.TipoDoc == TipoDocumento.FR && d.MetodoPagamento is { } m)
+                {
+                    <div class="col-12"><span class="text-body-secondary">Pago por</span> @MetodoPagamentoInfo.Nome(m) @(d.ReferenciaPagamento is null ? "" : $"(ref. {d.ReferenciaPagamento})")</div>
+                }
+                @if (d.TipoDoc == TipoDocumento.GR)
+                {
+                    <div class="col-12"><span class="text-body-secondary">Carga</span> @(d.LocalCarga ?? "—") · <span class="text-body-secondary">Descarga</span> @(d.LocalDescarga ?? "—") · <span class="text-body-secondary">Matrícula</span> @(d.Matricula ?? "—")</div>
+                }
+            </div>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr><th>Ref</th><th>Descrição</th><th class="num">Qtd</th><th class="num">Preço</th><th class="num">Desc.%</th><th class="num">IVA</th><th class="num">Total</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var l in d.Linhas)
+                        {
+                            <tr>
+                                <td class="tabular">@l.Ref</td>
+                                <td>@l.Descricao</td>
+                                <td class="num">@l.Quantidade.ToString("0.####", Formato.Cultura) @(l.Unidade is { } u && u != "un" ? u : "")</td>
+                                <td class="num">@Formato.Numero(l.PrecoUnitario)</td>
+                                <td class="num">@(l.DescontoPct == 0 ? "" : Formato.Percentagem(l.DescontoPct))</td>
+                                <td class="num">@Formato.Percentagem(l.TaxaIvaPct)</td>
+                                <td class="num">@Formato.Numero(l.TotalLinha)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            @if (d.Observacoes is not null) { <div class="painel-corpo border-top small"><span class="text-body-secondary">Observações:</span> @d.Observacoes</div> }
+        </section>
+
+        @if (Model.PodeEnviar && Model.EmailProposto is { } email)
+        {
+            <section class="painel mb-4">
+                <details open="@(Model.Emails.Count == 0)">
+                    <summary class="painel-cabecalho"><h2 class="mb-0"><i class="bi bi-envelope me-2"></i>Enviar por email</h2></summary>
+                    <form method="post" asp-page-handler="Enviar" asp-route-id="@d.Id" class="painel-corpo row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" for="Para">Para</label>
+                            <input class="form-control" id="Para" name="Para" value="@email.Para" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="Cc">Cc <span class="text-body-secondary">(opcional)</span></label>
+                            <input class="form-control" id="Cc" name="Cc" value="@email.Cc" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="Assunto">Assunto</label>
+                            <input class="form-control" id="Assunto" name="Assunto" value="@email.Assunto" required />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label" for="Corpo">Mensagem</label>
+                            <textarea class="form-control" id="Corpo" name="Corpo" rows="8">@email.Corpo</textarea>
+                            <div class="form-text">O PDF do documento vai em anexo (o mesmo que se imprime). O texto inicial vem do modelo de email deste tipo de documento.</div>
+                        </div>
+                        <div class="col-12 d-flex justify-content-end">
+                            <button class="btn btn-primary" type="submit"><i class="bi bi-send me-1"></i>Enviar email</button>
+                        </div>
+                    </form>
+                </details>
+            </section>
+        }
+    </div>
+
+    <div class="col-xl-4">
+        <section class="painel mb-4">
+            <div class="painel-cabecalho"><h2>Totais</h2></div>
+            <div class="painel-corpo">
+                <dl class="totais mb-0">
+                    <dt>Subtotal</dt><dd>@Formato.Numero(d.Subtotal)</dd>
+                    @if (d.DescontoGlobal != 0) { <dt>Desconto (@Formato.Percentagem(d.DescontoGlobalPct))</dt><dd>−@Formato.Numero(d.DescontoGlobal)</dd> }
+                    <dt>Base tributável</dt><dd>@Formato.Numero(d.BaseTributavel)</dd>
+                    @foreach (var r in d.IvaResumo.OrderByDescending(r => r.TaxaPct)) { <dt>IVA @Formato.Percentagem(r.TaxaPct)</dt><dd>@Formato.Numero(r.Iva)</dd> }
+                    <dt class="total">Total</dt><dd class="total">@Formato.Numero(d.Total) <small>@d.Moeda</small></dd>
+                </dl>
+                @if (d.EmMoedaEstrangeira)
+                {
+                    <p class="small text-body-secondary mt-2 mb-0 tabular">Contravalor: base @Formato.Moeda(d.BaseTributavelMzn) · IVA @Formato.Moeda(d.TotalIvaMzn) · total @Formato.Moeda(d.TotalMzn)</p>
+                }
+                @if (Model.PorCreditar is { } pc && pc != d.Total)
+                {
+                    <p class="small mt-2 mb-0">Ainda por creditar: <strong class="tabular">@Formato.Numero(pc) @d.Moeda</strong></p>
+                }
+            </div>
+        </section>
+
+        @if (Model.Correccoes.Count > 0 || Model.Convertidos.Count > 0)
+        {
+            <section class="painel mb-4">
+                <div class="painel-cabecalho"><h2>Documentos ligados</h2></div>
+                <ul class="list-unstyled painel-corpo mb-0 small">
+                    @foreach (var c in Model.Correccoes.Concat(Model.Convertidos))
+                    {
+                        var (ce, te) = Vista.Estado(c.Estado);
+                        <li class="d-flex justify-content-between align-items-center py-1">
+                            <a asp-page="Detalhe" asp-route-id="@c.Id" class="doc-num">@(c.NumeroFormatado ?? c.Tipo + " rascunho")</a>
+                            <span><span class="tabular me-2">@Formato.Numero(c.Total)</span><span class="estado @ce">@te</span></span>
+                        </li>
+                    }
+                </ul>
+            </section>
+        }
+
+        @if (Model.Emails.Count > 0)
+        {
+            <section class="painel mb-4">
+                <div class="painel-cabecalho"><h2>Emails</h2></div>
+                <ul class="list-unstyled painel-corpo mb-0 small">
+                    @foreach (var e in Model.Emails)
+                    {
+                        <li class="py-1">
+                            <span class="estado @(e.Estado == EstadoEmail.Enviado ? "estado-pago" : e.Estado == EstadoEmail.Falhou ? "estado-vencido" : "estado-parcial")">
+                                @(e.Estado == EstadoEmail.Enviado ? "Enviado" : e.Estado == EstadoEmail.Falhou ? "Falhou" : "Em fila")
+                            </span>
+                            <span class="ms-1">@e.Para</span>
+                            <span class="text-body-secondary tabular d-block">@Formato.DataHora(e.EnviadoEm ?? e.CreatedAt)@(e.ErroUltimo is null ? "" : " · " + e.ErroUltimo)</span>
+                        </li>
+                    }
+                </ul>
+            </section>
+        }
+
+        @if (d.Emitido)
+        {
+            <section class="painel mb-4">
+                <div class="painel-cabecalho"><h2>Integridade</h2></div>
+                <dl class="painel-corpo mb-0 ficha small">
+                    <dt>Emitido</dt><dd class="tabular">@Formato.DataHora(d.EmitidoEm!.Value) por @d.EmitidoPor</dd>
+                    <dt>Hash (SHA-256)</dt><dd><code class="json">@d.Hash</code></dd>
+                    <dt>Código no rodapé</dt><dd class="tabular fw-semibold">@HashDocumento.Curto(d.Hash)</dd>
+                </dl>
+            </section>
+        }
+
+        @if (Model.Historico.Count > 0)
+        {
+            <section class="painel">
+                <div class="painel-cabecalho"><h2>Histórico</h2></div>
+                <ul class="list-unstyled painel-corpo mb-0 small">
+                    @foreach (var h in Model.Historico)
+                    {
+                        <li class="py-1"><span class="tabular text-body-secondary">@Formato.DataHora(h.Data)</span> · @h.Accao · @h.Utilizador</li>
+                    }
+                </ul>
+            </section>
+        }
+
+        @if (Model.PodeEditar)
+        {
+            <form method="post" asp-page-handler="Apagar" asp-route-id="@d.Id" class="mt-3" data-confirmar="Apagar este rascunho? Não tem número nem valor fiscal.">
+                <button class="btn btn-link text-danger px-0" type="submit">Apagar rascunho</button>
+            </form>
+        }
+    </div>
+</div>
+
+@if (Model.PodeAnular)
+{
+    <div class="modal fade" id="modalAnular" tabindex="-1" aria-labelledby="tituloAnular" aria-hidden="true">
+        <div class="modal-dialog">
+            <form method="post" asp-page-handler="Anular" asp-route-id="@d.Id" class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title h5" id="tituloAnular">Anular @d.NumeroFormatado</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <p>O documento mantém o número e fica marcado como anulado. Esta acção não se desfaz e fica registada com o seu nome.</p>
+                    <label class="form-label" for="motivo">Motivo da anulação</label>
+                    <textarea class="form-control" id="motivo" name="motivo" rows="3" maxlength="500" required minlength="5"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Anular documento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+}

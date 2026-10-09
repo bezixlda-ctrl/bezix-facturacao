@@ -1,0 +1,244 @@
+@page "{id:int?}"
+@model Bezix.Facturacao.Web.Pages.Documentos.EditarModel
+@using Bezix.Facturacao.Domain.Documentos
+@using Bezix.Facturacao.Web.Pages.Documentos
+@{
+    var tipo = Model.Dados.Tipo;
+    var nome = TipoDocumentoInfo.Nome(tipo);
+    ViewData["Title"] = Model.Novo ? Vista.Novo(tipo) : $"{nome} (rascunho)";
+    var temVencimento = RegrasTipo.TemVencimento(tipo);
+    var estrangeira = Model.Dados.Moeda != Bezix.Facturacao.Domain.Configuracao.Moeda.Base;
+}
+<div class="cabecalho-pagina">
+    <div>
+        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Documentos</a>
+        <h1 class="mt-1">@ViewData["Title"]</h1>
+        @if (RegrasTipo.MencaoObrigatoria(tipo) is { } mencao) { <p>@mencao.</p> }
+    </div>
+</div>
+
+<form method="post" id="formDocumento" novalidate>
+    <input type="hidden" asp-for="Dados.Tipo" />
+    <input type="hidden" asp-for="Dados.DocOrigemId" />
+    @for (var i = 0; i < Model.Dados.Origens.Count; i++)
+    {
+        <input type="hidden" name="Dados.Origens[@i]" value="@Model.Dados.Origens[i]" />
+    }
+
+    <partial name="_ResumoErros" />
+
+    @if (Model.Origem is { } origem)
+    {
+        <div class="alert alert-info d-flex flex-wrap gap-3 align-items-center">
+            <i class="bi bi-link-45deg fs-5"></i>
+            <div>
+                @(tipo == TipoDocumento.NC ? "Credita" : "Debita") <a asp-page="Detalhe" asp-route-id="@origem.Id" target="_blank" class="doc-num">@origem.NumeroFormatado</a>
+                de @Formato.Data(origem.Data), total @Formato.Numero(origem.Total) @origem.Moeda.
+                @if (Model.PorCreditar is { } pc) { <span>Ainda por creditar: <strong class="tabular">@Formato.Numero(pc) @origem.Moeda</strong>.</span> }
+            </div>
+        </div>
+    }
+
+    <div class="row g-4">
+        <div class="col-xl-8">
+            <section class="painel mb-4">
+                <div class="painel-corpo row g-3">
+                    <div class="col-md-7">
+                        <span class="form-label d-block" id="rotuloCliente">Cliente</span>
+                        <input type="hidden" asp-for="Dados.ClienteId" id="clienteId" />
+                        <div id="clienteEscolhido" class="d-flex align-items-center gap-2 @(Model.Dados.ClienteId > 0 ? "" : "d-none")">
+                            <div class="form-control d-flex justify-content-between align-items-center" aria-labelledby="rotuloCliente">
+                                <span><strong id="clienteNome">@Model.NomeCliente</strong> <span class="text-body-secondary small tabular" id="clienteNuit">@(Model.NuitCliente is null ? "sem NUIT" : "NUIT " + Model.NuitCliente)</span></span>
+                                @if (Model.Origem is null)
+                                {
+                                    <button type="button" class="btn btn-sm btn-link p-0" id="trocarCliente">Trocar</button>
+                                }
+                            </div>
+                        </div>
+                        <div id="pesquisaClienteBloco" class="position-relative @(Model.Dados.ClienteId > 0 ? "d-none" : "")">
+                            <input class="form-control" type="search" id="pesquisaCliente" name="q" placeholder="Escreva o nome, NUIT ou telefone" autocomplete="off" aria-labelledby="rotuloCliente"
+                                   hx-get="@Url.Page("/Documentos/Editar", "Clientes")" hx-trigger="input changed delay:250ms" hx-target="#resultadosCliente" hx-include="this" />
+                            <div id="resultadosCliente" class="pesquisa-resultados"></div>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label" asp-for="Dados.SerieId">Série</label>
+                        <select class="form-select" asp-for="Dados.SerieId">
+                            @foreach (var s in Model.Series)
+                            {
+                                <option value="@s.Id">@s.TipoDoc @(s.Codigo + s.Ano) · próximo n.º @s.ProximoNumero.ToString("0000")</option>
+                            }
+                        </select>
+                        @if (Model.Series.Count == 0)
+                        {
+                            <div class="form-text text-danger">Não há série activa de @nome.ToLowerInvariant() para @Model.Dados.Data.Year. Abra uma em Configurações → Séries.</div>
+                        }
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label" asp-for="Dados.Data">Data</label>
+                        <input class="form-control" asp-for="Dados.Data" type="date" id="dataDocumento" />
+                    </div>
+                    @if (temVencimento)
+                    {
+                        <div class="col-6 col-md-3">
+                            <label class="form-label" asp-for="Dados.Vencimento">@(tipo == TipoDocumento.CT ? "Válida até" : "Vencimento")</label>
+                            <input class="form-control" asp-for="Dados.Vencimento" type="date" id="vencimento" />
+                        </div>
+                    }
+                    <div class="col-6 col-md-3">
+                        <label class="form-label" asp-for="Dados.Moeda">Moeda</label>
+                        <select class="form-select" asp-for="Dados.Moeda" id="moeda" disabled="@(Model.Origem is not null)">
+                            @foreach (var m in Model.Moedas)
+                            {
+                                <option value="@m.Codigo">@m.Codigo · @m.Nome</option>
+                            }
+                        </select>
+                        @if (Model.Origem is not null) { <input type="hidden" asp-for="Dados.Moeda" /> }
+                    </div>
+                    <div class="col-6 col-md-3 @(estrangeira ? "" : "d-none")" id="blocoCambio">
+                        <label class="form-label" asp-for="Dados.Cambio">Câmbio (MZN por 1)</label>
+                        <input class="form-control tabular text-end" asp-for="Dados.Cambio" type="text" inputmode="decimal" id="cambio"
+                               value="@Model.Dados.Cambio.ToString("0.######", Formato.Cultura)" readonly="@(Model.Origem is not null)" />
+                        <div class="form-text" id="ajudaCambio"></div>
+                    </div>
+
+                    @if (tipo == TipoDocumento.FR)
+                    {
+                        <div class="col-md-6">
+                            <label class="form-label" asp-for="Dados.MetodoPagamento">Pago por</label>
+                            <select class="form-select" asp-for="Dados.MetodoPagamento">
+                                <option value="">Escolha…</option>
+                                @foreach (var m in Enum.GetValues<MetodoPagamento>())
+                                {
+                                    <option value="@m">@MetodoPagamentoInfo.Nome(m)</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" asp-for="Dados.ReferenciaPagamento">Referência do pagamento <span class="text-body-secondary">(opcional)</span></label>
+                            <input class="form-control" asp-for="Dados.ReferenciaPagamento" maxlength="100" placeholder="Ex.: ID da transacção M-Pesa" />
+                        </div>
+                    }
+                    @if (tipo == TipoDocumento.GR)
+                    {
+                        <div class="col-md-5">
+                            <label class="form-label" asp-for="Dados.LocalCarga">Local de carga</label>
+                            <input class="form-control" asp-for="Dados.LocalCarga" maxlength="200" />
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label" asp-for="Dados.LocalDescarga">Local de descarga</label>
+                            <input class="form-control" asp-for="Dados.LocalDescarga" maxlength="200" />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label" asp-for="Dados.Matricula">Matrícula</label>
+                            <input class="form-control text-uppercase" asp-for="Dados.Matricula" maxlength="20" />
+                        </div>
+                    }
+                    @if (RegrasTipo.ExigeOrigem(tipo))
+                    {
+                        <div class="col-12">
+                            <label class="form-label" asp-for="Dados.MotivoCorreccao">Motivo da @nome.ToLowerInvariant()</label>
+                            <input class="form-control" asp-for="Dados.MotivoCorreccao" maxlength="500" placeholder="Ex.: devolução de 2 unidades; erro no preço" required />
+                        </div>
+                    }
+                </div>
+            </section>
+        </div>
+
+        <div class="col-xl-4">
+            <section class="painel">
+                <div class="painel-cabecalho"><h2>Totais</h2></div>
+                <div class="painel-corpo">
+                    <label class="form-label" asp-for="Dados.DescontoGlobalPct">Desconto global</label>
+                    <div class="input-group mb-3">
+                        <input class="form-control tabular text-end" asp-for="Dados.DescontoGlobalPct" type="text" inputmode="decimal" id="descontoGlobal"
+                               value="@Formato.Numero(Model.Dados.DescontoGlobalPct)" />
+                        <span class="input-group-text">%</span>
+                    </div>
+                    <div id="totais" hx-post="@Url.Page("/Documentos/Editar", "Calcular")" hx-include="#formDocumento"
+                         hx-trigger="input delay:500ms from:#formDocumento, change from:#formDocumento, recalcular from:body" hx-sync="this:replace">
+                        <partial name="_Totais" model="Model" />
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <section class="painel mb-4">
+            <div class="painel-cabecalho">
+                <h2>Linhas</h2>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="adicionarLinha"><i class="bi bi-plus-lg me-1"></i>Adicionar linha</button>
+            </div>
+            <div class="table-responsive">
+                <table class="table linhas-documento mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 110px">Ref</th>
+                            <th>Descrição</th>
+                            <th class="num" style="width: 90px">Qtd</th>
+                            <th style="width: 70px">Un.</th>
+                            <th class="num" style="width: 120px">Preço</th>
+                            <th class="num" style="width: 80px">Desc.%</th>
+                            <th style="width: 110px">IVA</th>
+                            <th class="num" style="width: 120px">Total</th>
+                            <th style="width: 40px"><span class="visually-hidden">Remover</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="linhas">
+                        @for (var i = 0; i < Model.Dados.Linhas.Count; i++)
+                        {
+                            <partial name="_LinhaDocumento" model="(i, Model.Dados.Linhas[i], Model.Taxas)" />
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="7" class="text-end text-body-secondary">Total do documento</td>
+                            <td class="num fw-bold" id="totalRodape">—</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <template id="modeloLinha">
+                <partial name="_LinhaDocumento" model="(-1, new Bezix.Facturacao.Web.Pages.Documentos.EditarModel.LinhaForm(), Model.Taxas)" />
+            </template>
+            <datalist id="listaArtigos">
+                @foreach (var a in Model.Artigos) { <option value="@a.Codigo">@a.Descricao</option> }
+            </datalist>
+        </section>
+
+        <div class="row g-4">
+            <div class="col-lg-7 col-xl-8">
+                <section class="painel h-100">
+                    <div class="painel-corpo">
+                        <label class="form-label" asp-for="Dados.Observacoes">Observações <span class="text-body-secondary">(aparecem no documento)</span></label>
+                        <textarea class="form-control" asp-for="Dados.Observacoes" rows="3" maxlength="2000"></textarea>
+                    </div>
+                </section>
+            </div>
+            <div class="col-lg-5 col-xl-4">
+                <section class="painel painel-corpo d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg" asp-page-handler="Emitir"
+                            data-confirmar="Emitir é definitivo: o documento recebe número e deixa de poder ser alterado. Correcções só por nota de crédito/débito ou anulação. Emitir agora?">
+                        <i class="bi bi-check2-circle me-1"></i>Emitir @nome.ToLowerInvariant()
+                    </button>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-outline-secondary flex-fill" asp-page-handler="Guardar">Guardar rascunho</button>
+                        <button type="submit" class="btn btn-outline-secondary flex-fill" asp-page-handler="PreVisualizar" formtarget="_blank">
+                            <i class="bi bi-eye me-1"></i>Pré-visualizar
+                        </button>
+                    </div>
+                    <details class="small">
+                        <summary class="text-body-secondary">Justificação, se precisar de aprovação</summary>
+                        <textarea class="form-control mt-2" name="Justificacao" rows="2" maxlength="500" placeholder="Ex.: cliente com contrato anual">@Model.Justificacao</textarea>
+                    </details>
+                </section>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script src="~/js/editor-documento.js" asp-append-version="true"></script>
+}

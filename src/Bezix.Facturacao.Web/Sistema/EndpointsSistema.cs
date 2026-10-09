@@ -22,14 +22,16 @@ public static class EndpointsSistema
         // O Winhost não tem processos permanentes: o Scheduled Task Tool chama este endereço a cada 15–60 min
         // para correr lembretes, recorrentes, webhooks e backups. O Scheduled Task Tool só faz GET e não
         // envia cabeçalhos, por isso o token também é aceite na query string.
-        app.MapMethods("/internal/jobs/tick", ["GET", "POST"], async (HttpContext http, Microsoft.Extensions.Options.IOptions<OpcoesJobs> opcoes, ILogger<OpcoesJobs> log) =>
+        app.MapMethods("/internal/jobs/tick", ["GET", "POST"], async (HttpContext http, Microsoft.Extensions.Options.IOptions<OpcoesJobs> opcoes,
+            Application.Comunicacao.ServicoComunicacao comunicacao, ILogger<OpcoesJobs> log) =>
         {
             if (!TokenValido(http, opcoes.Value.Token)) return Results.NotFound();
 
             var inicio = DateTime.UtcNow;
+            var emails = await comunicacao.ProcessarPendentesAsync(http.RequestAborted);
             // Fase 5: lembretes, recorrentes, webhooks pendentes, backup lógico.
-            log.LogInformation("jobs/tick executado.");
-            return Results.Ok(new { executadoEm = inicio, tarefas = Array.Empty<string>() });
+            log.LogInformation("jobs/tick executado: {Emails} emails tentados.", emails);
+            return Results.Ok(new { executadoEm = inicio, emailsTentados = emails });
         }).AllowAnonymous().DisableAntiforgery();
 
         // Logótipo servido a partir de App_Data (fora de wwwroot). Público: aparece no ecrã de entrada

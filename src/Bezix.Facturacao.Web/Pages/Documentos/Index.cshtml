@@ -1,0 +1,69 @@
+@page
+@model Bezix.Facturacao.Web.Pages.Documentos.IndexModel
+@using Bezix.Facturacao.Domain.Documentos
+@using Bezix.Facturacao.Web.Pages.Documentos
+@{
+    ViewData["Title"] = "Documentos";
+}
+<div class="cabecalho-pagina">
+    <div>
+        <h1>Documentos</h1>
+        <p>Facturas, notas, cotações e guias. Os rascunhos e os pedidos de aprovação aparecem primeiro.</p>
+    </div>
+    @if (Model.TiposNovos.Count > 0)
+    {
+        <div class="d-flex gap-2">
+            @if (Model.TiposNovos.Contains(TipoDocumento.FT))
+            {
+                <a class="btn btn-primary" asp-page="Editar" asp-route-tipo="FT"><i class="bi bi-plus-lg me-1"></i>Nova factura</a>
+            }
+            <div class="dropdown">
+                <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Outro documento</button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    @foreach (var t in Model.TiposNovos.Where(t => t != TipoDocumento.FT))
+                    {
+                        <li><a class="dropdown-item" asp-page="Editar" asp-route-tipo="@t"><i class="bi @Vista.Icone(t) me-2"></i>@Vista.Novo(t)</a></li>
+                    }
+                </ul>
+            </div>
+        </div>
+    }
+</div>
+
+<section class="painel">
+    <form method="get" class="d-flex flex-wrap gap-2 p-3 border-bottom" role="search"
+          hx-get="@Url.Page("/Documentos/Index")" hx-target="#listaDocumentos" hx-push-url="true"
+          hx-trigger="input changed delay:300ms from:#Q, change from:select, change from:input[type=date], submit">
+        @if (Model.ClienteId is not null) { <input type="hidden" name="ClienteId" value="@Model.ClienteId" /> }
+        <div class="flex-grow-1" style="min-width: 200px">
+            <label class="visually-hidden" for="Q">Pesquisar documentos</label>
+            <input class="form-control" type="search" id="Q" name="Q" value="@Model.Q" placeholder="N.º do documento, cliente ou NUIT" autocomplete="off" />
+        </div>
+        <label class="visually-hidden" for="Tipo">Tipo</label>
+        <select class="form-select w-auto" id="Tipo" name="Tipo">
+            <option value="">Todos os tipos</option>
+            @foreach (var t in RegrasTipo.Editaveis)
+            {
+                <option value="@t" selected="@(Model.Tipo == t)">@TipoDocumentoInfo.Nome(t)</option>
+            }
+        </select>
+        <label class="visually-hidden" for="Estado">Estado</label>
+        <select class="form-select w-auto" id="Estado" name="Estado">
+            <option value="">Todos os estados</option>
+            @foreach (var e in Enum.GetValues<EstadoDocumento>())
+            {
+                <option value="@e" selected="@(Model.Estado == e)">@Vista.Estado(e).Texto</option>
+            }
+        </select>
+        <div class="d-flex align-items-center gap-1">
+            <label class="small text-body-secondary" for="De">De</label>
+            <input class="form-control w-auto" type="date" id="De" name="De" value="@Model.De?.ToString("yyyy-MM-dd")" />
+            <label class="small text-body-secondary" for="Ate">a</label>
+            <input class="form-control w-auto" type="date" id="Ate" name="Ate" value="@Model.Ate?.ToString("yyyy-MM-dd")" />
+        </div>
+        <noscript><button class="btn btn-outline-primary" type="submit">Filtrar</button></noscript>
+    </form>
+    <div id="listaDocumentos">
+        <partial name="_ListaDocumentos" model="Model" />
+    </div>
+</section>

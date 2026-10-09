@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Bezix.Facturacao.Domain.Comunicacao;
 using Bezix.Facturacao.Domain.Configuracao;
 using Bezix.Facturacao.Domain.Documentos;
 using Bezix.Facturacao.Domain.Fiscal;
@@ -43,6 +44,8 @@ public sealed class InicializadorBaseDados(
         await GarantirPerfisAsync();
         await GarantirTaxasAsync(ct);
         await GarantirSeriesDoAnoAsync(ct);
+        await GarantirMoedasAsync(ct);
+        await GarantirModelosAsync(ct);
         await GarantirAdministradorAsync();
     }
 
@@ -124,6 +127,51 @@ public sealed class InicializadorBaseDados(
                 DataAbertura = new DateOnly(hoje.Year, 1, 1),
             });
         }
+        await db.SaveChangesAsync(ct);
+    }
+
+    private async Task GarantirMoedasAsync(CancellationToken ct)
+    {
+        var existentes = await db.Moedas.Select(m => m.Codigo).ToListAsync(ct);
+        Moeda[] padrao =
+        [
+            new() { Codigo = "MZN", Nome = "Metical", Simbolo = "MT", NomeSingular = "metical", NomePlural = "meticais", CentimoSingular = "centavo", CentimoPlural = "centavos", Ordem = 1 },
+            new() { Codigo = "USD", Nome = "Dólar americano", Simbolo = "US$", NomeSingular = "dólar americano", NomePlural = "dólares americanos", CentimoSingular = "cêntimo", CentimoPlural = "cêntimos", Ordem = 2 },
+            new() { Codigo = "EUR", Nome = "Euro", Simbolo = "€", NomeSingular = "euro", NomePlural = "euros", CentimoSingular = "cêntimo", CentimoPlural = "cêntimos", Ordem = 3 },
+            new() { Codigo = "ZAR", Nome = "Rand sul-africano", Simbolo = "R", NomeSingular = "rand", NomePlural = "rands", CentimoSingular = "cêntimo", CentimoPlural = "cêntimos", Ordem = 4 },
+        ];
+        var novas = padrao.Where(m => !existentes.Contains(m.Codigo)).ToList();
+        if (novas.Count == 0) return;
+        db.Moedas.AddRange(novas);
+        await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>Textos dirigidos ao cliente: criados uma vez e depois editáveis (nunca sobrepostos).</summary>
+    private async Task GarantirModelosAsync(CancellationToken ct)
+    {
+        var existentes = await db.ModelosComunicacao.Select(m => m.Codigo).ToListAsync(ct);
+        const string assinatura = "\n\nPara qualquer esclarecimento, basta responder a este email.\n\nCumprimentos,\n{utilizador.nome}\n{empresa.nome}";
+        const string contas = "\n\nPode pagar por transferência para:\n{empresa.contas}";
+        ModeloComunicacao[] padrao =
+        [
+            new() { Codigo = "documento.FT", Nome = "Envio de factura", Assunto = "Factura {documento.numero} · {empresa.nome}",
+                Corpo = "Exmo(a). {cliente.contacto},\n\nEnviamos em anexo a factura {documento.numero}, de {documento.data}, no valor de {documento.total}, com vencimento a {documento.vencimento}." + contas + assinatura },
+            new() { Codigo = "documento.FG", Nome = "Envio de factura global", Assunto = "Factura global {documento.numero} · {empresa.nome}",
+                Corpo = "Exmo(a). {cliente.contacto},\n\nEnviamos em anexo a factura global {documento.numero}, de {documento.data}, no valor de {documento.total}, com vencimento a {documento.vencimento}." + contas + assinatura },
+            new() { Codigo = "documento.FR", Nome = "Envio de factura-recibo", Assunto = "Factura-recibo {documento.numero} · {empresa.nome}",
+                Corpo = "Exmo(a). {cliente.contacto},\n\nAgradecemos o seu pagamento. Enviamos em anexo a factura-recibo {documento.numero}, de {documento.data}, no valor de {documento.total}." + assinatura },
+            new() { Codigo = "documento.NC", Nome = "Envio de nota de crédito", Assunto = "Nota de crédito {documento.numero} · {empresa.nome}",
+                Corpo = "Exmo(a). {cliente.contacto},\n\nEnviamos em anexo a nota de crédito {documento.numero}, de {documento.data}, no valor de {documento.total}." + assinatura },
+            new() { Codigo = "documento.ND", Nome = "Envio de nota de débito", Assunto = "Nota de débito {documento.numero} · {empresa.nome}",
+                Corpo = "Exmo(a). {cliente.contacto},\n\nEnviamos em anexo a nota de débito {documento.numero}, de {documento.data}, no valor de {documento.total}, com vencimento a {documento.vencimento}." + contas + assinatura },
+            new() { Codigo = "documento.CT", Nome = "Envio de cotação", Assunto = "Cotação {documento.numero} · {empresa.nome}",
+                Corpo = "Exmo(a). {cliente.contacto},\n\nConforme solicitado, enviamos em anexo a cotação {documento.numero}, no valor de {documento.total}, válida até {documento.vencimento}.\n\nPara avançar, basta confirmar por resposta a este email." + assinatura },
+            new() { Codigo = "documento.GR", Nome = "Envio de guia de remessa", Assunto = "Guia de remessa {documento.numero} · {empresa.nome}",
+                Corpo = "Exmo(a). {cliente.contacto},\n\nEnviamos em anexo a guia de remessa {documento.numero}, de {documento.data}, referente à mercadoria entregue." + assinatura },
+        ];
+        var novos = padrao.Where(m => !existentes.Contains(m.Codigo)).ToList();
+        if (novos.Count == 0) return;
+        db.ModelosComunicacao.AddRange(novos);
         await db.SaveChangesAsync(ct);
     }
 

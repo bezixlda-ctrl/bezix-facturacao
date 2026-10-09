@@ -1,0 +1,33 @@
+@model (int Indice, Bezix.Facturacao.Web.Pages.Documentos.EditarModel.LinhaForm Linha, List<Bezix.Facturacao.Domain.Fiscal.TaxaIva> Taxas)
+@{
+    // Índice -1 = modelo para novas linhas; o JavaScript renumera os nomes "Dados.Linhas[n]".
+    var n = Model.Indice < 0 ? "__i__" : Model.Indice.ToString();
+    var p = $"Dados.Linhas[{n}]";
+    var l = Model.Linha;
+    var taxaExiste = Model.Taxas.Any(t => t.Codigo == l.CodigoTaxaIva);
+}
+<tr class="linha-documento">
+    <td>
+        <input type="hidden" name="@(p).ArtigoId" value="@l.ArtigoId" class="campo-artigo" />
+        <input class="form-control form-control-sm text-uppercase campo-ref" name="@(p).Ref" value="@l.Ref" list="listaArtigos" maxlength="30" aria-label="Referência do artigo" autocomplete="off" />
+    </td>
+    <td><textarea class="form-control form-control-sm campo-descricao" name="@(p).Descricao" rows="1" maxlength="500" aria-label="Descrição">@l.Descricao</textarea></td>
+    <td><input class="form-control form-control-sm text-end tabular" name="@(p).Quantidade" value="@l.Quantidade.ToString("0.####", Formato.Cultura)" inputmode="decimal" aria-label="Quantidade" /></td>
+    <td><input class="form-control form-control-sm campo-unidade" name="@(p).Unidade" value="@l.Unidade" maxlength="20" aria-label="Unidade" /></td>
+    <td><input class="form-control form-control-sm text-end tabular campo-preco" name="@(p).PrecoUnitario" value="@Formato.Numero(l.PrecoUnitario)" inputmode="decimal" aria-label="Preço unitário" /></td>
+    <td><input class="form-control form-control-sm text-end tabular" name="@(p).DescontoPct" value="@(l.DescontoPct == 0 ? "" : l.DescontoPct.ToString("0.##", Formato.Cultura))" inputmode="decimal" aria-label="Desconto %" /></td>
+    <td>
+        <select class="form-select form-select-sm campo-taxa" name="@(p).CodigoTaxaIva" aria-label="Taxa de IVA">
+            @foreach (var t in Model.Taxas)
+            {
+                <option value="@t.Codigo" selected="@(t.Codigo == l.CodigoTaxaIva)">@Formato.Percentagem(t.Percentagem) @(t.IsIsencao ? t.Descricao : "")</option>
+            }
+            @if (!taxaExiste && !string.IsNullOrEmpty(l.CodigoTaxaIva))
+            {
+                <option value="@l.CodigoTaxaIva" selected>@l.CodigoTaxaIva (fora de vigor)</option>
+            }
+        </select>
+    </td>
+    <td class="num total-linha tabular">—</td>
+    <td class="text-end"><button type="button" class="btn btn-sm btn-link text-danger p-0 remover-linha" aria-label="Remover linha"><i class="bi bi-x-lg"></i></button></td>
+</tr>

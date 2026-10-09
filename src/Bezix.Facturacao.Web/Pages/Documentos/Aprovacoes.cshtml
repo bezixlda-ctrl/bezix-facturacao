@@ -1,0 +1,43 @@
+@page
+@model Bezix.Facturacao.Web.Pages.Documentos.AprovacoesModel
+@using Bezix.Facturacao.Domain.Documentos
+@{
+    ViewData["Title"] = "Aprovações";
+}
+<div class="cabecalho-pagina">
+    <div>
+        <h1>Aprovações</h1>
+        <p>Documentos com desconto acima do limite do perfil ou notas de crédito pedidas por quem não as pode emitir. Ao aprovar, o documento é emitido.</p>
+    </div>
+</div>
+
+<section class="painel">
+    @if (Model.Pendentes.Count == 0)
+    {
+        <div class="vazio"><i class="bi bi-check2-all"></i>Não há pedidos à espera de aprovação.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr><th>Pedido</th><th>Documento</th><th>Cliente</th><th class="num">Total</th><th>Pedido por</th><th>Justificação</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var a in Model.Pendentes)
+                    {
+                        var d = a.Documento!;
+                        <tr>
+                            <td>@(a.Tipo == TipoAprovacao.Desconto ? "Desconto acima do limite" : "Nota de crédito")</td>
+                            <td><a asp-page="Detalhe" asp-route-id="@d.Id" class="fw-semibold">@TipoDocumentoInfo.Nome(d.TipoDoc)</a></td>
+                            <td>@d.ClienteNome</td>
+                            <td class="num">@Formato.Numero(d.Total) <small class="text-body-secondary">@d.Moeda</small></td>
+                            <td>@a.PedidoPorNome <span class="d-block small text-body-secondary tabular">@Formato.DataHora(a.CreatedAt)</span></td>
+                            <td class="small">@a.Justificacao</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>
