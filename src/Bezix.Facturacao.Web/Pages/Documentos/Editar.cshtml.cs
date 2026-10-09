@@ -18,7 +18,6 @@ public class EditarModel(
     ServicoEmissao emissao,
     ServicoClientes clientes,
     ServicoArtigos artigos,
-    ServicoMoedas moedas,
     ServicoTaxasIva taxas,
     Application.Abstracoes.IUtilizadorActual utilizador) : PaginaBase
 {
@@ -64,7 +63,6 @@ public class EditarModel(
     public string? NomeCliente { get; private set; }
     public string? NuitCliente { get; private set; }
     public List<Serie> Series { get; private set; } = [];
-    public List<Moeda> Moedas { get; private set; } = [];
     public List<TaxaIva> Taxas { get; private set; } = [];
     public List<Domain.Artigos.Artigo> Artigos { get; private set; } = [];
     public Documento? Origem { get; private set; }
@@ -164,12 +162,6 @@ public class EditarModel(
         return new JsonResult(new { a.Id, a.Codigo, a.Descricao, a.Unidade, preco = Formato.Numero(a.Preco), taxa = a.CodigoTaxaIva });
     }
 
-    public async Task<IActionResult> OnGetCambioAsync(string moeda, DateOnly data)
-    {
-        var valor = await moedas.CambioAsync(moeda, data);
-        return new JsonResult(new { valor = valor?.ToString("0.######", Formato.Cultura) });
-    }
-
     // ------------------------------------------------------------------
 
     private async Task<(bool Ok, int? Id)> GuardarAsync()
@@ -197,7 +189,6 @@ public class EditarModel(
     private async Task CarregarAsync()
     {
         Series = await documentos.SeriesActivasAsync(Dados.Tipo, Dados.Data.Year);
-        Moedas = await moedas.ActivasAsync();
         Taxas = await taxas.VigentesAsync(Dados.Data);
         Artigos = (await artigos.PesquisarAsync(new Application.Artigos.FiltroArtigos(Tamanho: 100))).Itens.ToList();
         if (Dados.ClienteId > 0 && await clientes.ObterAsync(Dados.ClienteId) is { } c)

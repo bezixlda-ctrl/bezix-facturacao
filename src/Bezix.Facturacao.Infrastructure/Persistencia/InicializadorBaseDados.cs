@@ -136,9 +136,6 @@ public sealed class InicializadorBaseDados(
         Moeda[] padrao =
         [
             new() { Codigo = "MZN", Nome = "Metical", Simbolo = "MT", NomeSingular = "metical", NomePlural = "meticais", CentimoSingular = "centavo", CentimoPlural = "centavos", Ordem = 1 },
-            new() { Codigo = "USD", Nome = "Dólar americano", Simbolo = "US$", NomeSingular = "dólar americano", NomePlural = "dólares americanos", CentimoSingular = "cêntimo", CentimoPlural = "cêntimos", Ordem = 2 },
-            new() { Codigo = "EUR", Nome = "Euro", Simbolo = "€", NomeSingular = "euro", NomePlural = "euros", CentimoSingular = "cêntimo", CentimoPlural = "cêntimos", Ordem = 3 },
-            new() { Codigo = "ZAR", Nome = "Rand sul-africano", Simbolo = "R", NomeSingular = "rand", NomePlural = "rands", CentimoSingular = "cêntimo", CentimoPlural = "cêntimos", Ordem = 4 },
         ];
         var novas = padrao.Where(m => !existentes.Contains(m.Codigo)).ToList();
         if (novas.Count == 0) return;

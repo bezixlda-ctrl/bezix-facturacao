@@ -119,37 +119,6 @@
         document.getElementById("pesquisaCliente").focus();
     });
 
-    // ---------- Moeda e câmbio ----------
-    var moeda = document.getElementById("moeda");
-    var cambio = document.getElementById("cambio");
-    var ajuda = document.getElementById("ajudaCambio");
-    var blocoCambio = document.getElementById("blocoCambio");
-
-    function propostaCambio() {
-        if (moeda.value === "MZN") {
-            blocoCambio.classList.add("d-none");
-            cambio.value = "1";
-            recalcular();
-            return;
-        }
-        blocoCambio.classList.remove("d-none");
-        var data = document.getElementById("dataDocumento").value;
-        fetch(urlBase + "?handler=Cambio&moeda=" + moeda.value + "&data=" + data, { headers: { "Accept": "application/json" } })
-            .then(function (r) { return r.json(); })
-            .then(function (c) {
-                if (c.valor) {
-                    cambio.value = c.valor;
-                    ajuda.textContent = "Câmbio registado em Configurações. Pode ajustar.";
-                } else {
-                    cambio.value = "";
-                    ajuda.textContent = "Sem câmbio registado para " + moeda.value + ": escreva o valor do dia.";
-                    cambio.focus();
-                }
-                recalcular();
-            });
-    }
-    if (moeda && !moeda.disabled) moeda.addEventListener("change", propostaCambio);
-
     renumerar();
     recalcular();
 })();

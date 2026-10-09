@@ -188,32 +188,29 @@ public class DocumentosTests(AplicacaoFactory app)
         Assert.Contains(r.Resultado.Erros, e => e.Contains("NUIT do cliente"));
     }
 
-    [Fact]
-    public async Task Factura_em_dolares_guarda_contravalor_em_meticais()
-    {
-        var (cliente, serie) = await PrepararAsync();
-        var id = await CriarRascunhoAsync(PerfisPadrao.Gestor,
-            Rascunho(TipoDocumento.FT, serie, cliente, Linha(10, 150)) with { Moeda = "USD", Cambio = 63.85m });
-
-        Assert.Equal(ResultadoEmissaoTipo.Emitido, (await EmitirAsync(PerfisPadrao.Gestor, id)).Tipo);
-        var doc = await LerAsync(id);
-
-        Assert.Equal(("USD", 1_500m, 240m, 1_740m), (doc.Moeda, doc.BaseTributavel, doc.TotalIva, doc.Total));
-        Assert.Equal(95_775m, doc.BaseTributavelMzn);   // 1.500 × 63,85
-        Assert.Equal(15_324m, doc.TotalIvaMzn);         // 240 × 63,85
-        Assert.Equal(111_099m, doc.TotalMzn);
-        var resumo = Assert.Single(doc.IvaResumo);
-        Assert.Equal((95_775m, 15_324m), (resumo.BaseMzn, resumo.IvaMzn));
-    }
-
-    [Fact]
-    public async Task Moeda_estrangeira_sem_cambio_nao_e_aceite()
+    [Theory]
+    [InlineData("USD", 63.85)]
+    [InlineData("EUR", 1)]
+    [InlineData("MZN", 2)]
+    public async Task Documentos_so_em_meticais(string moeda, double cambio)
     {
         var (cliente, serie) = await PrepararAsync();
         var (r, _) = await ComoAsync(PerfisPadrao.Gestor, sp => sp.GetRequiredService<ServicoDocumentos>()
-            .GuardarRascunhoAsync(null, Rascunho(TipoDocumento.FT, serie, cliente, Linha(1, 1)) with { Moeda = "EUR", Cambio = 0 }));
+            .GuardarRascunhoAsync(null, Rascunho(TipoDocumento.FT, serie, cliente, Linha(1, 1)) with { Moeda = moeda, Cambio = (decimal)cambio }));
 
-        Assert.Contains(r.Erros, e => e.Contains("câmbio"));
+        Assert.Contains(r.Erros, e => e.Contains("meticais (MZN)"));
+    }
+
+    [Fact]
+    public async Task Factura_em_meticais_tem_valores_fiscais_iguais_aos_do_documento()
+    {
+        var (cliente, serie) = await PrepararAsync();
+        var id = await CriarRascunhoAsync(PerfisPadrao.Gestor, Rascunho(TipoDocumento.FT, serie, cliente, Linha(10, 150)));
+        Assert.Equal(ResultadoEmissaoTipo.Emitido, (await EmitirAsync(PerfisPadrao.Gestor, id)).Tipo);
+
+        var doc = await LerAsync(id);
+        Assert.Equal(("MZN", 1m), (doc.Moeda, doc.Cambio));
+        Assert.Equal((doc.BaseTributavel, doc.TotalIva, doc.Total), (doc.BaseTributavelMzn, doc.TotalIvaMzn, doc.TotalMzn));
     }
 
     // ------------------------------------------------------------------ Notas de crédito e anulação

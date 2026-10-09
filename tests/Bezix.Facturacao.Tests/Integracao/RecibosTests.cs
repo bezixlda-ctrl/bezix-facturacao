@@ -56,12 +56,12 @@ public class RecibosTests(AplicacaoFactory app)
     }
 
     /// <summary>Emite uma factura (Gestor) e devolve o id. Total = valor × 1,16.</summary>
-    private Task<int> FacturaAsync(int cliente, int serie, decimal semIva, DateOnly? data = null, DateOnly? vencimento = null, string moeda = "MZN", decimal cambio = 1) =>
+    private Task<int> FacturaAsync(int cliente, int serie, decimal semIva, DateOnly? data = null, DateOnly? vencimento = null) =>
         ComoAsync(PerfisPadrao.Gestor, async sp =>
         {
             var d = data ?? Hoje;
             var (r, id) = await sp.GetRequiredService<ServicoDocumentos>().GuardarRascunhoAsync(null, new DadosRascunho(
-                TipoDocumento.FT, serie, cliente, d, vencimento ?? d.AddDays(30), moeda, cambio, 0, null, null, null, null, null, null, null, null,
+                TipoDocumento.FT, serie, cliente, d, vencimento ?? d.AddDays(30), "MZN", 1, 0, null, null, null, null, null, null, null, null,
                 [new LinhaRascunho(null, null, "Serviço", "un", 1, semIva, 0, "NOR")]));
             Assert.True(r.Sucesso, string.Join("; ", r.Erros));
             var e = await sp.GetRequiredService<ServicoEmissao>().EmitirAsync(id!.Value);
@@ -201,24 +201,6 @@ public class RecibosTests(AplicacaoFactory app)
             Assert.True((await emissao.AnularAsync(a, "Factura errada")).Sucesso);
             return null;
         });
-    }
-
-    [Fact]
-    public async Task Factura_em_dolares_entra_na_conta_corrente_em_meticais()
-    {
-        var (cliente, ft, _, _) = await PrepararAsync();
-        var usd = await FacturaAsync(cliente, ft, 100, moeda: "USD", cambio: 64); // 116 USD = 7.424 MZN
-
-        await ComoAsync<object?>(PerfisPadrao.Tesouraria, async sp =>
-        {
-            var cc = sp.GetRequiredService<ServicoContaCorrente>();
-            var aberto = Assert.Single(await cc.EmAbertoAsync(cliente));
-            Assert.Equal((116m, "USD", 7_424m, 7_424m), (aberto.Total, aberto.Moeda, aberto.TotalMzn, aberto.EmAberto));
-            Assert.Equal(7_424m, (await cc.SaldoAsync(cliente)).Saldo);
-            return null;
-        });
-        var (r, _) = await ReciboAsync(cliente, 7_424, new Alocacao(usd, 7_424));
-        Assert.True(r.Sucesso, string.Join("; ", r.Erros));
     }
 
     [Fact]

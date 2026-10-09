@@ -7,7 +7,6 @@
     var nome = TipoDocumentoInfo.Nome(tipo);
     ViewData["Title"] = Model.Novo ? Vista.Novo(tipo) : $"{nome} (rascunho)";
     var temVencimento = RegrasTipo.TemVencimento(tipo);
-    var estrangeira = Model.Dados.Moeda != Bezix.Facturacao.Domain.Configuracao.Moeda.Base;
 }
 <div class="cabecalho-pagina">
     <div>
@@ -86,20 +85,10 @@
                         </div>
                     }
                     <div class="col-6 col-md-3">
-                        <label class="form-label" asp-for="Dados.Moeda">Moeda</label>
-                        <select class="form-select" asp-for="Dados.Moeda" id="moeda" disabled="@(Model.Origem is not null)">
-                            @foreach (var m in Model.Moedas)
-                            {
-                                <option value="@m.Codigo">@m.Codigo · @m.Nome</option>
-                            }
-                        </select>
-                        @if (Model.Origem is not null) { <input type="hidden" asp-for="Dados.Moeda" /> }
-                    </div>
-                    <div class="col-6 col-md-3 @(estrangeira ? "" : "d-none")" id="blocoCambio">
-                        <label class="form-label" asp-for="Dados.Cambio">Câmbio (MZN por 1)</label>
-                        <input class="form-control tabular text-end" asp-for="Dados.Cambio" type="text" inputmode="decimal" id="cambio"
-                               value="@Model.Dados.Cambio.ToString("0.######", Formato.Cultura)" readonly="@(Model.Origem is not null)" />
-                        <div class="form-text" id="ajudaCambio"></div>
+                        <span class="form-label d-block">Moeda</span>
+                        <div class="form-control-plaintext fw-semibold">MZN · Metical</div>
+                        <input type="hidden" asp-for="Dados.Moeda" value="MZN" />
+                        <input type="hidden" asp-for="Dados.Cambio" value="1" />
                     </div>
 
                     @if (tipo == TipoDocumento.FR)

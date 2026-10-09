@@ -657,45 +657,6 @@ namespace Bezix.Facturacao.Infrastructure.Persistencia.Migracoes
                     b.ToTable("Moedas", (string)null);
                 });
 
-            modelBuilder.Entity("Bezix.Facturacao.Domain.Configuracao.TaxaCambio", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatedBy")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<DateOnly>("Data")
-                        .HasColumnType("date");
-
-                    b.Property<string>("Moeda")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(3)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("Valor")
-                        .HasPrecision(18, 6)
-                        .HasColumnType("decimal(18,6)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Moeda", "Data")
-                        .IsUnique();
-
-                    b.ToTable("TaxasCambio", (string)null);
-                });
-
             modelBuilder.Entity("Bezix.Facturacao.Domain.Documentos.Aprovacao", b =>
                 {
                     b.Property<int>("Id")

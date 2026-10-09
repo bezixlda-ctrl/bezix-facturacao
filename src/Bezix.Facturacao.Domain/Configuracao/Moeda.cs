@@ -2,7 +2,10 @@ using Bezix.Facturacao.Domain.Comum;
 
 namespace Bezix.Facturacao.Domain.Configuracao;
 
-/// <summary>Moeda em que um documento pode ser emitido. A moeda base (contabilística e fiscal) é sempre o MZN.</summary>
+/// <summary>
+/// Moeda dos documentos. Todos os documentos são emitidos em meticais (MZN), como exige a legislação fiscal
+/// moçambicana; a tabela guarda os nomes usados no valor por extenso.
+/// </summary>
 public class Moeda : Entidade
 {
     public const string Base = "MZN";
@@ -22,14 +25,4 @@ public class Moeda : Entidade
     public int Ordem { get; set; }
 
     public bool IsBase => Codigo == Base;
-}
-
-/// <summary>Câmbio de referência (ex.: Banco de Moçambique): quantos MZN vale 1 unidade da moeda, a partir de uma data.</summary>
-public class TaxaCambio : Entidade
-{
-    public string Moeda { get; set; } = "";
-    public DateOnly Data { get; set; }
-
-    /// <summary>MZN por 1 unidade da moeda (6 casas decimais).</summary>
-    public decimal Valor { get; set; }
 }

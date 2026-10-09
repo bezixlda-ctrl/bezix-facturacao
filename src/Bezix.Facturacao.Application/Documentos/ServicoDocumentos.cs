@@ -16,7 +16,6 @@ public sealed class ServicoDocumentos(
     IUtilizadorActual utilizador,
     ServicoEmpresa empresas,
     ServicoClientes clientes,
-    ServicoMoedas moedas,
     IServicoAuditoria auditoria,
     TimeProvider relogio)
 {
@@ -257,8 +256,6 @@ public sealed class ServicoDocumentos(
         var novo = await NovoAsync(tipo, o.ClienteId, ct);
         return await GuardarRascunhoAsync(null, novo with
         {
-            Moeda = o.Moeda,
-            Cambio = o.EmMoedaEstrangeira ? (await moedas.CambioAsync(o.Moeda, novo.Data, ct) ?? o.Cambio) : 1m,
             DescontoGlobalPct = o.DescontoGlobalPct,
             Observacoes = o.Observacoes,
             Linhas = CopiarLinhas(o),
@@ -287,8 +284,6 @@ public sealed class ServicoDocumentos(
         var observacoes = "Ref.: " + string.Join(", ", origens.Select(o => o.NumeroFormatado));
         return await GuardarRascunhoAsync(null, novo with
         {
-            Moeda = primeira.Moeda,
-            Cambio = primeira.EmMoedaEstrangeira ? (await moedas.CambioAsync(primeira.Moeda, novo.Data, ct) ?? primeira.Cambio) : 1m,
             DescontoGlobalPct = origens.Count == 1 ? primeira.DescontoGlobalPct : 0,
             Observacoes = observacoes,
             Linhas = origens.SelectMany(CopiarLinhas).ToList(),
@@ -309,8 +304,6 @@ public sealed class ServicoDocumentos(
         var linhas = tipo == TipoDocumento.NC ? CopiarLinhas(o) : [];
         return await GuardarRascunhoAsync(null, novo with
         {
-            Moeda = o.Moeda,
-            Cambio = o.Cambio,
             DescontoGlobalPct = tipo == TipoDocumento.NC ? o.DescontoGlobalPct : 0,
             DocOrigemId = o.Id,
             Linhas = linhas,
@@ -334,10 +327,8 @@ public sealed class ServicoDocumentos(
 
         if (d.ClienteId == 0 || await clientes.ObterAsync(d.ClienteId, ct) is null) erros.Add("Escolha o cliente.");
 
-        var moeda = await db.Moedas.AsNoTracking().SingleOrDefaultAsync(m => m.Codigo == d.Moeda, ct);
-        if (moeda is null || !moeda.Activa) erros.Add("Escolha uma moeda activa.");
-        else if (!moeda.IsBase && d.Cambio <= 0) erros.Add($"Indique o câmbio: quantos MZN vale 1 {d.Moeda}.");
-        if (d.Cambio > 0 && decimal.Round(d.Cambio, 6) != d.Cambio) erros.Add("O câmbio pode ter no máximo 6 casas decimais.");
+        // Legislação fiscal moçambicana: os documentos são emitidos em meticais.
+        if (d.Moeda != Moeda.Base || d.Cambio != 1m) erros.Add("Os documentos são emitidos em meticais (MZN).");
 
         if (d.Vencimento is { } v && v < d.Data) erros.Add("O vencimento não pode ser anterior à data do documento.");
         if (d.DescontoGlobalPct is < 0 or > 100) erros.Add("O desconto global tem de estar entre 0 e 100%.");

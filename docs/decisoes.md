@@ -67,13 +67,14 @@ As colunas `Clientes.Nome`, `Clientes.Contacto` e `Artigos.Descricao` usam a col
 
 Opção em Configurações → Empresa. Quando activa, quem não tem a permissão `Documentos.VerTodos` (por omissão, o Facturador) só vê os clientes de que é responsável; na fase 3 aplica-se também aos documentos. O responsável é quem cria o cliente; quem tem `Documentos.VerTodos` pode mudá-lo.
 
-## D13. Documentos em moeda estrangeira — fase 3
+## D13. Documentos só em meticais — fase 3, revista na fase 5
 
-Pedido do utilizador em 09/10/2026: a facturação permite escolher a moeda. Cada documento tem **moeda** (MZN, USD, EUR, ZAR; outras criam-se em Configurações → Moedas) e **câmbio** (MZN por 1 unidade, 6 casas decimais). O câmbio é proposto a partir da tabela de câmbios (Configurações → Moedas e câmbios) e pode ser ajustado em cada documento.
+Na fase 3 foi implementada a escolha de moeda por documento (com câmbio e contravalor em MZN). Em 09/10/2026 o utilizador decidiu: **as facturas são emitidas em meticais e o sistema também o é, em cumprimento da regulação fiscal moçambicana**.
 
-O documento guarda os totais na moeda escolhida e também o **contravalor em MZN** (base, IVA e total, também por taxa). O PDF mostra o câmbio e o contravalor. Os mapas de IVA e a exportação AT (fases 5 e 6) usam os valores em MZN. NC e ND ficam obrigatoriamente na moeda e no câmbio do documento corrigido.
-
-**A confirmar com o contabilista:** se a lei exige que o IVA de documentos em moeda estrangeira seja expresso em meticais no próprio documento (o sistema já o imprime) e qual o câmbio de referência obrigatório (Banco de Moçambique do dia da emissão?).
+- O editor deixou de ter escolha de moeda e câmbio; o documento e o PDF mostram "Moeda: MZN" (menção obrigatória).
+- O servidor recusa qualquer documento com moeda diferente de MZN ou câmbio diferente de 1.
+- Foram retirados a página de moedas e câmbios e a tabela de câmbios; as moedas estrangeiras não usadas foram apagadas (migração `SoMeticais`). A tabela `Moedas` fica só com o metical, para o valor por extenso.
+- As colunas `Moeda`, `Cambio` e `*Mzn` mantêm-se nos documentos (sempre MZN, 1 e iguais aos totais): não exigem migração de dados e servem a exportação AT.
 
 ## D14. Imutabilidade em duas camadas — fase 3
 
@@ -92,7 +93,7 @@ Desconto efectivo (linhas + global, face ao valor bruto) acima do limite do perf
 
 ## D17. Recibos e conta corrente em meticais — fase 4
 
-Decisão do utilizador (09/10/2026): **recibos, conta corrente, extractos e antiguidade de saldos são em meticais**. Facturas em moeda estrangeira entram pelo contravalor em MZN gravado na emissão; o recibo aloca meticais a esse contravalor (diferenças de câmbio no recebimento não são tratadas automaticamente na v1).
+Decisão do utilizador (09/10/2026): **recibos, conta corrente, extractos e antiguidade de saldos são em meticais**, tal como todos os documentos (D13).
 
 - **Conta corrente** calculada a partir dos documentos emitidos (os anulados não contam): débitos FT, FG, ND e FR; créditos NC, RC e FR. Não há tabela de movimentos separada: não pode ficar dessincronizada.
 - **Estado de pagamento** de cada FT/FG/ND: em aberto = total MZN − alocações de recibos não anulados − NC emitidas. Mostra-se Pago, Parcial, Vencido ou Emitido.
@@ -105,7 +106,6 @@ Decisão do utilizador (09/10/2026): **recibos, conta corrente, extractos e anti
 
 - ~~QuestPDF~~: confirmado em 09/10/2026 que a receita anual é inferior a 1 M USD; usa-se a licença Community. Rever se a receita passar esse valor.
 - **Motivo de isenção por omissão:** o texto "Isento nos termos do artigo 9 do Código do IVA" é provisório. Confirmar com o contabilista.
-- **Moeda estrangeira:** ver D13.
 - **NUIT de particulares:** com o limite a 0 (valor por omissão), o NUIT só é exigido a empresas. Definir o limite em Configurações → Empresa quando a AT o indicar.
 - **Limite do NUIT obrigatório**, regras da factura global e requisitos de certificação: aguardam resposta da AT ([oficio-AT.md](oficio-AT.md)).
 - **Limpeza de importações abandonadas (fase 5):** ficheiros CSV analisados mas não importados ficam em `App_Data/uploads/importacoes`. O `jobs/tick` deve apagar os que tenham mais de 24 horas.

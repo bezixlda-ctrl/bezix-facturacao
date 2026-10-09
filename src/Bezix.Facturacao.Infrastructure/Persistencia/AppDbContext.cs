@@ -25,7 +25,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<Actividade> Actividades => Set<Actividade>();
     public DbSet<Artigo> Artigos => Set<Artigo>();
     public DbSet<Moeda> Moedas => Set<Moeda>();
-    public DbSet<TaxaCambio> TaxasCambio => Set<TaxaCambio>();
     public DbSet<Documento> Documentos => Set<Documento>();
     public DbSet<DocumentoLinha> DocumentoLinhas => Set<DocumentoLinha>();
     public DbSet<DocumentoIvaResumo> DocumentoIvaResumos => Set<DocumentoIvaResumo>();
@@ -182,14 +181,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.Property(x => x.CentimoPlural).HasMaxLength(40).IsRequired();
             e.HasIndex(x => x.Codigo).IsUnique();
             e.Ignore(x => x.IsBase);
-        });
-
-        b.Entity<TaxaCambio>(e =>
-        {
-            e.ToTable("TaxasCambio");
-            e.Property(x => x.Moeda).HasMaxLength(3).IsUnicode(false).IsRequired();
-            e.Property(x => x.Valor).HasPrecision(18, 6);
-            e.HasIndex(x => new { x.Moeda, x.Data }).IsUnique();
         });
 
         b.Entity<Documento>(e =>

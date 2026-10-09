@@ -21,7 +21,6 @@ public interface IAppDbContext
     DbSet<Actividade> Actividades { get; }
     DbSet<Artigo> Artigos { get; }
     DbSet<Moeda> Moedas { get; }
-    DbSet<TaxaCambio> TaxasCambio { get; }
     DbSet<Documento> Documentos { get; }
     DbSet<DocumentoLinha> DocumentoLinhas { get; }
     DbSet<DocumentoIvaResumo> DocumentoIvaResumos { get; }
