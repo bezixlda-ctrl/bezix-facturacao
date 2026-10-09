@@ -81,6 +81,14 @@
         });
     });
 
+    // Atalhos de período nos relatórios: <button data-periodo-de="AAAA-MM-DD" data-periodo-ate="AAAA-MM-DD">.
+    document.addEventListener("click", function (e) {
+        var botao = e.target.closest("[data-periodo-de]");
+        if (!botao || !botao.form) return;
+        botao.form.elements["De"].value = botao.getAttribute("data-periodo-de");
+        botao.form.elements["Ate"].value = botao.getAttribute("data-periodo-ate");
+    });
+
     // Copiar para a área de transferência: <button data-copiar="#campo">.
     document.addEventListener("click", function (e) {
         var botao = e.target.closest("[data-copiar]");

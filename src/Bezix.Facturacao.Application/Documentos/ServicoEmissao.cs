@@ -91,37 +91,37 @@ public sealed class ServicoEmissao(
         return new ResultadoEmissao(ResultadoEmissaoTipo.AguardaAprovacao, Resultado.Falha(texto + " O documento ficou a aguardar aprovação de um gestor."));
     }
 
+    /// <summary>
+    /// Emissão em duas etapas, para a série ficar bloqueada o mínimo de tempo (decisão D24): com 50 pessoas a emitir na
+    /// mesma série, tudo o que se faz com o bloqueio é feito em fila.
+    /// 1.ª sem bloqueio: recálculo, validações e gravação das linhas e totais definitivos (o documento continua rascunho).
+    /// 2.ª com a série bloqueada: confirma que o rascunho não mudou, revalida o que depende da série e de outros documentos,
+    /// numera, encadeia o hash e grava.
+    /// </summary>
     private async Task<ResultadoEmissao> EmitirInternoAsync(int id, CancellationToken ct)
     {
+        var (versao, recusa) = await PrepararEmissaoAsync(id, ct);
+        if (recusa is not null) return recusa;
+
         var resultado = await transacoes.ExecutarAsync(async c =>
         {
-            var doc = await db.Documentos.Include(d => d.Linhas).Include(d => d.IvaResumo).Include(d => d.Origens)
-                .SingleAsync(d => d.Id == id, c);
+            var doc = await db.Documentos.SingleAsync(d => d.Id == id, c);
             if (doc.Estado is not (EstadoDocumento.Rascunho or EstadoDocumento.AguardaAprovacao))
                 return ResultadoEmissao.Recusado("Este documento já foi emitido.");
+            if (doc.UpdatedAt != versao)
+                return ResultadoEmissao.Recusado("O documento foi alterado enquanto estava a ser emitido. Tente de novo.");
 
             // Bloqueio da série até ao fim da transacção: a partir daqui ninguém mais numera nesta série.
             var serie = await bloqueio.BloquearAsync(doc.SerieId, c);
-
-            // Recálculo definitivo no servidor, com as taxas em vigor na data do documento.
-            var calculo = await documentos.CalcularAsync(ServicoDocumentos.ParaRascunho(doc), c);
-            var erros = await ValidarAsync(doc, serie, calculo, c);
+            var erros = await ValidarComSerieAsync(doc, serie, c);
             if (erros.Count > 0) return ResultadoEmissao.Recusado([.. erros]);
 
-            var cliente = await db.Clientes.AsNoTracking().SingleAsync(x => x.Id == doc.ClienteId, c);
-            var empresa = await empresas.ObterAsync(c);
-            var contas = await db.ContasBancarias.AsNoTracking().ToListAsync(c);
-
-            // 1.º gravar linhas e totais definitivos ainda como rascunho (os triggers bloqueiam linhas de documentos emitidos).
-            documentos.AplicarCalculo(doc, calculo);
-            ServicoDocumentos.CopiarCliente(doc, cliente);
-            doc.EmitenteJson = DadosEmitente.De(empresa, contas).ParaJson();
-            await db.SaveChangesAsync(c);
-
-            // 2.º numerar e encadear.
+            var aguardavaAprovacao = doc.Estado == EstadoDocumento.AguardaAprovacao;
             await numerador.NumerarAsync(doc, serie, c);
 
-            var pendentes = await db.Aprovacoes.Where(a => a.DocumentoId == id && a.Estado == EstadoAprovacao.Pendente).ToListAsync(c);
+            var pendentes = aguardavaAprovacao
+                ? await db.Aprovacoes.Where(a => a.DocumentoId == id && a.Estado == EstadoAprovacao.Pendente).ToListAsync(c)
+                : [];
             foreach (var a in pendentes)
             {
                 a.Estado = EstadoAprovacao.Aprovada;
@@ -147,6 +147,61 @@ public sealed class ServicoEmissao(
             catch (Exception ex) { log.LogError(ex, "Falha a gerar o PDF do documento {Id} depois da emissão.", id); }
         }
         return resultado;
+    }
+
+    /// <summary>1.ª etapa da emissão (sem bloquear a série). Devolve a versão gravada do rascunho, ou a recusa.</summary>
+    private async Task<(DateTime? Versao, ResultadoEmissao? Recusa)> PrepararEmissaoAsync(int id, CancellationToken ct)
+    {
+        db.DescartarAlteracoes();
+        var doc = await db.Documentos.Include(d => d.Linhas).Include(d => d.IvaResumo).Include(d => d.Origens)
+            .SingleAsync(d => d.Id == id, ct);
+        if (doc.Estado is not (EstadoDocumento.Rascunho or EstadoDocumento.AguardaAprovacao))
+            return (null, ResultadoEmissao.Recusado("Este documento já foi emitido."));
+
+        // Recálculo definitivo no servidor, com as taxas em vigor na data do documento.
+        var serie = await db.Series.AsNoTracking().SingleAsync(s => s.Id == doc.SerieId, ct);
+        var calculo = await documentos.CalcularAsync(ServicoDocumentos.ParaRascunho(doc), ct);
+        var erros = await ValidarAsync(doc, serie, calculo, ct);
+        if (erros.Count > 0) return (null, ResultadoEmissao.Recusado([.. erros]));
+
+        var cliente = await db.Clientes.AsNoTracking().SingleAsync(x => x.Id == doc.ClienteId, ct);
+        var empresa = await empresas.ObterAsync(ct);
+        var contas = await db.ContasBancarias.AsNoTracking().ToListAsync(ct);
+
+        // Linhas e totais definitivos gravados ainda como rascunho (os triggers bloqueiam linhas de documentos emitidos).
+        documentos.AplicarCalculo(doc, calculo);
+        ServicoDocumentos.CopiarCliente(doc, cliente);
+        doc.EmitenteJson = DadosEmitente.De(empresa, contas).ParaJson();
+        doc.UpdatedAt = relogio.GetUtcNow().UtcDateTime; // marca a versão, mesmo que nada tenha mudado
+        await db.SaveChangesAsync(ct);
+        var versao = doc.UpdatedAt;
+        db.DescartarAlteracoes();
+        return (versao, null);
+    }
+
+    /// <summary>
+    /// Regras que dependem da série ou de outros documentos, repetidas com a série bloqueada: entre a 1.ª etapa e o
+    /// bloqueio pode ter sido emitido outro documento (data mais recente na série, outra NC sobre a mesma factura).
+    /// </summary>
+    private async Task<List<string>> ValidarComSerieAsync(Documento doc, Serie serie, CancellationToken ct)
+    {
+        var erros = new List<string>();
+        if (serie.Estado != EstadoSerie.Activa) erros.Add($"A série {serie.Descricao} está fechada.");
+        if (serie.UltimaData is { } ultima && doc.Data < ultima)
+            erros.Add($"A data não pode ser anterior à do último documento da série ({ultima:dd/MM/yyyy}).");
+        if (RegrasTipo.ExigeOrigem(doc.TipoDoc) && doc.DocOrigemId is { } origemId)
+        {
+            var origem = await db.Documentos.AsNoTracking().SingleOrDefaultAsync(d => d.Id == origemId, ct);
+            if (origem is null || origem.Estado != EstadoDocumento.Emitido)
+                erros.Add("O documento corrigido tem de ser uma factura emitida e não anulada.");
+            else if (doc.TipoDoc == TipoDocumento.NC)
+            {
+                var porCreditar = await documentos.ValorPorCreditarAsync(origemId, doc.Id, ct);
+                if (doc.Total > porCreditar)
+                    erros.Add($"A nota de crédito ({doc.Total:#,##0.00}) passa o valor ainda por creditar de {origem.NumeroFormatado} ({porCreditar:#,##0.00} {origem.Moeda}).");
+            }
+        }
+        return erros;
     }
 
     /// <summary>Regras fiscais verificadas antes de numerar (secção 3 da especificação).</summary>

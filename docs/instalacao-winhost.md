@@ -33,14 +33,26 @@ Os segredos nunca vão para o repositório. Criar no servidor, na pasta do site,
     "Remetente": "facturacao@[dominio]",
     "NomeRemetente": "[Nome da empresa]",
     "Seguranca": "StartTls"
+  },
+  "Backups": {
+    "Destino": "S3",
+    "Chave": "[chave AES-256 em Base64: ver backups-restauro.md]",
+    "S3": { "Endpoint": "[endpoint]", "Regiao": "[região]", "Bucket": "[bucket]", "Prefixo": "producao", "ChaveAcesso": "[key id]", "ChaveSecreta": "[secret]" }
+  },
+  "Certificacao": {
+    "NumeroCertificado": ""
   }
 }
 ```
 
+- `Backups`: destino dos backups diários cifrados ([backups-restauro.md](backups-restauro.md)). Sem esta secção, o `/health` avisa que não há backups externos.
+- `Certificacao:NumeroCertificado`: deixar vazio até a AT atribuir o número; depois preencher (aparece no rodapé dos documentos) e reciclar o app pool.
+- Os administradores têm de activar a verificação em dois passos no primeiro acesso (decisão D25).
+
 - Sem `Email:Servidor`, os emails não saem: ficam gravados como ficheiros `.eml` em `App_Data/emails` (útil para testes). Os emails que falham ficam na fila e são repetidos pelo `jobs/tick` (1, 5 e 30 min, 2 h e 12 h).
 
 - O primeiro administrador só é criado se a base de dados ainda não tiver utilizadores. Depois de entrar e mudar a password, **apagar o bloco `Inicializacao`** do ficheiro.
-- Para gerar o token: `[Convert]::ToBase64String((1..32 | % { Get-Random -Max 256 }) -as [byte[]])` no PowerShell, ou um gerador de passwords.
+- Para gerar o token (PowerShell): `$b = New-Object byte[] 32; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b); [Convert]::ToBase64String($b)`, ou um gerador de passwords.
 
 ## 3. Publicar
 
@@ -70,6 +82,12 @@ https://[dominio]/internal/jobs/tick?token=[Jobs:Token]
 
 Esta chamada também aquece o site depois de uma reciclagem do app pool. Corre os emails em fila, as facturas recorrentes, os lembretes de pagamento, os webhooks e a limpeza (decisão D18). O resultado de cada execução aparece em **Automação → Últimas execuções**.
 
+Criar uma **segunda tarefa**, de hora a hora, para os backups (só fazem backup se o último tiver mais de 20 horas):
+
+```
+https://[dominio]/internal/jobs/backup?token=[Jobs:Token]
+```
+
 Os lembretes saem a partir da hora definida no plano (8 h por omissão, hora de Maputo). Com a tarefa de 15 em 15 minutos, saem no máximo 15 minutos depois dessa hora.
 
 ### Endereço público e chaves de cifra
@@ -79,7 +97,15 @@ Os lembretes saem a partir da hora definida no plano (8 h por omissão, hora de 
 
 ## 6. Monitorização
 
-Configurar o UptimeRobot (ou semelhante) para verificar `https://[dominio]/health` a cada 5 minutos. Resposta 200 com `"estado":"Healthy"` = base de dados e pasta de ficheiros a funcionar.
+Configurar o UptimeRobot (ou semelhante) para verificar `https://[dominio]/health` a cada 5 minutos, com um monitor de **palavra-chave** que alerta quando a resposta não contém `"estado":"Healthy"`:
+
+| Verificação | Unhealthy (503) | Degraded (200) |
+|---|---|---|
+| `baseDados` | Sem ligação | — |
+| `ficheiros` | Pasta sem escrita | Menos de 200 MB livres |
+| `tarefas` | — | `jobs/tick` não corre há mais de 1 hora |
+| `emails` | — | Emails na fila há mais de 1 hora ou falhados nas últimas 24 h |
+| `backups` | — | Sem backup externo com sucesso há mais de 30 horas, ou não configurado |
 
 ## 7. Verificação depois do deploy
 
@@ -89,6 +115,9 @@ Configurar o UptimeRobot (ou semelhante) para verificar `https://[dominio]/healt
 - [ ] Apagar o bloco `Inicializacao` do `appsettings.Production.json`.
 - [ ] Seguir a lista "Preparar o sistema para facturar" no painel (dados fiscais, logótipo, contas, segundo administrador).
 - [ ] A tarefa agendada aparece no log (`App_Data/logs`) como `jobs/tick executado`.
+- [ ] Administração → Backups: **Fazer backup agora**, depois **Verificar** os dois ficheiros; fazer o primeiro teste de restauro ([backups-restauro.md](backups-restauro.md)).
+- [ ] Configurações → Empresa: preencher o endereço público (base dos links enviados aos clientes).
+- [ ] Correr o teste de carga contra o ambiente de teste no Winhost e registar em [carga.md](carga.md).
 - [ ] Confirmar que o runtime self-contained arranca no Winhost (decisão D1).
 
 ## Problemas comuns
@@ -99,3 +128,4 @@ Configurar o UptimeRobot (ou semelhante) para verificar `https://[dominio]/healt
 | Erro HTTP 500.19 | Módulo ASP.NET Core em falta no servidor: pedir ao suporte do Winhost o *ASP.NET Core Module V2*. |
 | Login volta sempre ao ecrã de entrada | O site está a ser servido por HTTP: os cookies de sessão só funcionam em HTTPS. Activar o SSL. |
 | `jobs/tick` responde 404 | Token em falta ou diferente do `Jobs:Token`. |
+| `jobs/backup` responde 500 | Ver a mensagem: credenciais ou bucket do destino errados, ou `Backups:Chave` que não é Base64 de 32 bytes. |

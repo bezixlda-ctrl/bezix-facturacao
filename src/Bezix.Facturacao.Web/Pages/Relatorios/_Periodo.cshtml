@@ -1,0 +1,31 @@
+@model (DateOnly Inicio, DateOnly Fim)
+@{
+    var hoje = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(2));
+    var mes = new DateOnly(hoje.Year, hoje.Month, 1);
+    var atalhos = new (string Nome, DateOnly De, DateOnly Ate)[]
+    {
+        ("Este mês", mes, hoje),
+        ("Mês anterior", mes.AddMonths(-1), mes.AddDays(-1)),
+        ("Este ano", new DateOnly(hoje.Year, 1, 1), hoje),
+        ("Ano anterior", new DateOnly(hoje.Year - 1, 1, 1), new DateOnly(hoje.Year - 1, 12, 31)),
+    };
+}
+<div class="d-flex flex-wrap align-items-end gap-2">
+    <div>
+        <label class="form-label small mb-1" for="De">De</label>
+        <input class="form-control" type="date" id="De" name="De" value="@Model.Inicio.ToString("yyyy-MM-dd")" />
+    </div>
+    <div>
+        <label class="form-label small mb-1" for="Ate">Até</label>
+        <input class="form-control" type="date" id="Ate" name="Ate" value="@Model.Fim.ToString("yyyy-MM-dd")" />
+    </div>
+    <button type="submit" class="btn btn-primary">Ver</button>
+    <div class="btn-group flex-wrap" role="group" aria-label="Períodos rápidos">
+        @foreach (var a in atalhos)
+        {
+            var activo = a.De == Model.Inicio && a.Ate == Model.Fim;
+            <button type="submit" class="btn btn-sm @(activo ? "btn-secondary" : "btn-outline-secondary")"
+                    data-periodo-de="@a.De.ToString("yyyy-MM-dd")" data-periodo-ate="@a.Ate.ToString("yyyy-MM-dd")">@a.Nome</button>
+        }
+    </div>
+</div>

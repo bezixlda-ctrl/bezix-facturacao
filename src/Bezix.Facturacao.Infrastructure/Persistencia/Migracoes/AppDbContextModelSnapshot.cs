@@ -1494,6 +1494,84 @@ namespace Bezix.Facturacao.Infrastructure.Persistencia.Migracoes
                     b.ToTable("Series", (string)null);
                 });
 
+            modelBuilder.Entity("Bezix.Facturacao.Domain.Fiscal.ExportacaoAT", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Ano")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FicheiroPath")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<string>("Formato")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("GeradoEm")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("GeradoPor")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("HashSha256")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nchar(64)")
+                        .IsFixedLength();
+
+                    b.Property<int>("Mes")
+                        .HasColumnType("int");
+
+                    b.Property<string>("NomeFicheiro")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("NumAnulados")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NumDocs")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReferenciaSubmissao")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("SubmetidoEm")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SubmetidoPor")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<long>("Tamanho")
+                        .HasColumnType("bigint");
+
+                    b.Property<decimal>("TotalBase")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalIva")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Ano", "Mes");
+
+                    b.ToTable("ExportacoesAT", (string)null);
+                });
+
             modelBuilder.Entity("Bezix.Facturacao.Domain.Fiscal.TaxaIva", b =>
                 {
                     b.Property<int>("Id")

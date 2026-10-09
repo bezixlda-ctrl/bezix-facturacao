@@ -73,7 +73,7 @@
         <div class="app-nav-grupo">Análise</div>
         @if (u.TemAlguma(Permissoes.Relatorios.Vendas, Permissoes.Relatorios.Fiscal))
         {
-            <span class="em-breve"><i class="bi bi-bar-chart-line"></i>Relatórios<small>em breve</small></span>
+            <a asp-page="/Relatorios/Index" class="@Activo("/Relatorios")" aria-current="@Atual("/Relatorios")"><i class="bi bi-bar-chart-line"></i>Relatórios</a>
         }
         @if (u.TemPermissao(Permissoes.Automacao.Ver))
         {
@@ -92,6 +92,10 @@
         {
             <a asp-page="/Administracao/Utilizadores/Index" class="@Activo("/Administracao/Utilizadores")" aria-current="@Atual("/Administracao/Utilizadores")"><i class="bi bi-person-gear"></i>Utilizadores</a>
             <a asp-page="/Administracao/Perfis/Index" class="@Activo("/Administracao/Perfis")" aria-current="@Atual("/Administracao/Perfis")"><i class="bi bi-shield-check"></i>Perfis e permissões</a>
+        }
+        @if (u.TemPermissao(Permissoes.Configuracoes.Gerir))
+        {
+            <a asp-page="/Administracao/Backups" class="@Activo("/Administracao/Backups")" aria-current="@Atual("/Administracao/Backups")"><i class="bi bi-cloud-check"></i>Backups</a>
         }
         @if (u.TemPermissao(Permissoes.Administracao.Integracoes))
         {

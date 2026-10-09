@@ -3,6 +3,8 @@ using Bezix.Facturacao.Application.Artigos;
 using Bezix.Facturacao.Application.Automacao;
 using Bezix.Facturacao.Application.Integracoes;
 using Bezix.Facturacao.Application.Painel;
+using Bezix.Facturacao.Application.Fiscal;
+using Bezix.Facturacao.Infrastructure.Fiscal;
 using Bezix.Facturacao.Infrastructure.Integracoes;
 using Bezix.Facturacao.Application.Clientes;
 using Bezix.Facturacao.Application.Comunicacao;
@@ -48,6 +50,19 @@ public static class DependencyInjection
         services.Configure<OpcoesFicheiros>(config.GetSection("Ficheiros"));
         services.Configure<OpcoesInicializacao>(config.GetSection("Inicializacao"));
         services.Configure<OpcoesEmail>(config.GetSection("Email"));
+        services.Configure<OpcoesCertificacao>(config.GetSection("Certificacao"));
+        services.Configure<Backups.OpcoesBackups>(config.GetSection("Backups"));
+        services.AddSingleton<Backups.IHostEnvironmentRaiz>(new Backups.HostEnvironmentRaiz(contentRoot));
+        services.AddSingleton<Backups.IDestinoBackup>(sp =>
+        {
+            var o = sp.GetRequiredService<IOptions<Backups.OpcoesBackups>>().Value;
+            return o.Destino.ToUpperInvariant() switch
+            {
+                "S3" => new Backups.DestinoS3(o.S3),
+                _ => new Backups.DestinoPasta(Path.GetFullPath(Path.Combine(contentRoot, string.IsNullOrWhiteSpace(o.Pasta) ? "App_Data/backups" : o.Pasta))),
+            };
+        });
+        services.AddScoped<Backups.ServicoBackups>();
         services.AddSingleton<ArmazenamentoLocal>(sp => new ArmazenamentoLocal(sp.GetRequiredService<IOptions<OpcoesFicheiros>>(), contentRoot));
         services.AddSingleton<IArmazenamentoFicheiros>(sp => sp.GetRequiredService<ArmazenamentoLocal>());
         services.AddSingleton<IProcessadorImagem, ProcessadorImagemSkia>();
@@ -94,6 +109,9 @@ public static class DependencyInjection
         services.AddScoped<ServicoWebhooks>();
         services.AddScoped<IPublicadorEventos>(sp => sp.GetRequiredService<ServicoWebhooks>());
         services.AddScoped<ServicoChavesApi>();
+        services.AddSingleton<IExportadorAT, ExportadorCsvProvisorio>();
+        services.AddScoped<ServicoExportacaoAT>();
+        services.AddScoped<Application.Relatorios.ServicoRelatorios>();
         services.AddScoped<ServicoLembretes>();
         services.AddScoped<ServicoRecorrencias>();
         services.AddScoped<ServicoTarefas>();

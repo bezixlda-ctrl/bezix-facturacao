@@ -29,8 +29,16 @@ public class SegurancaModel(
     [BindProperty] public string CodigoVerificacao { get; set; } = "";
     [BindProperty] public string? Assinatura { get; set; }
 
+    [BindProperty(SupportsGet = true)] public bool Obrigatorio { get; set; }
+
     public async Task<IActionResult> OnGetAsync()
     {
+        // Sessão aberta antes de o 2FA ser obrigatório: actualiza as claims em vez de pedir para sair e voltar a entrar.
+        if (await utilizadores.GetUserAsync(User) is { TwoFactorEnabled: true } u && !User.HasClaim(Seguranca.DoisPassosObrigatorio.ClaimDoisPassos, "1"))
+        {
+            await sessoes.RefreshSignInAsync(u);
+            if (Obrigatorio) return LocalRedirect("/");
+        }
         await CarregarAsync();
         return Page();
     }
@@ -94,6 +102,7 @@ public class SegurancaModel(
         CodigosRecuperacaoNovos = string.Join(" ", codigos ?? []);
         auditoria.Registar("Utilizador", u.Id, "Utilizador.Activar2FA");
         await db.SaveChangesAsync();
+        await sessoes.RefreshSignInAsync(u); // a sessão passa a ter a marca "dois passos" (administradores deixam de ser redireccionados)
         return RedirecionarComSucesso("Verificação em dois passos activada.");
     }
 

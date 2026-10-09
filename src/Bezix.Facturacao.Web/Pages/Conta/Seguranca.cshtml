@@ -10,6 +10,12 @@
     </div>
 </div>
 
+@if (Model.Obrigatorio && !Model.DoisPassosActivo)
+{
+    <div class="alert alert-warning"><i class="bi bi-shield-exclamation me-1"></i><strong>Active a verificação em dois passos para continuar.</strong>
+        Os administradores têm de proteger a conta com um código do telemóvel (aplicação como Google Authenticator ou Microsoft Authenticator).</div>
+}
+
 <partial name="_ResumoErros" />
 
 @if (Model.CodigosRecuperacaoNovos is not null)

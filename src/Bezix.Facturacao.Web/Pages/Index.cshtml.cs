@@ -26,6 +26,7 @@ public class IndexModel(
     Application.Recebimentos.ServicoPagamentosComunicados comunicados,
     Application.Automacao.ServicoRecorrencias recorrencias,
     Application.Integracoes.ServicoWebhooks webhooks,
+    Application.Fiscal.ServicoExportacaoAT exportacaoAT,
     AppDbContext db,
     TimeProvider relogio) : PaginaBase
 {
@@ -49,6 +50,7 @@ public class IndexModel(
     public int PagamentosPorValidar { get; private set; }
     public List<Application.Automacao.RecorrenciaVista> RecorrentesSemana { get; private set; } = [];
     public int WebhooksFalhados { get; private set; }
+    public (int Ano, int Mes)? ExportacaoPorFazer { get; private set; }
     public List<Serie> SeriesPorFechar { get; private set; } = [];
     public Dictionary<int, Application.Recebimentos.SituacaoDocumento> Situacao { get; private set; } = [];
 
@@ -80,6 +82,7 @@ public class IndexModel(
         if (User.TemPermissao(Permissoes.Recibos.ValidarPagamentoComunicado)) PagamentosPorValidar = await comunicados.ContarPorValidarAsync();
         if (User.TemPermissao(Permissoes.Automacao.Ver)) RecorrentesSemana = await recorrencias.ProximasAsync(7);
         if (User.TemPermissao(Permissoes.Administracao.Integracoes)) WebhooksFalhados = await webhooks.ContarFalhadasAsync();
+        if (User.TemPermissao(Permissoes.Relatorios.Fiscal)) ExportacaoPorFazer = await exportacaoAT.PorFazerAsync();
 
         if (VeFacturacao)
         {

@@ -29,10 +29,12 @@ public sealed class BloqueioSerie(AppDbContext db) : IBloqueioSerie
             throw new InvalidOperationException("O bloqueio da série só faz sentido dentro de uma transacção.");
 
         // UPDLOCK: mais ninguém lê a série para escrever até ao commit. HOLDLOCK: o bloqueio dura toda a transacção.
+        // Se a série já estava carregada, o EF devolveria os valores antigos: nesse caso recarrega-se (já bloqueada).
+        var jaCarregada = db.Series.Local.Any(s => s.Id == serieId);
         var serie = await db.Series
             .FromSql($"SELECT * FROM [Series] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {serieId}")
             .SingleAsync(ct);
-        await db.Entry(serie).ReloadAsync(ct);
+        if (jaCarregada) await db.Entry(serie).ReloadAsync(ct);
         return serie;
     }
 }

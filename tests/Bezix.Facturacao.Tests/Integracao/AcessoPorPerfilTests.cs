@@ -56,6 +56,13 @@ public class AcessoPorPerfilTests(AplicacaoFactory app)
         Linha("/Automacao", PerfisPadrao.Administrador, PerfisPadrao.Gestor, PerfisPadrao.Facturador, PerfisPadrao.Tesouraria);
         Linha("/Administracao/Integracoes", PerfisPadrao.Administrador);
         Linha("/Administracao/Integracoes/Entregas", PerfisPadrao.Administrador);
+
+        // Fase 6: relatórios ("vendas": todos menos Tesouraria; "fiscais e exportação AT": Administrador, Gestor, Contabilista) e backups
+        Linha("/Relatorios", PerfisPadrao.Administrador, PerfisPadrao.Gestor, PerfisPadrao.Facturador, PerfisPadrao.Contabilista, PerfisPadrao.Consulta);
+        Linha("/Relatorios/Vendas", PerfisPadrao.Administrador, PerfisPadrao.Gestor, PerfisPadrao.Facturador, PerfisPadrao.Contabilista, PerfisPadrao.Consulta);
+        Linha("/Relatorios/Iva", PerfisPadrao.Administrador, PerfisPadrao.Gestor, PerfisPadrao.Contabilista);
+        Linha("/Relatorios/ExportacaoAT", PerfisPadrao.Administrador, PerfisPadrao.Gestor, PerfisPadrao.Contabilista);
+        Linha("/Administracao/Backups", PerfisPadrao.Administrador);
         return d;
     }
 

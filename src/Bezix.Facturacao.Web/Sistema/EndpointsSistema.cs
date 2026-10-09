@@ -33,6 +33,23 @@ public static class EndpointsSistema
             return Results.Ok(new { executadoEm = inicio, tarefas = resultados });
         }).AllowAnonymous().DisableAntiforgery();
 
+        // Backup diário (decisão D23): chamado pela segunda tarefa agendada, de hora a hora ou uma vez por dia. Só faz o backup
+        // se o último tiver mais de Backups:IntervaloHoras; "forcar=true" faz já. Corre até ao fim mesmo que quem chamou desista.
+        app.MapMethods("/internal/jobs/backup", ["GET", "POST"], async (HttpContext http, Microsoft.Extensions.Options.IOptions<OpcoesJobs> opcoes,
+            Infrastructure.Backups.ServicoBackups backups, bool forcar = false) =>
+        {
+            if (!TokenValido(http, opcoes.Value.Token)) return Results.NotFound();
+            try
+            {
+                var r = await backups.ExecutarAsync(forcar, CancellationToken.None);
+                return Results.Ok(r);
+            }
+            catch (Exception ex)
+            {
+                return Results.Problem(statusCode: 500, title: "O backup falhou", detail: ex.Message);
+            }
+        }).AllowAnonymous().DisableAntiforgery();
+
         // Logótipo servido a partir de App_Data (fora de wwwroot). Público: aparece no ecrã de entrada
         // e, mais tarde, na página do documento partilhada com o cliente.
         app.MapGet("/marca/logotipo", async (ServicoEmpresa empresas, IArmazenamentoFicheiros ficheiros, HttpContext http) =>
@@ -54,6 +71,12 @@ public static class EndpointsSistema
         return CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(recebido), Encoding.UTF8.GetBytes(esperado));
     }
 
+    private static readonly JsonSerializerOptions JsonSaude = new()
+    {
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All),
+        DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+    };
+
     private static Task EscreverSaude(HttpContext http, Microsoft.Extensions.Diagnostics.HealthChecks.HealthReport relatorio)
     {
         http.Response.ContentType = "application/json; charset=utf-8";
@@ -61,7 +84,7 @@ public static class EndpointsSistema
         {
             estado = relatorio.Status.ToString(),
             duracaoMs = (int)relatorio.TotalDuration.TotalMilliseconds,
-            verificacoes = relatorio.Entries.ToDictionary(e => e.Key, e => new { estado = e.Value.Status.ToString(), e.Value.Description }),
-        }));
+            verificacoes = relatorio.Entries.ToDictionary(e => e.Key, e => new { estado = e.Value.Status.ToString(), descricao = e.Value.Description }),
+        }, JsonSaude));
     }
 }

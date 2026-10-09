@@ -130,10 +130,49 @@ A especificação prevê uma tabela de interacções com o cliente. Não foi cri
 - **Webhooks**: POST em JSON, `X-Signature: sha256=HMAC(segredo, "{X-Timestamp}.{corpo}")`. O timestamp entra na assinatura para o destino poder recusar repetições antigas. Só endereços `https`. Repetições após 1, 5 e 30 minutos, 2 e 12 horas; depois de 5 entregas falhadas seguidas, a subscrição é desactivada e aparece um alerta no painel. O segredo é cifrado com Data Protection (chaves em `App_Data/chaves`).
 - Documentação: `/api/docs` (Swagger UI) e `/api/openapi/v1.json`; exemplos em [api.md](api.md).
 
+## D22. Exportação AT provisória, integridade e certificação — fase 6
+
+- **`IExportadorAT`** isola o formato. A implementação actual (`csv-provisorio-v1`) gera um ZIP com `documentos.csv`, `linhas.csv`, `iva.csv` (RFC 4180, UTF-8, ponto decimal, datas ISO) e um `LEIA-ME.txt` com totais de controlo e o SHA-256 de cada CSV. Quando a AT enviar a estrutura oficial, cria-se outra implementação e regista-se no `DependencyInjection`; documentos, séries e cálculo não mudam.
+- Entram os **documentos fiscais** (FT, FR, FG, NC, ND, RC) com data no mês, **incluindo os anulados** (estado "A"). Cotações e guias não entram.
+- Antes de gerar, verifica-se a **cadeia de hashes e a numeração sem saltos** de cada série envolvida. Uma série quebrada bloqueia a exportação e fica na auditoria (`Integridade.Falha`). A verificação de todas as séries está disponível em Relatórios → Exportação AT.
+- Cada ficheiro fica no histórico (`ExportacoesAT`) com o SHA-256, quem gerou, e a marca de submissão no e-Declaração com a referência do comprovativo. Gerar de novo o mesmo mês não apaga o anterior.
+- **Identificação do software** no rodapé dos PDFs vem da configuração `Certificacao` (nome, versão, n.º de certificado). Enquanto o n.º estiver vazio, lê-se "certificação AT pendente". A 2.ª via de um documento antigo é regenerada com o texto em vigor nesse momento; se a AT exigir o texto da data de emissão, guarda-se no `EmitenteJson` (sem migração).
+- **Ainda não feito, à espera da AT:** assinatura digital com chave privada e o formato oficial do ficheiro.
+
+## D23. Backups externos cifrados
+
+- **O quê:** a base de dados em **BACPAC** (exportação lógica completa com o esquema, os dados e os triggers, feita pelo DacFx; restaurável em qualquer SQL Server com SqlPackage ou SSMS) e os ficheiros (`App_Data/uploads` com PDFs, logótipos, comprovativos e exportações AT, e `App_Data/chaves`) em ZIP. Escolheu-se BACPAC porque o alojamento partilhado não deixa a aplicação fazer `BACKUP DATABASE` para um ficheiro.
+- **Cifra:** AES-256-GCM em blocos de 1 MB antes de sair do servidor, com detecção de alteração, troca ou corte de blocos. A chave (`Backups:Chave`) fica fora do repositório e **tem de ter uma cópia fora do servidor**.
+- **Destino:** armazenamento compatível com S3 (Amazon S3, Backblaze B2, Wasabi, Cloudflare R2) ou uma pasta. A escolha do fornecedor e as credenciais são da Bezix (ver [backups-restauro.md](backups-restauro.md)).
+- **Quando:** `/internal/jobs/backup`, numa segunda tarefa agendada, separada do `jobs/tick` porque pode demorar minutos. O backup só é feito se o último tiver mais de 20 horas. **Retenção** 7 diários, 4 semanais e 12 mensais.
+- **Verificação:** o `/health` fica "Degraded" sem backup há mais de 30 horas. Em Administração → Backups cada ficheiro pode ser descarregado, decifrado e aberto sem restaurar. O teste automático faz o **restauro completo** numa base nova e confirma documentos, hashes e triggers.
+- **Licenças e tamanho:** DacFx (licença Microsoft, componente redistribuível) e AWS SDK (Apache 2.0). A publicação self-contained passa de 135 MB para 193 MB, sobretudo por causa do DacFx.
+
+## D24. Emissão em duas etapas e testes de carga
+
+Com 50 pessoas a emitir na mesma série, tudo o que se faz com a série bloqueada acontece em fila. A emissão passou a ter duas etapas:
+
+1. **Sem bloqueio:** recálculo, validações e gravação das linhas e totais definitivos (o documento continua em rascunho).
+2. **Com a série bloqueada:** confirma que o rascunho não mudou (versão), revalida o que depende da série e de outros documentos (data da última emissão; valor por creditar da factura, para duas NC em simultâneo não passarem o total), numera, encadeia o hash e grava.
+
+Resultados com `tools/Bezix.Facturacao.Carga` (portátil de 8 núcleos, LocalDB, 8.764 documentos, todos na mesma série):
+
+| Perfil (50 utilizadores) | p50 | p95 | p99 |
+|---|---|---|---|
+| Emissões desfasadas, uma a cada ~10 s por pessoa | 50 ms | 91 ms | 108 ms |
+| Os 50 a emitir no mesmo instante (rajada) | 74 ms | 395 ms | 515 ms |
+| PDF (descarregar) | 6–11 ms | 9–28 ms | — |
+
+Painel: 109 ms (1,4 s no primeiro pedido após arranque). Antes da alteração, a rajada tinha p95 de 1,9 s e p99 de 7,5 s. O limite real é cerca de 45 emissões por segundo numa única série; no Winhost os números serão piores (servidor partilhado) e devem ser medidos depois do deploy (ver [carga.md](carga.md)).
+
+## D25. Verificação em dois passos obrigatória para administradores
+
+Quem gere utilizadores (perfil Administrador) e não tem 2FA activo só consegue abrir "A minha conta" até o activar. Fica ligado por omissão (`Seguranca:DoisPassosObrigatorioAdministradores`) e desligado em desenvolvimento e nos testes. A API (chaves) e a página pública do cliente não são afectadas.
+
 ## Pendentes de confirmação
 
 - ~~QuestPDF~~: confirmado em 09/10/2026 que a receita anual é inferior a 1 M USD; usa-se a licença Community. Rever se a receita passar esse valor.
 - **Motivo de isenção por omissão:** o texto "Isento nos termos do artigo 9 do Código do IVA" é provisório. Confirmar com o contabilista.
 - **NUIT de particulares:** com o limite a 0 (valor por omissão), o NUIT só é exigido a empresas. Definir o limite em Configurações → Empresa quando a AT o indicar.
-- **Limite do NUIT obrigatório**, regras da factura global e requisitos de certificação: aguardam resposta da AT ([oficio-AT.md](oficio-AT.md)).
-- **2FA obrigatório para administradores:** por agora é recomendado (lista de primeiros passos no painel). Tornar obrigatório na fase 6, depois de todos os administradores o terem activado.
+- **Limite do NUIT obrigatório**, regras da factura global, **formato oficial da exportação mensal** e requisitos de certificação (assinatura digital, n.º de certificado): aguardam resposta da AT ([oficio-AT.md](oficio-AT.md), [certificacao.md](certificacao.md)).
+- **Fornecedor dos backups externos:** escolher (por exemplo Backblaze B2 ou Amazon S3), criar o bucket e as credenciais, e gerar a chave de cifra.

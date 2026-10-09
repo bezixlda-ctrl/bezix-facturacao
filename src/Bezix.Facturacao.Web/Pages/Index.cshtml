@@ -167,7 +167,8 @@
             @{
                 var nada = Model.Vencidas.Count == 0 && Model.AVencer.Count == 0 && Model.Rascunhos.Count == 0
                     && Model.AprovacoesPendentes == 0 && Model.EmailsFalhados == 0 && Model.SeriesPorFechar.Count == 0
-                    && Model.PagamentosPorValidar == 0 && Model.RecorrentesSemana.Count == 0 && Model.WebhooksFalhados == 0;
+                    && Model.PagamentosPorValidar == 0 && Model.RecorrentesSemana.Count == 0 && Model.WebhooksFalhados == 0
+                    && Model.ExportacaoPorFazer is null;
             }
             @if (nada)
             {
@@ -177,6 +178,10 @@
                 @if (Model.AprovacoesPendentes > 0)
                 {
                     <li class="alerta"><i class="bi bi-patch-question"></i><span>@Model.AprovacoesPendentes @(Model.AprovacoesPendentes == 1 ? "documento aguarda" : "documentos aguardam") a sua aprovação.</span><a class="btn btn-sm btn-primary" asp-page="/Documentos/Aprovacoes">Ver</a></li>
+                }
+                @if (Model.ExportacaoPorFazer is { } exp)
+                {
+                    <li class="alerta"><i class="bi bi-file-earmark-zip"></i><span>A exportação AT de @exp.Mes.ToString("00")/@exp.Ano ainda não foi gerada.</span><a class="btn btn-sm btn-primary" asp-page="/Relatorios/ExportacaoAT">Gerar</a></li>
                 }
                 @if (Model.PagamentosPorValidar > 0)
                 {

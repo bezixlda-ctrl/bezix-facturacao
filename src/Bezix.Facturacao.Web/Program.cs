@@ -16,6 +16,29 @@ using Bezix.Facturacao.Web.Api;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection;
 
+// Restauro (docs/backups-restauro.md): Bezix.Facturacao.Web.exe decifrar-backup <ficheiro.bzx> <saida> [chave Base64]
+// A chave também pode vir da variável de ambiente BEZIX_BACKUP_CHAVE, para não ficar no histórico da consola.
+if (args is ["decifrar-backup", var origemBackup, var saidaBackup, ..])
+{
+    var chaveBackup = args.Length > 3 ? args[3] : Environment.GetEnvironmentVariable("BEZIX_BACKUP_CHAVE");
+    if (string.IsNullOrWhiteSpace(chaveBackup))
+    {
+        Console.Error.WriteLine("Indique a chave dos backups (4.º argumento ou variável BEZIX_BACKUP_CHAVE).");
+        return 2;
+    }
+    try
+    {
+        await Bezix.Facturacao.Infrastructure.Backups.ServicoBackups.DecifrarFicheiroAsync(origemBackup, saidaBackup, Convert.FromBase64String(chaveBackup));
+        Console.WriteLine($"Decifrado para {saidaBackup}.");
+        return 0;
+    }
+    catch (Exception ex) when (ex is System.Security.Cryptography.CryptographicException or FormatException or IOException)
+    {
+        Console.Error.WriteLine("Não foi possível decifrar: " + ex.Message);
+        return 1;
+    }
+}
+
 Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
 
 try
@@ -151,7 +174,10 @@ try
 
     servicos.AddHealthChecks()
         .AddCheck<VerificacaoBaseDados>("baseDados")
-        .AddCheck<VerificacaoDisco>("ficheiros");
+        .AddCheck<VerificacaoDisco>("ficheiros")
+        .AddCheck<VerificacaoTarefas>("tarefas")
+        .AddCheck<VerificacaoEmails>("emails")
+        .AddCheck<VerificacaoBackups>("backups");
 
     servicos.AddHsts(o =>
     {
@@ -205,6 +231,7 @@ try
     app.UseRateLimiter();
     app.UseAuthentication();
     app.UseAuthorization();
+    app.UseMiddleware<DoisPassosObrigatorio>();
 
     app.MapStaticAssets().AllowAnonymous();
     app.MapRazorPages().WithStaticAssets();
@@ -229,5 +256,6 @@ finally
 {
     await Log.CloseAndFlushAsync();
 }
+return 0;
 
 public partial class Program;

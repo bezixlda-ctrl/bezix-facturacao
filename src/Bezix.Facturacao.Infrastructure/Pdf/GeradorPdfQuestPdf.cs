@@ -14,9 +14,8 @@ namespace Bezix.Facturacao.Infrastructure.Pdf;
 /// linhas com cabeçalho repetido em cada página, totais com IVA por taxa, contas bancárias e rodapé
 /// "Processado por computador" com identificação do software, hash curto, utilizador e página X/Y.
 /// </summary>
-public sealed class GeradorPdfQuestPdf(IArmazenamentoFicheiros ficheiros) : IGeradorPdf
+public sealed class GeradorPdfQuestPdf(IArmazenamentoFicheiros ficheiros, Microsoft.Extensions.Options.IOptions<OpcoesCertificacao> certificacao) : IGeradorPdf
 {
-    public const string IdentificacaoSoftware = "Bezix Facturação v1";
 
     static GeradorPdfQuestPdf()
     {
@@ -50,7 +49,7 @@ public sealed class GeradorPdfQuestPdf(IArmazenamentoFicheiros ficheiros) : IGer
                     if (doc.TipoDoc == TipoDocumento.RC) ConteudoRecibo(c, doc, emitente, moeda, opcoes, cor);
                     else Conteudo(c, doc, emitente, moeda, opcoes, cor);
                 });
-                page.Footer().Element(c => Rodape(c, doc, emitente, opcoes));
+                page.Footer().Element(c => Rodape(c, doc, emitente, opcoes, certificacao.Value.TextoRodape));
 
                 var marca = opcoes.Marca switch
                 {
@@ -409,12 +408,12 @@ public sealed class GeradorPdfQuestPdf(IArmazenamentoFicheiros ficheiros) : IGer
                                 c.Item().Text(string.Join("   ", new[] { conta.Banco, $"Conta {conta.NumeroConta}", conta.Nib is null ? null : $"NIB {conta.Nib}" }.Where(v => v is not null))).FontSize(8.5f);
                         });
                 });
-                page.Footer().Element(c => Rodape(c, new Documento(), emitente, new OpcoesPdf(MarcaPdf.Nenhuma, utilizador)));
+                page.Footer().Element(c => Rodape(c, new Documento(), emitente, new OpcoesPdf(MarcaPdf.Nenhuma, utilizador), certificacao.Value.TextoRodape));
             });
         }).GeneratePdf();
     }
 
-    private static void Rodape(IContainer c, Documento doc, DadosEmitente e, OpcoesPdf opcoes)
+    private static void Rodape(IContainer c, Documento doc, DadosEmitente e, OpcoesPdf opcoes, string software)
     {
         c.BorderTop(0.75f).BorderColor("#D5DBE3").PaddingTop(5).Column(col =>
         {
@@ -422,7 +421,7 @@ public sealed class GeradorPdfQuestPdf(IArmazenamentoFicheiros ficheiros) : IGer
             col.Item().Row(r =>
             {
                 var hash = HashDocumento.Curto(doc.Hash);
-                var partes = new List<string> { $"Software: {IdentificacaoSoftware} (certificação AT pendente)" };
+                var partes = new List<string> { software };
                 if (hash.Length > 0) partes.Add($"Hash {hash}");
                 if (!string.IsNullOrWhiteSpace(opcoes.Utilizador)) partes.Add($"Processado por {opcoes.Utilizador}");
                 r.RelativeItem().Text(string.Join(" · ", partes)).FontSize(7).FontColor("#5B6676");

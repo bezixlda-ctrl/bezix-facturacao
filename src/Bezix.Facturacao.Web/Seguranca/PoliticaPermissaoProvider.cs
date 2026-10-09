@@ -37,6 +37,7 @@ public sealed class FabricaClaims(
     {
         var id = await base.GenerateClaimsAsync(user);
         id.AddClaim(new Claim(ClaimsPrincipalExtensions.ClaimNome, user.Nome));
+        if (user.TwoFactorEnabled) id.AddClaim(new Claim(DoisPassosObrigatorio.ClaimDoisPassos, "1"));
 
         // Limite de desconto do perfil (o utilizador tem um perfil). Sem claim = sem limite.
         foreach (var nome in await UserManager.GetRolesAsync(user))

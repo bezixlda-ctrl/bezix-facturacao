@@ -485,3 +485,10 @@ details > summary.painel-cabecalho h2 { font-size: 1.125rem; }
 .rejeitar-form { position: absolute; right: 0; z-index: 5; width: 280px; margin-top: .25rem; padding: .75rem; background: var(--bs-body-bg); border: 1px solid var(--bz-borda); border-radius: .5rem; box-shadow: 0 8px 24px rgb(0 0 0 / .12); }
 .totais-publico td { border-bottom: 0; padding-top: .25rem; padding-bottom: .25rem; }
 .totais-publico tr:first-child td { border-top: 1px solid var(--bz-borda); padding-top: .75rem; }
+
+/* ---------- Relatórios ---------- */
+.cartao-relatorio { display: block; height: 100%; padding: 1.25rem; color: inherit; text-decoration: none; transition: border-color .15s; }
+.cartao-relatorio:hover, .cartao-relatorio:focus-visible { border-color: var(--bz-primaria); }
+.cartao-relatorio > i { font-size: 1.5rem; color: var(--bz-primaria); }
+.cartao-relatorio h2 { font-size: 1.05rem; margin: .5rem 0 .25rem; }
+.cartao-relatorio p { margin: 0; font-size: .875rem; color: var(--bs-secondary-color); }

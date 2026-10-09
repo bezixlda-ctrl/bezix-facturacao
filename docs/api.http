@@ -1,0 +1,114 @@
+# Colecção de testes da API v1 (Visual Studio, Rider ou VS Code com a extensão REST Client).
+# Preencher @chave com uma chave criada em Administração → Integrações (de um ambiente de teste) e @cliente com um id válido.
+# Documentação: docs/api.md · Swagger: {{base}}/api/docs
+
+@base = http://localhost:5011
+@chave = bzx_coloque_aqui_a_sua_chave
+@cliente = 1
+
+### Sem chave → 401 (problem+json)
+GET {{base}}/api/v1/clientes
+
+### Listar clientes
+GET {{base}}/api/v1/clientes?pesquisa=&pagina=1&tamanho=10
+Authorization: Bearer {{chave}}
+
+### Criar cliente
+POST {{base}}/api/v1/clientes
+Authorization: Bearer {{chave}}
+Content-Type: application/json
+
+{
+  "nome": "Cliente API, Lda",
+  "tipo": "Empresa",
+  "nuit": "400123987",
+  "endereco": "Av. Julius Nyerere, 100",
+  "cidade": "Maputo",
+  "email": "contas@cliente-api.co.mz",
+  "aceitarNuitDuplicado": false
+}
+
+### Ler um cliente
+GET {{base}}/api/v1/clientes/{{cliente}}
+Authorization: Bearer {{chave}}
+
+### Extracto de conta corrente
+GET {{base}}/api/v1/clientes/{{cliente}}/extracto?de=2026-01-01&ate=2026-12-31
+Authorization: Bearer {{chave}}
+
+### Artigos
+GET {{base}}/api/v1/artigos?pesquisa=&tamanho=10
+Authorization: Bearer {{chave}}
+
+### Criar rascunho de factura (sem Idempotency-Key → 400)
+POST {{base}}/api/v1/documentos
+Authorization: Bearer {{chave}}
+Content-Type: application/json
+
+{ "tipo": "FT", "clienteId": {{cliente}}, "descontoGlobalPct": 0, "linhas": [] }
+
+### Criar e emitir factura (repetir com a mesma chave devolve a mesma resposta, sem duplicar)
+# @name factura
+POST {{base}}/api/v1/documentos
+Authorization: Bearer {{chave}}
+Idempotency-Key: exemplo-encomenda-0001
+Content-Type: application/json
+
+{
+  "tipo": "FT",
+  "clienteId": {{cliente}},
+  "descontoGlobalPct": 0,
+  "emitir": true,
+  "linhas": [
+    { "descricao": "Manutenção preventiva", "quantidade": 2, "precoUnitario": 1450, "descontoPct": 0, "codigoTaxaIva": "NOR" },
+    { "descricao": "Deslocação", "quantidade": 1, "precoUnitario": 500, "descontoPct": 0, "codigoTaxaIva": "NOR" }
+  ]
+}
+
+### Mesma Idempotency-Key com outro corpo → 422
+POST {{base}}/api/v1/documentos
+Authorization: Bearer {{chave}}
+Idempotency-Key: exemplo-encomenda-0001
+Content-Type: application/json
+
+{ "tipo": "FT", "clienteId": {{cliente}}, "descontoGlobalPct": 0, "emitir": true,
+  "linhas": [ { "descricao": "Outra coisa", "quantidade": 1, "precoUnitario": 1, "descontoPct": 0, "codigoTaxaIva": "NOR" } ] }
+
+### Ler a factura criada
+GET {{base}}/api/v1/documentos/{{factura.response.body.$.id}}
+Authorization: Bearer {{chave}}
+
+### PDF
+GET {{base}}/api/v1/documentos/{{factura.response.body.$.id}}/pdf
+Authorization: Bearer {{chave}}
+
+### Enviar por email (corpo opcional: sem ele usa o modelo de email do tipo de documento)
+POST {{base}}/api/v1/documentos/{{factura.response.body.$.id}}/email
+Authorization: Bearer {{chave}}
+Content-Type: application/json
+
+{ "para": "contas@cliente-api.co.mz" }
+
+### Registar recibo que paga a factura
+POST {{base}}/api/v1/recibos
+Authorization: Bearer {{chave}}
+Idempotency-Key: exemplo-recibo-0001
+Content-Type: application/json
+
+{
+  "clienteId": {{cliente}},
+  "valor": {{factura.response.body.$.total}},
+  "metodo": "Transferencia",
+  "referencia": "TRF-0001",
+  "alocacoes": [ { "documentoId": {{factura.response.body.$.id}}, "valor": {{factura.response.body.$.total}} } ]
+}
+
+### Anular (precisa do escopo documentos:anular; uma factura com recibo não se anula)
+POST {{base}}/api/v1/documentos/{{factura.response.body.$.id}}/anular
+Authorization: Bearer {{chave}}
+Content-Type: application/json
+
+{ "motivo": "Teste da API" }
+
+### Contrato OpenAPI
+GET {{base}}/api/openapi/v1.json

@@ -38,12 +38,21 @@ public sealed partial class AplicacaoFactory : WebApplicationFactory<Program>, I
         builder.UseSetting("Inicializacao:AdministradorNome", "Admin Teste");
         builder.UseSetting("Inicializacao:AdministradorPassword", PasswordTeste);
         builder.UseSetting("Email:PastaLocal", PastaEmails);
+        builder.UseSetting("Seguranca:DoisPassosObrigatorioAdministradores", "false");
+        builder.UseSetting("Backups:Destino", "Pasta");
+        builder.UseSetting("Backups:Pasta", PastaBackups);
+        builder.UseSetting("Backups:Chave", ChaveBackups);
         builder.ConfigureTestServices(s =>
         {
             s.AddScoped<IUtilizadorActual, UtilizadorTeste>();
             s.AddSingleton<IEnviadorWebhook>(Webhooks);
         });
     }
+
+    /// <summary>Destino dos backups nos testes (fora da pasta de ficheiros, que é a que vai no backup).</summary>
+    public string PastaBackups => _pastaFicheiros + "-backups";
+
+    public string ChaveBackups { get; } = Convert.ToBase64String(Bezix.Facturacao.Infrastructure.Backups.CifraBackup.NovaChave());
 
     /// <summary>Recebe os webhooks em vez da rede.</summary>
     public EnviadorWebhookFalso Webhooks { get; } = new();
@@ -64,6 +73,7 @@ public sealed partial class AplicacaoFactory : WebApplicationFactory<Program>, I
             await scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.EnsureDeletedAsync();
         await base.DisposeAsync();
         try { Directory.Delete(_pastaFicheiros, recursive: true); } catch (IOException) { }
+        try { Directory.Delete(PastaBackups, recursive: true); } catch (IOException) { }
     }
 
     public HttpClient CriarCliente() => CreateClient(new WebApplicationFactoryClientOptions

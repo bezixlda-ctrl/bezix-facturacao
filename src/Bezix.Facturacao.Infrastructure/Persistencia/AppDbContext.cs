@@ -47,6 +47,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<PedidoIdempotente> PedidosIdempotentes => Set<PedidoIdempotente>();
     public DbSet<WebhookSubscricao> WebhookSubscricoes => Set<WebhookSubscricao>();
     public DbSet<WebhookEntrega> WebhookEntregas => Set<WebhookEntrega>();
+    public DbSet<ExportacaoAT> ExportacoesAT => Set<ExportacaoAT>();
 
     // Triggers que impedem alterar documentos emitidos mesmo por SQL directo (ver migração Fase3Documentos).
     public const string TriggerDocumentos = "TR_Documentos_Imutavel";
@@ -463,6 +464,22 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             e.HasOne(x => x.Subscricao).WithMany().HasForeignKey(x => x.SubscricaoId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(x => new { x.Estado, x.ProximaTentativa });
             e.HasIndex(x => new { x.SubscricaoId, x.CreatedAt });
+        });
+
+        b.Entity<ExportacaoAT>(e =>
+        {
+            e.ToTable("ExportacoesAT");
+            e.Property(x => x.Formato).HasMaxLength(50).IsRequired();
+            e.Property(x => x.NomeFicheiro).HasMaxLength(100).IsRequired();
+            e.Property(x => x.FicheiroPath).HasMaxLength(300).IsRequired();
+            e.Property(x => x.HashSha256).HasMaxLength(64).IsFixedLength().IsRequired();
+            e.Property(x => x.TotalBase).HasPrecision(18, 2);
+            e.Property(x => x.TotalIva).HasPrecision(18, 2);
+            e.Property(x => x.GeradoPor).HasMaxLength(256).IsRequired();
+            e.Property(x => x.SubmetidoPor).HasMaxLength(256);
+            e.Property(x => x.ReferenciaSubmissao).HasMaxLength(100);
+            e.Ignore(x => x.Periodo);
+            e.HasIndex(x => new { x.Ano, x.Mes });
         });
 
         b.Entity<RegistoLog>(e =>

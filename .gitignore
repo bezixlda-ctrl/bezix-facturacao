@@ -264,6 +264,9 @@ Generated_Code/
 # because we have git ;-)
 _UpgradeReport_Files/
 Backup*/
+# Código do módulo de backups (o padrão acima é para as pastas de backup do Visual Studio).
+!src/**/Backups/
+!tests/**/Backups/
 UpgradeLog*.XML
 UpgradeLog*.htm
 ServiceFabricBackup/

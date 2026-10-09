@@ -1,0 +1,83 @@
+@page
+@model Bezix.Facturacao.Web.Pages.Relatorios.IvaModel
+@{
+    ViewData["Title"] = "Mapa de IVA";
+    var rota = new Dictionary<string, string> { ["de"] = Model.Inicio.ToString("yyyy-MM-dd"), ["ate"] = Model.Fim.ToString("yyyy-MM-dd") };
+}
+<div class="cabecalho-pagina">
+    <div>
+        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Relatórios</a>
+        <h1 class="mt-1">Mapa de IVA</h1>
+        <p>IVA liquidado por taxa, para a declaração periódica: o facturado (FT, FR, FG, ND) menos o creditado em notas de crédito. Documentos anulados não contam. Por omissão, o mês anterior.</p>
+    </div>
+    <a class="btn btn-outline-secondary" asp-page-handler="Csv" asp-all-route-data="rota"><i class="bi bi-filetype-csv me-1"></i>Excel (CSV)</a>
+</div>
+
+<section class="painel mb-4">
+    <form method="get" class="p-3 border-bottom"><partial name="_Periodo" model="(Model.Inicio, Model.Fim)" /></form>
+    @if (Model.Linhas.Count == 0)
+    {
+        <div class="vazio"><i class="bi bi-percent"></i><p class="mb-0">Sem documentos com IVA neste período.</p></div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr><th>Taxa</th><th class="num">Base facturada</th><th class="num">IVA facturado</th><th class="num">Base creditada</th><th class="num">IVA creditado</th><th class="num">Base líquida</th><th class="num">IVA liquidado</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var l in Model.Linhas)
+                    {
+                        <tr>
+                            <td>@Formato.Percentagem(l.TaxaPct)@if (l.MotivoIsencao is not null) { <div class="small text-body-secondary">@l.MotivoIsencao</div> }</td>
+                            <td class="num">@Formato.Numero(l.BaseFacturada)</td><td class="num">@Formato.Numero(l.IvaFacturado)</td>
+                            <td class="num">@Formato.Numero(l.BaseCreditada)</td><td class="num">@Formato.Numero(l.IvaCreditado)</td>
+                            <td class="num fw-semibold">@Formato.Numero(l.Base)</td><td class="num fw-semibold">@Formato.Numero(l.Iva)</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr class="fw-bold">
+                        <td>Total</td>
+                        <td class="num">@Formato.Numero(Model.Linhas.Sum(l => l.BaseFacturada))</td><td class="num">@Formato.Numero(Model.Linhas.Sum(l => l.IvaFacturado))</td>
+                        <td class="num">@Formato.Numero(Model.Linhas.Sum(l => l.BaseCreditada))</td><td class="num">@Formato.Numero(Model.Linhas.Sum(l => l.IvaCreditado))</td>
+                        <td class="num">@Formato.Numero(Model.Linhas.Sum(l => l.Base))</td><td class="num">@Formato.Numero(Model.Linhas.Sum(l => l.Iva))</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    }
+</section>
+
+<section class="painel">
+    <div class="painel-cabecalho">
+        <h2>Documentos anulados no período</h2>
+        @if (Model.Anulados.Count > 0) { <a class="small" asp-page-handler="AnuladosCsv" asp-all-route-data="rota">Excel (CSV)</a> }
+    </div>
+    @if (Model.Anulados.Count == 0)
+    {
+        <div class="vazio"><i class="bi bi-check2-circle"></i><p class="mb-0">Nenhum documento anulado neste período.</p></div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead><tr><th>Documento</th><th>Data</th><th>Cliente</th><th class="num">Total</th><th>Anulado</th><th>Motivo</th></tr></thead>
+                <tbody>
+                    @foreach (var a in Model.Anulados)
+                    {
+                        <tr>
+                            <td><a class="doc-num text-decoration-none" asp-page="/Documentos/Detalhe" asp-route-id="@a.Id">@a.Numero</a></td>
+                            <td class="tabular">@Formato.Data(a.Data)</td>
+                            <td>@a.Cliente</td>
+                            <td class="num">@Formato.Numero(a.Total)</td>
+                            <td class="small">@Formato.DataHora(a.AnuladoEm)<div class="text-body-secondary">@a.AnuladoPor</div></td>
+                            <td class="small">@a.Motivo</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

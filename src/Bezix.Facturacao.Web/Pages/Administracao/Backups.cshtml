@@ -1,0 +1,97 @@
+@page
+@model Bezix.Facturacao.Web.Pages.Administracao.BackupsModel
+@{
+    ViewData["Title"] = "Backups";
+}
+<div class="cabecalho-pagina">
+    <div>
+        <h1>Backups</h1>
+        <p>Cópia diária da base de dados e dos ficheiros (PDFs, logótipo, comprovativos, exportações AT, chaves), cifrada antes de sair do servidor. Guardam-se 7 diárias, 4 semanais e 12 mensais.</p>
+    </div>
+    @if (Model.Opcoes.Configurado)
+    {
+        <form method="post" asp-page-handler="Executar" data-confirmar="Fazer agora um backup completo? Pode demorar alguns minutos.">
+            <button class="btn btn-primary" type="submit"><i class="bi bi-cloud-arrow-up me-1"></i>Fazer backup agora</button>
+        </form>
+    }
+</div>
+
+@if (!Model.Opcoes.Configurado)
+{
+    <div class="alert alert-warning">
+        <strong>Backups externos não configurados.</strong> Defina <code>Backups:Destino</code> (<code>S3</code> ou <code>Pasta</code>), as credenciais e <code>Backups:Chave</code>
+        no <code>appsettings.Production.json</code> (ver o guia de instalação). Até lá, só existe o backup do painel do Winhost.
+    </div>
+}
+else
+{
+    <p class="small text-body-secondary">Destino: <strong>@Model.Destino</strong></p>
+}
+
+@if (Model.Verificacao is { } v)
+{
+    <div class="alert @(v.Valido ? "alert-success" : "alert-danger")"><strong>@v.Nome</strong>: @v.Detalhe</div>
+}
+
+<div class="row g-4">
+    <div class="col-xl-7">
+        <section class="painel">
+            <div class="painel-cabecalho"><h2>Backups guardados</h2></div>
+            @if (Model.ErroDestino is not null)
+            {
+                <div class="alert alert-danger m-3">Não foi possível ler o destino: @Model.ErroDestino</div>
+            }
+            else if (Model.Remotos.Count == 0)
+            {
+                <div class="vazio"><i class="bi bi-cloud"></i><p class="mb-0">Ainda não há backups no destino.</p></div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>Ficheiro</th><th class="num">Tamanho</th><th><span class="visually-hidden">Acções</span></th></tr></thead>
+                        <tbody>
+                            @foreach (var r in Model.Remotos)
+                            {
+                                <tr>
+                                    <td class="font-monospace small text-break">@r.Nome</td>
+                                    <td class="num small">@((r.Tamanho / 1024d / 1024d).ToString("0.0", Formato.Cultura)) MB</td>
+                                    <td class="text-end">
+                                        <form method="post" asp-page-handler="Verificar" asp-route-nome="@r.Nome">
+                                            <button class="btn btn-sm btn-outline-secondary" type="submit" title="Descarrega, decifra e abre o ficheiro">Verificar</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    </div>
+    <div class="col-xl-5">
+        <section class="painel">
+            <div class="painel-cabecalho"><h2>Últimas execuções</h2></div>
+            @if (Model.Execucoes.Count == 0)
+            {
+                <div class="vazio"><i class="bi bi-clock"></i><p class="mb-0">Ainda não correu. Configure a tarefa agendada <code>/internal/jobs/backup</code>.</p></div>
+            }
+            else
+            {
+                <ul class="list-unstyled mb-0">
+                    @foreach (var e in Model.Execucoes)
+                    {
+                        <li class="px-3 py-2 border-bottom small">
+                            <div class="d-flex justify-content-between">
+                                <span class="tabular">@Formato.DataHora(e.Inicio)</span>
+                                <span class="estado @(e.Sucesso ? "estado-pago" : "estado-vencido")">@(e.Sucesso ? "OK" : "Falhou")</span>
+                            </div>
+                            <div class="@(e.Sucesso ? "text-body-secondary" : "text-danger")">@(e.Sucesso ? e.Resultado : e.Erro)</div>
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+        <p class="small text-body-secondary mt-3">Restaurar: ver <em>docs/backups-restauro.md</em>. Guarde a chave dos backups fora do servidor — sem ela os ficheiros não se abrem.</p>
+    </div>
+</div>

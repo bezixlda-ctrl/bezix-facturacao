@@ -1,0 +1,126 @@
+@page
+@model Bezix.Facturacao.Web.Pages.Relatorios.ExportacaoATModel
+@using Bezix.Facturacao.Web.Pages.Relatorios
+@{
+    ViewData["Title"] = "Exportação AT";
+    var ultimas = Model.Historico.GroupBy(e => (e.Ano, e.Mes)).ToDictionary(g => g.Key, g => g.Max(e => e.Id));
+}
+<div class="cabecalho-pagina">
+    <div>
+        <a asp-page="Index" class="small text-decoration-none"><i class="bi bi-arrow-left"></i> Relatórios</a>
+        <h1 class="mt-1">Exportação mensal para a AT</h1>
+        <p>Ficheiro com os documentos fiscais do mês (facturas, facturas-recibo, facturas globais, notas de crédito e débito, recibos), incluindo os anulados, para submeter comprimido no e-Declaração.</p>
+    </div>
+</div>
+
+<div class="alert alert-warning d-flex gap-2">
+    <i class="bi bi-exclamation-triangle"></i>
+    <div>
+        <strong>Formato provisório.</strong> A AT ainda não enviou a estrutura oficial do ficheiro (ofício da fase 1). O ficheiro serve para conferência interna e para o contabilista;
+        não o submeta no e-Declaração até o formato oficial estar implementado.
+    </div>
+</div>
+
+<partial name="_ResumoErros" />
+
+<div class="row g-4">
+    <div class="col-xl-4">
+        <form method="post" asp-page-handler="Gerar" class="painel mb-4">
+            <div class="painel-cabecalho"><h2>Gerar ficheiro</h2></div>
+            <div class="painel-corpo row g-3">
+                <div class="col-7">
+                    <label class="form-label" asp-for="Mes">Mês</label>
+                    <select class="form-select" asp-for="Mes">
+                        @for (var m = 1; m <= 12; m++) { <option value="@m">@ExportacaoATModel.NomeMes(m)</option> }
+                    </select>
+                </div>
+                <div class="col-5">
+                    <label class="form-label" asp-for="Ano">Ano</label>
+                    <input class="form-control" asp-for="Ano" type="number" min="2024" max="@Model.Hoje.Year" />
+                </div>
+                <div class="col-12">
+                    <p class="small text-body-secondary mb-2">Antes de gerar, o sistema confirma que nenhum documento das séries foi alterado (cadeia de hashes) e que não há saltos de numeração.</p>
+                    <button class="btn btn-primary w-100" type="submit"><i class="bi bi-file-earmark-zip me-1"></i>Gerar ficheiro do mês</button>
+                </div>
+            </div>
+        </form>
+
+        <form method="post" asp-page-handler="Integridade" class="painel">
+            <div class="painel-cabecalho"><h2>Integridade</h2></div>
+            <div class="painel-corpo">
+                @if (Model.Integridade is null)
+                {
+                    <p class="small text-body-secondary">Verifica todas as séries: hashes encadeados e numeração sem saltos.</p>
+                    <button class="btn btn-outline-secondary w-100" type="submit"><i class="bi bi-shield-check me-1"></i>Verificar todas as séries</button>
+                }
+                else
+                {
+                    var falhas = Model.Integridade.Count(s => s.PrimeiroComProblema is not null);
+                    <div class="alert @(falhas == 0 ? "alert-success" : "alert-danger") small">
+                        @(falhas == 0 ? $"As {Model.Integridade.Count} séries estão íntegras." : $"{falhas} série(s) com problema. Contacte o suporte antes de exportar.")
+                    </div>
+                    <ul class="list-unstyled small mb-0">
+                        @foreach (var s in Model.Integridade)
+                        {
+                            <li class="d-flex justify-content-between py-1 border-bottom">
+                                <span class="doc-num">@s.Serie</span>
+                                @if (s.PrimeiroComProblema is { } n) { <span class="text-danger">quebrada no n.º @n</span> }
+                                else { <span class="text-body-secondary">@s.Documentos doc. · íntegra</span> }
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </form>
+    </div>
+
+    <div class="col-xl-8">
+        <section class="painel">
+            <div class="painel-cabecalho"><h2>Histórico</h2></div>
+            @if (Model.Historico.Count == 0)
+            {
+                <div class="vazio"><i class="bi bi-archive"></i><p class="mb-0">Ainda não foi gerado nenhum ficheiro.</p></div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table mb-0">
+                        <thead><tr><th>Período</th><th class="num">Docs</th><th class="num">Base</th><th class="num">IVA</th><th>Gerado</th><th>Submissão</th></tr></thead>
+                        <tbody>
+                            @foreach (var e in Model.Historico)
+                            {
+                                var ultima = ultimas[(e.Ano, e.Mes)] == e.Id;
+                                <tr class="@(ultima ? "" : "text-body-secondary")">
+                                    <td>
+                                        <a asp-page-handler="Ficheiro" asp-route-id="@e.Id" class="fw-semibold text-decoration-none"><i class="bi bi-download me-1"></i>@e.Periodo</a>
+                                        <div class="small">@e.Formato@(ultima ? "" : " · substituído")</div>
+                                    </td>
+                                    <td class="num">@e.NumDocs@if (e.NumAnulados > 0) { <div class="small">@e.NumAnulados anul.</div> }</td>
+                                    <td class="num">@Formato.Numero(e.TotalBase)</td>
+                                    <td class="num">@Formato.Numero(e.TotalIva)</td>
+                                    <td class="small">@Formato.DataHora(e.GeradoEm)<div class="text-body-secondary text-break">@e.GeradoPor</div><code class="small" title="SHA-256 do ficheiro">@e.HashSha256[..12]…</code></td>
+                                    <td class="small">
+                                        @if (e.SubmetidoEm is { } s)
+                                        {
+                                            <span class="estado estado-pago">Submetido</span>
+                                            <div>@Formato.Data(s)@(e.ReferenciaSubmissao is null ? "" : $" · {e.ReferenciaSubmissao}")</div>
+                                        }
+                                        else if (ultima)
+                                        {
+                                            <form method="post" asp-page-handler="Submetida" asp-route-id="@e.Id" class="d-flex gap-1"
+                                                  data-confirmar="Confirma que este ficheiro foi submetido no e-Declaração?">
+                                                <label class="visually-hidden" for="ref-@e.Id">Referência da submissão</label>
+                                                <input class="form-control form-control-sm" id="ref-@e.Id" name="referencia" maxlength="100" placeholder="Ref. do comprovativo" />
+                                                <button class="btn btn-sm btn-outline-secondary text-nowrap" type="submit">Marcar submetido</button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    </div>
+</div>

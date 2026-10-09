@@ -43,6 +43,7 @@ public interface IAppDbContext
     DbSet<PedidoIdempotente> PedidosIdempotentes { get; }
     DbSet<WebhookSubscricao> WebhookSubscricoes { get; }
     DbSet<WebhookEntrega> WebhookEntregas { get; }
+    DbSet<ExportacaoAT> ExportacoesAT { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 
