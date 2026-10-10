@@ -48,7 +48,8 @@ if (-not $SemTestes) {
 }
 
 Passo "Publicação (self-contained win-$Arquitectura)"
-dotnet publish src/Bezix.Facturacao.Web -p:PublishProfile=Winhost -p:RuntimeIdentifier=win-$Arquitectura --nologo
+# "-r" (e não só -p:RuntimeIdentifier) para o restore trazer o runtime e as bibliotecas nativas da mesma arquitectura.
+dotnet publish src/Bezix.Facturacao.Web -p:PublishProfile=Winhost -r win-$Arquitectura --nologo
 if ($LASTEXITCODE -ne 0) { Falha "A publicação falhou." }
 $saida = Join-Path $raiz "artifacts/publish/winhost"
 
@@ -64,6 +65,17 @@ $proibidos = @(Get-ChildItem $saida -Recurse -File | Where-Object {
 if ($proibidos.Count -gt 0) { Falha ("O pacote tem ficheiros que não devem ir para o servidor: " + ($proibidos.Name -join ", ")) }
 $webConfig = Get-Content (Join-Path $saida "web.config") -Raw
 if ($webConfig -notmatch 'hostingModel="inprocess"' -or $webConfig -notmatch 'Bezix\.Facturacao\.Web\.exe') { Falha "web.config inesperado." }
+# Todas as peças nativas têm de ser da arquitectura pedida (uma só de outra dá HTTP 500.32 no IIS).
+function Maquina([string] $ficheiro) {
+    $b = [IO.File]::ReadAllBytes($ficheiro); $pe = [BitConverter]::ToInt32($b, 0x3C)
+    switch ([BitConverter]::ToUInt16($b, $pe + 4)) { 0x14c { "x86" } 0x8664 { "x64" } default { "outra" } }
+}
+foreach ($n in @("Bezix.Facturacao.Web.exe", "coreclr.dll", "hostfxr.dll", "libSkiaSharp.dll", "QuestPdfSkia.dll", "Microsoft.Data.SqlClient.SNI.dll")) {
+    $f = Get-ChildItem $saida -Recurse -Filter $n | Select-Object -First 1
+    if (-not $f) { Falha "Falta $n no pacote." }
+    if ((Maquina $f.FullName) -ne $Arquitectura) { Falha "$n é $(Maquina $f.FullName), mas o pacote é $Arquitectura." }
+}
+Write-Host "Binários nativos: todos $Arquitectura"
 foreach ($f in @("Bezix.Facturacao.Web.exe", "wwwroot/lib/phosphor/regular/Phosphor.woff2", "wwwroot/css/site.css")) {
     if (-not (Test-Path (Join-Path $saida $f))) { Falha "Falta $f no pacote." }
 }
