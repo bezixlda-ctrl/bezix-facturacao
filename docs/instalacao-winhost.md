@@ -8,7 +8,7 @@ O sistema fica em **https://bezixcenter.net/facturacao/**, como sub-aplicação 
 
 1. **Pasta:** pelo FTP (ou *File Manager*), criar a pasta `facturacao` na raiz do site `bezixcenter.net`.
 2. **Aplicação:** em *Site Manager → Application Starting Point*, marcar `/facturacao` como ponto de partida de aplicação. Sem isto o IIS não arranca o ASP.NET Core nessa pasta e os pedidos caem no site principal.
-3. **App pool:** em *Site Info Manager*, confirmar **64 bits**. O ideal é **No Managed Code**; se o site principal precisar de outra opção (ex.: aplicações ASP.NET clássicas), manter: o ASP.NET Core funciona na mesma.
+3. **App pool:** em *Site Info Manager*, ver se o app pool está em 32 ou 64 bits (*Enable 32-bit applications*). O pacote tem de ser da mesma arquitectura: `-Arquitectura x64` (por omissão) ou `-Arquitectura x86` no script de publicação. Com a arquitectura errada aparece o erro **HTTP 500.32 – Failed to load .NET Core host**. O ideal é **No Managed Code**; se o site principal precisar de outra opção (ex.: aplicações ASP.NET clássicas), manter: o ASP.NET Core funciona na mesma.
    Atenção: o modo *in-process* só permite **uma** aplicação ASP.NET Core por app pool. Se mais tarde for instalado outro sistema ASP.NET Core em `bezixcenter.net`, pedir ao suporte do Winhost um app pool separado para um deles.
 4. **Base de dados:** *MS SQL Manager* → criar uma base de dados SQL Server para a facturação (não usar a dos outros sistemas). Anotar servidor, nome, utilizador e password.
 5. **SSL:** o certificado de `bezixcenter.net` já cobre `/facturacao`. A aplicação força HTTPS.
@@ -175,4 +175,6 @@ Configurar o UptimeRobot (ou semelhante) para verificar `https://bezixcenter.net
 | Erro HTTP 500.19 | Módulo ASP.NET Core em falta no servidor: pedir ao suporte do Winhost o *ASP.NET Core Module V2*. |
 | Login volta sempre ao ecrã de entrada | O site está a ser servido por HTTP: os cookies de sessão só funcionam em HTTPS. Activar o SSL. |
 | `jobs/tick` responde 404 | Token em falta ou diferente do `Jobs:Token`. |
+| HTTP 500.32 *Failed to load .NET Core host* | Pacote de 64 bits num app pool de 32 bits (ou o contrário). Mudar o app pool para 64 bits ou gerar o pacote com `-Arquitectura x86`. |
+| HTTP 500.19 *Cannot add duplicate collection entry* | O `web.config` do site principal já declara a mesma regra; o nosso tem de a remover antes (`<remove …/>`). Já corrigido para `App_Data` e para o handler `aspNetCore`. |
 | `jobs/backup` responde 500 | Ver a mensagem: credenciais ou bucket do destino errados, ou `Backups:Chave` que não é Base64 de 32 bytes. |

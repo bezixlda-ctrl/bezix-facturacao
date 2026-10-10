@@ -20,7 +20,9 @@
 [CmdletBinding()]
 param(
     [switch] $SemTestes,
-    [switch] $PermitirAlteracoes
+    [switch] $PermitirAlteracoes,
+    # x64 (por omissão) ou x86: tem de corresponder ao app pool do Winhost ("Enable 32-bit applications" = x86).
+    [ValidateSet("x64", "x86")] [string] $Arquitectura = "x64"
 )
 
 $ErrorActionPreference = "Stop"
@@ -45,8 +47,8 @@ if (-not $SemTestes) {
     if ($LASTEXITCODE -ne 0) { Falha "Os testes falharam; o pacote não foi criado." }
 }
 
-Passo "Publicação (self-contained win-x64)"
-dotnet publish src/Bezix.Facturacao.Web -p:PublishProfile=Winhost --nologo
+Passo "Publicação (self-contained win-$Arquitectura)"
+dotnet publish src/Bezix.Facturacao.Web -p:PublishProfile=Winhost -p:RuntimeIdentifier=win-$Arquitectura --nologo
 if ($LASTEXITCODE -ne 0) { Falha "A publicação falhou." }
 $saida = Join-Path $raiz "artifacts/publish/winhost"
 
@@ -68,13 +70,14 @@ foreach ($f in @("Bezix.Facturacao.Web.exe", "wwwroot/lib/phosphor/regular/Phosp
 @"
 Bezix Facturação
 Commit:   $commit ($ramo)
+Bits:     win-$Arquitectura
 Gerado:   $(Get-Date -Format "yyyy-MM-dd HH:mm") por $env:USERNAME
 "@ | Set-Content -Encoding utf8 (Join-Path $saida "VERSAO.txt")
 $tamanho = (Get-ChildItem $saida -Recurse -File | Measure-Object Length -Sum).Sum / 1MB
 Write-Host ("{0:N0} MB, {1} ficheiros" -f $tamanho, (Get-ChildItem $saida -Recurse -File).Count)
 
 Passo "Pacote"
-$zip = Join-Path $raiz "artifacts/bezix-facturacao-winhost-$data-$commit.zip"
+$zip = Join-Path $raiz "artifacts/bezix-facturacao-winhost-$Arquitectura-$data-$commit.zip"
 if (Test-Path $zip) { Remove-Item $zip }
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 [System.IO.Compression.ZipFile]::CreateFromDirectory($saida, $zip, [System.IO.Compression.CompressionLevel]::Optimal, $false)
