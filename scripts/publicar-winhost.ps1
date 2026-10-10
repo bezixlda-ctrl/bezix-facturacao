@@ -48,6 +48,9 @@ if (-not $SemTestes) {
 }
 
 Passo "Publicação (self-contained win-$Arquitectura)"
+# Pasta limpa: a publicação não substitui ficheiros nativos de outra arquitectura deixados por um pacote anterior.
+$saidaAnterior = Join-Path $raiz "artifacts/publish/winhost"
+if (Test-Path $saidaAnterior) { Remove-Item -LiteralPath $saidaAnterior -Recurse -Force }
 # "-r" (e não só -p:RuntimeIdentifier) para o restore trazer o runtime e as bibliotecas nativas da mesma arquitectura.
 dotnet publish src/Bezix.Facturacao.Web -p:PublishProfile=Winhost -r win-$Arquitectura --nologo
 if ($LASTEXITCODE -ne 0) { Falha "A publicação falhou." }
