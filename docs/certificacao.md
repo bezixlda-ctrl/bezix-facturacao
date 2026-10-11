@@ -26,7 +26,7 @@ Documento de apoio ao pedido de certificação do programa de facturação (Avis
 | 9 | Exportação mensal comprimida, com histórico | `IExportadorAT`; ZIP com SHA-256 guardado; histórico com quem gerou e referência da submissão | D22; Relatórios → Exportação AT |
 | 10 | Retenção (assumido 10 anos) | Documentos não se apagam (triggers); PDFs guardados fora de wwwroot; backups diários cifrados com retenção 7/4/12 e restauro testado | D23; [backups-restauro.md](backups-restauro.md) |
 | — | Auditoria | Emissão, anulação, alterações de configuração, entradas, exportações, integridade | Administração → Auditoria |
-| — | Controlo de acessos | Perfis com permissões; 2FA obrigatório para administradores; teste automático da matriz de acessos | D25; matriz em [especificacao.md](especificacao.md) |
+| — | Controlo de acessos | Perfis com permissões; mudança de password obrigatória para contas criadas pelo Administrador; verificação em dois passos disponível; teste automático da matriz de acessos | D25; matriz em [especificacao.md](especificacao.md) |
 
 ## A aguardar a AT
 

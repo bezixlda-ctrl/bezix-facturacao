@@ -2011,6 +2011,9 @@ namespace Bezix.Facturacao.Infrastructure.Persistencia.Migracoes
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("DeveMudarPassword")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");

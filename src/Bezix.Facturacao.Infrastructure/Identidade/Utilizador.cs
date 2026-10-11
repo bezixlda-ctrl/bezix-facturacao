@@ -12,6 +12,9 @@ public class Utilizador : IdentityUser
 
     public DateTime CreatedAt { get; set; }
     public DateTime? UltimoLogin { get; set; }
+
+    /// <summary>Password definida pelo Administrador (conta nova ou redefinida): tem de ser mudada no primeiro acesso.</summary>
+    public bool DeveMudarPassword { get; set; }
 }
 
 /// <summary>Perfil = conjunto de permissões (guardadas como claims do perfil).</summary>

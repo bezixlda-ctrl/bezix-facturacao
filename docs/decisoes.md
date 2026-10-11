@@ -165,9 +165,13 @@ Resultados com `tools/Bezix.Facturacao.Carga` (portátil de 8 núcleos, LocalDB,
 
 Painel: 109 ms (1,4 s no primeiro pedido após arranque). Antes da alteração, a rajada tinha p95 de 1,9 s e p99 de 7,5 s. O limite real é cerca de 45 emissões por segundo numa única série; no Winhost os números serão piores (servidor partilhado) e devem ser medidos depois do deploy (ver [carga.md](carga.md)).
 
-## D25. Verificação em dois passos obrigatória para administradores
+## D25. Mudança de password obrigatória; dois passos opcionais
 
-Quem gere utilizadores (perfil Administrador) e não tem 2FA activo só consegue abrir "A minha conta" até o activar. Fica ligado por omissão (`Seguranca:DoisPassosObrigatorioAdministradores`) e desligado em desenvolvimento e nos testes. A API (chaves) e a página pública do cliente não são afectadas.
+Revisto a 11/10/2026, a pedido do utilizador, depois da primeira instalação no Winhost.
+
+- **Mudança de password obrigatória** para quem recebe uma password do Administrador: contas novas e passwords redefinidas. Até a mudar, só abre "A minha conta". O Administrador inicial, criado a partir da configuração, não passa por isto.
+- **Verificação em dois passos opcional**: cada utilizador pode activá-la em "A minha conta". A obrigação para administradores continua disponível (`Seguranca:DoisPassosObrigatorioAdministradores = true`), mas desligada por omissão.
+- A API (chaves) e a página pública do cliente não são afectadas.
 
 ## D26. Instalação em https://bezixcenter.net/facturacao
 

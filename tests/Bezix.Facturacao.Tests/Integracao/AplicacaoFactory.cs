@@ -131,6 +131,12 @@ public sealed partial class AplicacaoFactory : WebApplicationFactory<Program>, I
         await accao(scope.ServiceProvider);
     }
 
+    public async Task<T> ComScopeAsync<T>(Func<IServiceProvider, Task<T>> accao)
+    {
+        using var scope = Services.CreateScope();
+        return await accao(scope.ServiceProvider);
+    }
+
     [GeneratedRegex("name=\"__RequestVerificationToken\" type=\"hidden\" value=\"([^\"]+)\"")]
     private static partial Regex TokenRegex();
 }

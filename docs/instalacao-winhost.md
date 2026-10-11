@@ -66,7 +66,8 @@ Os segredos nunca vão para o repositório. Criar no servidor, na pasta do site,
 
 - `Backups`: destino dos backups diários cifrados ([backups-restauro.md](backups-restauro.md)). Sem esta secção, o `/health` avisa que não há backups externos.
 - `Certificacao:NumeroCertificado`: deixar vazio até a AT atribuir o número; depois preencher (aparece no rodapé dos documentos) e reciclar o app pool.
-- Os administradores têm de activar a verificação em dois passos no primeiro acesso (decisão D25).
+- Utilizadores criados pelo Administrador têm de mudar a password no primeiro acesso; a verificação em dois passos é opcional (decisão D25). Para a tornar obrigatória para administradores: `"Seguranca": { "DoisPassosObrigatorioAdministradores": true }`.
+- A password do primeiro administrador (`Inicializacao:AdministradorPassword`) tem de ter pelo menos 10 caracteres, com maiúsculas, minúsculas e algarismos; caso contrário a aplicação não arranca (o motivo fica em `App_Data\logs`).
 
 - Sem `Email:Servidor`, os emails não saem: ficam gravados como ficheiros `.eml` em `App_Data/emails` (útil para testes). Os emails que falham ficam na fila e são repetidos pelo `jobs/tick` (1, 5 e 30 min, 2 h e 12 h).
 
@@ -157,7 +158,7 @@ Configurar o UptimeRobot (ou semelhante) para verificar `https://bezixcenter.net
 
 - [ ] `https://bezixcenter.net/facturacao/health` responde `Healthy`.
 - [ ] A página de entrada abre em HTTPS e o cadeado do browser está válido.
-- [ ] Entrar com o primeiro administrador, mudar a password e activar a verificação em dois passos.
+- [ ] Entrar com o primeiro administrador e mudar a password (a verificação em dois passos é recomendada, mas opcional).
 - [ ] Apagar o bloco `Inicializacao` do `appsettings.Production.json`.
 - [ ] Seguir a lista "Preparar o sistema para facturar" no painel (dados fiscais, logótipo, contas, segundo administrador).
 - [ ] A tarefa agendada aparece no log (`App_Data/logs`) como `jobs/tick executado`.

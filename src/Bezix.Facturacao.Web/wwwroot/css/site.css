@@ -568,3 +568,9 @@ details > summary.painel-cabecalho h2 { font-size: 1.125rem; }
 .cartao-relatorio > i { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 12px; font-size: 1.5rem; vertical-align: 0; color: var(--bz-primaria-texto); background: var(--bz-primaria-suave); }
 .cartao-relatorio h2 { font-size: 1.05rem; margin: .5rem 0 .25rem; }
 .cartao-relatorio p { margin: 0; font-size: .875rem; color: var(--bs-secondary-color); }
+
+/* ---------- Verificação em dois passos ---------- */
+/* O SVG do QR vem com largura fixa: ajusta-se à caixa (fundo branco também no tema escuro, para ser lido pela câmara). */
+.codigo-qr { flex-shrink: 0; width: 180px; padding: .5rem; background: #fff; border-radius: 10px; }
+.codigo-qr svg { display: block; width: 100%; height: auto; }
+.chave-manual { font-size: .95rem; letter-spacing: .04em; color: var(--bz-texto); background: var(--bz-superficie-2); padding: .25rem .5rem; border-radius: 6px; word-break: break-all; }

@@ -62,6 +62,8 @@ public sealed class ServicoUtilizadores(
             Nome = dados.Nome.Trim(),
             Activo = dados.Activo,
             CreatedAt = relogio.GetUtcNow().UtcDateTime,
+            // A password inicial foi escolhida pelo Administrador: o utilizador define a sua no primeiro acesso.
+            DeveMudarPassword = true,
         };
         var r = await utilizadores.CreateAsync(u, passwordInicial);
         if (!r.Succeeded) return Resultado.Falha([.. r.Errors.Select(e => e.Description)]);
@@ -118,6 +120,8 @@ public sealed class ServicoUtilizadores(
         if (!r.Succeeded) return Resultado.Falha([.. r.Errors.Select(e => e.Description)]);
         await utilizadores.SetLockoutEndDateAsync(u, u.Activo ? null : DateTimeOffset.MaxValue);
         await utilizadores.ResetAccessFailedCountAsync(u);
+        u.DeveMudarPassword = true;
+        await utilizadores.UpdateAsync(u);
 
         auditoria.Registar("Utilizador", u.Id, "Utilizador.RedefinirPassword", null, new { u.Email });
         await db.SaveChangesAsync();

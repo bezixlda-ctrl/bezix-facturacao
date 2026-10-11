@@ -6,9 +6,10 @@ Bezix Facturação: facturas, recibos e cobranças em meticais, de acordo com as
 
 1. Abra o endereço do sistema e entre com o email e a password que o administrador lhe deu.
 2. Ao fim de 5 tentativas erradas a conta fica bloqueada durante 15 minutos.
-3. No menu do seu nome → **A minha conta** pode:
+3. **Primeiro acesso:** se a password lhe foi dada pelo Administrador (conta nova ou password redefinida), o sistema pede-lhe logo para a mudar. Escreva a password recebida em "Password actual" e escolha uma sua; até lá, as outras páginas não abrem.
+4. No menu do seu nome → **A minha conta** pode:
    - mudar a password;
-   - activar a **verificação em dois passos**: leia o código QR com uma aplicação como Google Authenticator ou Microsoft Authenticator, escreva o código de 6 algarismos e guarde os códigos de recuperação num sítio seguro. Para administradores é obrigatória: enquanto não estiver activa, só esta página abre;
+   - activar, se quiser, a **verificação em dois passos**: leia o código QR com uma aplicação como Google Authenticator ou Microsoft Authenticator, escreva o código de 6 algarismos e guarde os códigos de recuperação num sítio seguro;
    - escrever a **assinatura** que aparece no fim dos emails que envia aos clientes.
 
 ## 2. O painel

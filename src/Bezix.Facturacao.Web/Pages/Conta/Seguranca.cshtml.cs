@@ -30,6 +30,8 @@ public class SegurancaModel(
     [BindProperty] public string? Assinatura { get; set; }
 
     [BindProperty(SupportsGet = true)] public bool Obrigatorio { get; set; }
+    [BindProperty(SupportsGet = true)] public bool MudarPassword { get; set; }
+    public bool DeveMudarPassword { get; private set; }
 
     public async Task<IActionResult> OnGetAsync()
     {
@@ -38,6 +40,12 @@ public class SegurancaModel(
         {
             await sessoes.RefreshSignInAsync(u);
             if (Obrigatorio) return LocalRedirect("~/");
+        }
+        // Marca de "mudar password" na sessão que já não corresponde à conta (ex.: mudou noutro separador).
+        if (User.HasClaim(Seguranca.DoisPassosObrigatorio.ClaimMudarPassword, "1") && await utilizadores.GetUserAsync(User) is { DeveMudarPassword: false } jaMudou)
+        {
+            await sessoes.RefreshSignInAsync(jaMudou);
+            return LocalRedirect("~/");
         }
         await CarregarAsync();
         return Page();
@@ -73,9 +81,20 @@ public class SegurancaModel(
             foreach (var e in r.Errors) ModelState.AddModelError(string.Empty, e.Description);
             if (r.Succeeded)
             {
+                var eraObrigatoria = u.DeveMudarPassword;
+                if (eraObrigatoria)
+                {
+                    u.DeveMudarPassword = false;
+                    await utilizadores.UpdateAsync(u);
+                }
                 auditoria.Registar("Utilizador", u.Id, "Utilizador.AlterarPassword");
                 await db.SaveChangesAsync();
                 await sessoes.RefreshSignInAsync(u);
+                if (eraObrigatoria)
+                {
+                    Sucesso("Password definida. Já pode usar o sistema.");
+                    return LocalRedirect("~/");
+                }
                 return RedirecionarComSucesso("Password alterada.");
             }
         }
@@ -133,6 +152,7 @@ public class SegurancaModel(
     {
         var u = await utilizadores.GetUserAsync(User) ?? throw new InvalidOperationException("Sem sessão.");
         DoisPassosActivo = u.TwoFactorEnabled;
+        DeveMudarPassword = u.DeveMudarPassword;
         Assinatura ??= u.AssinaturaEmail;
         if (DoisPassosActivo)
         {

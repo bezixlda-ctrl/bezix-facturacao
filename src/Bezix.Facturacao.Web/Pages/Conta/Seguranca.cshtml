@@ -10,7 +10,12 @@
     </div>
 </div>
 
-@if (Model.Obrigatorio && !Model.DoisPassosActivo)
+@if (Model.DeveMudarPassword)
+{
+    <div class="alert alert-warning"><i class="ph ph-key me-1"></i><strong>Defina a sua password para continuar.</strong>
+        A password actual foi criada pelo Administrador. Escreva-a em "Password actual" e escolha uma só sua.</div>
+}
+else if (Model.Obrigatorio && !Model.DoisPassosActivo)
 {
     <div class="alert alert-warning"><i class="ph ph-shield-warning me-1"></i><strong>Active a verificação em dois passos para continuar.</strong>
         Os administradores têm de proteger a conta com um código do telemóvel (aplicação como Google Authenticator ou Microsoft Authenticator).</div>
@@ -83,10 +88,10 @@
                         <li>Escreva abaixo o código de 6 algarismos que a aplicação mostra.</li>
                     </ol>
                     <div class="d-flex flex-wrap align-items-center gap-4 my-3">
-                        <div class="bg-white p-2 rounded" style="width:180px">@Html.Raw(Model.QrSvg)</div>
+                        <div class="codigo-qr" role="img" aria-label="Código QR para a aplicação de autenticação">@Html.Raw(Model.QrSvg)</div>
                         <div>
                             <div class="small text-body-secondary">Chave manual</div>
-                            <code class="tabular fs-6">@Model.ChaveManual</code>
+                            <code class="chave-manual">@Model.ChaveManual</code>
                         </div>
                     </div>
                     <form method="post" asp-page-handler="Activar" class="row g-2 align-items-end">
