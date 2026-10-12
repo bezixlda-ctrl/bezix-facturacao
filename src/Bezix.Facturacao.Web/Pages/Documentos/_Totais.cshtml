@@ -16,7 +16,7 @@
         {
             <dt>IVA @Formato.Percentagem(t.TaxaPct)</dt><dd>@Formato.Numero(t.Iva)</dd>
         }
-        <dt class="total">Total</dt><dd class="total">@Formato.Numero(c.Total) <small>@moeda</small></dd>
+        <dt class="total">Total</dt><dd class="total">@Formato.Numero(c.Total) <small>@Formato.Simbolo(moeda)</small></dd>
     </dl>
 
     @if (moeda != Bezix.Facturacao.Domain.Configuracao.Moeda.Base && c.Total > 0)
@@ -38,6 +38,6 @@
     <script type="application/json" id="totaisLinhas">@Html.Raw(System.Text.Json.JsonSerializer.Serialize(new
     {
         linhas = c.Linhas.Select(l => Formato.Numero(l.TotalLinha)),
-        total = Formato.Numero(c.Total) + " " + moeda,
+        total = Formato.Numero(c.Total) + " " + Formato.Simbolo(moeda),
     }))</script>
 }

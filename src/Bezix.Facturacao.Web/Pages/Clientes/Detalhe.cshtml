@@ -136,7 +136,7 @@
                                     <tr>
                                         <td><a asp-page="/Documentos/Detalhe" asp-route-id="@d.Id" class="doc-num text-decoration-none"><span class="tipo">@d.Tipo</span> @(d.NumeroFormatado?[3..] ?? "rascunho")</a></td>
                                         <td class="tabular">@Formato.Data(d.Data)</td>
-                                        <td class="num">@Formato.Numero(d.Total) <small class="text-body-secondary">@d.Moeda</small></td>
+                                        <td class="num">@Formato.Numero(d.Total) <small class="text-body-secondary">@Formato.Simbolo(d.Moeda)</small></td>
                                         <td><span class="estado @ce">@te</span></td>
                                     </tr>
                                 }

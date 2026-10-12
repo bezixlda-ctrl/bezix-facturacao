@@ -28,7 +28,7 @@
     }
 
     <div class="row g-4">
-        <div class="col-xl-4">
+        <div class="col-xl-5 col-xxl-4">
             <section class="painel">
                 <div class="painel-corpo row g-3">
                     <div class="col-12">
@@ -78,7 +78,7 @@
             </section>
         </div>
 
-        <div class="col-xl-8">
+        <div class="col-xl-7 col-xxl-8">
             <section class="painel" id="abertos" hx-get="@Url.Page("/Recibos/Novo", "Abertos")" hx-trigger="clienteEscolhido from:body" hx-include="#clienteId">
                 <partial name="_Abertos" model="Model" />
             </section>

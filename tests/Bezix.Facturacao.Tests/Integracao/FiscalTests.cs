@@ -127,7 +127,8 @@ public class FiscalTests(AplicacaoFactory app)
             Assert.Contains($"{numeros[nc]},16.00,100.00,16.00,", Ler(zip, "iva.csv"));
             var leiaMe = Ler(zip, "LEIA-ME.txt");
             Assert.Contains("FORMATO PROVISÓRIO", leiaMe);
-            Assert.Contains("certificação AT pendente", leiaMe);
+            Assert.Contains("Software:", leiaMe);
+            Assert.DoesNotContain("pendente", leiaMe);
 
             // A anulada conta nos documentos mas não nos totais; a NC subtrai.
             Assert.True(e.NumDocs >= 3 && e.NumAnulados >= 1);

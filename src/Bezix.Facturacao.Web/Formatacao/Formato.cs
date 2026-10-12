@@ -30,6 +30,9 @@ public static class Formato
     }
 
     public static string Moeda(decimal valor) => valor.ToString("#,##0.00", Cultura) + " MT";
+
+    /// <summary>Símbolo da moeda no ecrã: "MT" para meticais (o código ISO MZN fica nos documentos fiscais e na exportação).</summary>
+    public static string Simbolo(string? moeda) => moeda is null or "MZN" ? "MT" : moeda;
     public static string Numero(decimal valor) => valor.ToString("#,##0.00", Cultura);
     public static string Percentagem(decimal valor) => valor.ToString("0.##", Cultura) + "%";
 

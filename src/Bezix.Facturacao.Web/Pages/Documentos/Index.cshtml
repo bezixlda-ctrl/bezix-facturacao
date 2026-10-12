@@ -55,11 +55,11 @@
                 <option value="@e" selected="@(Model.Estado == e)">@Vista.Estado(e).Texto</option>
             }
         </select>
-        <div class="d-flex align-items-center gap-1">
+        <div class="filtro-datas">
             <label class="small text-body-secondary" for="De">De</label>
-            <input class="form-control w-auto" type="date" id="De" name="De" value="@Model.De?.ToString("yyyy-MM-dd")" />
+            <input class="form-control" type="date" id="De" name="De" value="@Model.De?.ToString("yyyy-MM-dd")" />
             <label class="small text-body-secondary" for="Ate">a</label>
-            <input class="form-control w-auto" type="date" id="Ate" name="Ate" value="@Model.Ate?.ToString("yyyy-MM-dd")" />
+            <input class="form-control" type="date" id="Ate" name="Ate" value="@Model.Ate?.ToString("yyyy-MM-dd")" />
         </div>
         <noscript><button class="btn btn-outline-primary" type="submit">Filtrar</button></noscript>
     </form>

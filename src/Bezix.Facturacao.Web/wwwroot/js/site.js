@@ -75,11 +75,53 @@
         });
     }
 
-    // Confirmação antes de acções definitivas: <button data-confirmar="Texto">.
+    // Confirmação antes de acções definitivas: <button data-confirmar="Texto"> (ou no <form>).
+    // Janela da própria aplicação (segue o tema), com o botão a dizer a acção; vermelho para acções destrutivas.
+    var janelaConfirmar = null, pedidoConfirmar = null;
+    function criarJanelaConfirmar() {
+        var el = document.createElement("div");
+        el.className = "modal fade";
+        el.tabIndex = -1;
+        el.setAttribute("aria-labelledby", "confirmarTitulo");
+        el.setAttribute("aria-hidden", "true");
+        el.innerHTML =
+            '<div class="modal-dialog modal-dialog-centered"><div class="modal-content janela-confirmar">' +
+            '<div class="modal-body"><div class="d-flex gap-3"><span class="janela-confirmar-icone" aria-hidden="true"><i class="ph ph-warning-circle"></i></span>' +
+            '<div><h2 class="h5 mb-1" id="confirmarTitulo">Confirmar</h2><p class="mb-0" data-texto></p></div></div></div>' +
+            '<div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>' +
+            '<button type="button" class="btn btn-primary" data-confirmar-ok>Confirmar</button></div></div></div>';
+        document.body.appendChild(el);
+        el.querySelector("[data-confirmar-ok]").addEventListener("click", function () {
+            var p = pedidoConfirmar;
+            pedidoConfirmar = null;
+            janelaConfirmar.hide();
+            if (!p) return;
+            p.form.dataset.confirmado = "1";
+            if (p.form.requestSubmit) p.form.requestSubmit(p.botao || undefined); else p.form.submit();
+        });
+        el.addEventListener("shown.bs.modal", function () { el.querySelector("[data-confirmar-ok]").focus(); });
+        return new bootstrap.Modal(el);
+    }
     document.addEventListener("submit", function (e) {
-        var botao = e.submitter;
-        var texto = (botao && botao.getAttribute("data-confirmar")) || e.target.getAttribute("data-confirmar");
-        if (texto && !window.confirm(texto)) e.preventDefault();
+        var form = e.target, botao = e.submitter;
+        if (form.dataset.confirmado === "1") { delete form.dataset.confirmado; return; }
+        var texto = (botao && botao.getAttribute("data-confirmar")) || form.getAttribute("data-confirmar");
+        if (!texto) return;
+        e.preventDefault();
+        if (typeof bootstrap === "undefined") { if (window.confirm(texto)) { form.dataset.confirmado = "1"; form.requestSubmit(botao || undefined); } return; }
+        janelaConfirmar = janelaConfirmar || criarJanelaConfirmar();
+        var el = janelaConfirmar._element;
+        var accao = ((botao && botao.innerText) || "Confirmar").trim() || "Confirmar";
+        var perigo = /apagar|anular|revogar|remover|rejeitar|desactivar|fechar/i.test(accao + " " + texto) ||
+            (botao && /danger/.test(botao.className));
+        el.querySelector("[data-texto]").textContent = texto;
+        el.querySelector("#confirmarTitulo").textContent = accao.replace(/\s+/g, " ");
+        var ok = el.querySelector("[data-confirmar-ok]");
+        ok.textContent = accao.replace(/\s+/g, " ");
+        ok.className = "btn " + (perigo ? "btn-danger" : "btn-primary");
+        el.querySelector(".janela-confirmar-icone").classList.toggle("perigo", !!perigo);
+        pedidoConfirmar = { form: form, botao: botao };
+        janelaConfirmar.show();
     });
 
     // Pré-visualização de imagem antes do envio: <input type=file data-previa="#id-img">.

@@ -136,7 +136,7 @@ A especificação prevê uma tabela de interacções com o cliente. Não foi cri
 - Entram os **documentos fiscais** (FT, FR, FG, NC, ND, RC) com data no mês, **incluindo os anulados** (estado "A"). Cotações e guias não entram.
 - Antes de gerar, verifica-se a **cadeia de hashes e a numeração sem saltos** de cada série envolvida. Uma série quebrada bloqueia a exportação e fica na auditoria (`Integridade.Falha`). A verificação de todas as séries está disponível em Relatórios → Exportação AT.
 - Cada ficheiro fica no histórico (`ExportacoesAT`) com o SHA-256, quem gerou, e a marca de submissão no e-Declaração com a referência do comprovativo. Gerar de novo o mesmo mês não apaga o anterior.
-- **Identificação do software** no rodapé dos PDFs vem da configuração `Certificacao` (nome, versão, n.º de certificado). Enquanto o n.º estiver vazio, lê-se "certificação AT pendente". A 2.ª via de um documento antigo é regenerada com o texto em vigor nesse momento; se a AT exigir o texto da data de emissão, guarda-se no `EmitenteJson` (sem migração).
+- **Identificação do software** no rodapé dos PDFs vem da configuração `Certificacao` (nome, versão, n.º de certificado). Enquanto o n.º estiver vazio, aparece só o nome e a versão do software (decisão do utilizador, 12/10/2026: sem menção de certificação pendente). A 2.ª via de um documento antigo é regenerada com o texto em vigor nesse momento; se a AT exigir o texto da data de emissão, guarda-se no `EmitenteJson` (sem migração).
 - **Ainda não feito, à espera da AT:** assinatura digital com chave privada e o formato oficial do ficheiro.
 
 ## D23. Backups externos cifrados

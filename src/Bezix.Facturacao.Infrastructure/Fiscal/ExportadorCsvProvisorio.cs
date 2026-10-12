@@ -94,7 +94,7 @@ public sealed class ExportadorCsvProvisorio : IExportadorAT
         sb.AppendLine();
         sb.AppendLine($"Período:        {d.Mes:00}/{d.Ano}");
         sb.AppendLine($"Emitente:       {d.EmitenteNome} (NUIT {d.EmitenteNuit})");
-        sb.AppendLine($"Software:       {d.Software}{(string.IsNullOrWhiteSpace(d.NumeroCertificado) ? " (certificação AT pendente)" : $" — certificado n.º {d.NumeroCertificado}/AT")}");
+        sb.AppendLine($"Software:       {d.Software}{(string.IsNullOrWhiteSpace(d.NumeroCertificado) ? "" : $" — certificado n.º {d.NumeroCertificado}/AT")}");
         sb.AppendLine($"Gerado em:      {d.GeradoEmUtc:yyyy-MM-ddTHH:mm:ss}Z");
         sb.AppendLine();
         sb.AppendLine("Ficheiros (UTF-8, separador vírgula, ponto decimal, datas ISO 8601, valores em MZN):");

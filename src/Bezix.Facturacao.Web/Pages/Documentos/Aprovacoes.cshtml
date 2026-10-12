@@ -31,7 +31,7 @@
                             <td>@(a.Tipo == TipoAprovacao.Desconto ? "Desconto acima do limite" : "Nota de crédito")</td>
                             <td><a asp-page="Detalhe" asp-route-id="@d.Id" class="fw-semibold">@TipoDocumentoInfo.Nome(d.TipoDoc)</a></td>
                             <td>@d.ClienteNome</td>
-                            <td class="num">@Formato.Numero(d.Total) <small class="text-body-secondary">@d.Moeda</small></td>
+                            <td class="num">@Formato.Numero(d.Total) <small class="text-body-secondary">@Formato.Simbolo(d.Moeda)</small></td>
                             <td>@a.PedidoPorNome <span class="d-block small text-body-secondary tabular">@Formato.DataHora(a.CreatedAt)</span></td>
                             <td class="small">@a.Justificacao</td>
                         </tr>

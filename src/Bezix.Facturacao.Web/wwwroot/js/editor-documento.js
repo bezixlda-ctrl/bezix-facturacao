@@ -119,6 +119,36 @@
         document.getElementById("pesquisaCliente").focus();
     });
 
+    // Antes de confirmar a emissão: se falta o cliente, avisa junto ao campo (em vez de pedir confirmação e só depois recusar).
+    var formulario = document.getElementById("formDocumento");
+    if (formulario) formulario.addEventListener("submit", function (e) {
+        var botao = e.submitter;
+        if (!botao || !/handler=Emitir/i.test(botao.getAttribute("formaction") || "")) return;
+        var cliente = document.getElementById("clienteId");
+        var aviso = document.getElementById("avisoCliente");
+        if (cliente && (!cliente.value || cliente.value === "0")) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!aviso) {
+                aviso = document.createElement("div");
+                aviso.id = "avisoCliente";
+                aviso.className = "invalid-feedback d-block";
+                aviso.textContent = "Escolha o cliente antes de emitir.";
+                blocoPesquisa.appendChild(aviso);
+            }
+            var campo = document.getElementById("pesquisaCliente");
+            campo.classList.add("is-invalid");
+            campo.setAttribute("aria-describedby", "avisoCliente");
+            campo.focus();
+        }
+    });
+    var campoCliente = document.getElementById("pesquisaCliente");
+    if (campoCliente) campoCliente.addEventListener("input", function () {
+        campoCliente.classList.remove("is-invalid");
+        var aviso = document.getElementById("avisoCliente");
+        if (aviso) aviso.remove();
+    });
+
     renumerar();
     recalcular();
 })();

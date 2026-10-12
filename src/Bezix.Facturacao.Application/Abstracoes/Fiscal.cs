@@ -39,6 +39,6 @@ public sealed class OpcoesCertificacao
     public string Identificacao => $"{Software} v{Versao}";
 
     public string TextoRodape => string.IsNullOrWhiteSpace(NumeroCertificado)
-        ? $"Software: {Identificacao} (certificação AT pendente)"
+        ? $"Software: {Identificacao}"
         : $"Programa certificado n.º {NumeroCertificado}/AT · {Identificacao}";
 }

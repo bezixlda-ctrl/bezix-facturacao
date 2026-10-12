@@ -34,7 +34,7 @@ Documento de apoio ao pedido de certificação do programa de facturação (Avis
 |---|---|---|
 | Estrutura oficial do ficheiro mensal | Formato provisório `csv-provisorio-v1` | Nova implementação de `IExportadorAT`; sem mudanças no modelo de dados |
 | Assinatura digital (algoritmo, chave, entrega da chave pública) | Só hash SHA-256 encadeado | Assinar o hash na emissão (campo novo no documento), com a chave privada fora da base de dados |
-| Menção/código de certificação | Texto "certificação AT pendente" | Preencher `Certificacao:NumeroCertificado`; sem novo deploy de código |
+| Menção/código de certificação | Só o nome e a versão do software | Preencher `Certificacao:NumeroCertificado`; sem novo deploy de código |
 | Limite do NUIT para não sujeitos passivos | Configurável, 0 por omissão | Configurações → Empresa |
 | Regras da factura global | Implementada como factura com várias guias de origem | Ajustar validações, se necessário |
 

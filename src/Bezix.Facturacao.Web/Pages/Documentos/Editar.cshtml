@@ -32,8 +32,8 @@
             <i class="ph ph-link-simple fs-5"></i>
             <div>
                 @(tipo == TipoDocumento.NC ? "Credita" : "Debita") <a asp-page="Detalhe" asp-route-id="@origem.Id" target="_blank" class="doc-num">@origem.NumeroFormatado</a>
-                de @Formato.Data(origem.Data), total @Formato.Numero(origem.Total) @origem.Moeda.
-                @if (Model.PorCreditar is { } pc) { <span>Ainda por creditar: <strong class="tabular">@Formato.Numero(pc) @origem.Moeda</strong>.</span> }
+                de @Formato.Data(origem.Data), total @Formato.Moeda(origem.Total).
+                @if (Model.PorCreditar is { } pc) { <span>Ainda por creditar: <strong class="tabular">@Formato.Moeda(pc)</strong>.</span> }
             </div>
         </div>
     }
@@ -65,7 +65,7 @@
                         <select class="form-select" asp-for="Dados.SerieId">
                             @foreach (var s in Model.Series)
                             {
-                                <option value="@s.Id">@s.TipoDoc @(s.Codigo + s.Ano) · próximo n.º @s.ProximoNumero.ToString("0000")</option>
+                                <option value="@s.Id">@s.TipoDoc @(s.Codigo + s.Ano) · n.º @s.ProximoNumero.ToString("0000")</option>
                             }
                         </select>
                         @if (Model.Series.Count == 0)
@@ -86,7 +86,7 @@
                     }
                     <div class="col-6 col-md-3">
                         <span class="form-label d-block">Moeda</span>
-                        <div class="form-control-plaintext fw-semibold">MZN · Metical</div>
+                        <div class="form-control-plaintext fw-semibold">Meticais (MT)</div>
                         <input type="hidden" asp-for="Dados.Moeda" value="MZN" />
                         <input type="hidden" asp-for="Dados.Cambio" value="1" />
                     </div>
@@ -212,9 +212,9 @@
                             data-confirmar="Emitir é definitivo: o documento recebe número e deixa de poder ser alterado. Correcções só por nota de crédito/débito ou anulação. Emitir agora?">
                         <i class="ph ph-check-circle me-1"></i>Emitir @nome.ToLowerInvariant()
                     </button>
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-outline-secondary flex-fill" asp-page-handler="Guardar">Guardar rascunho</button>
-                        <button type="submit" class="btn btn-outline-secondary flex-fill" asp-page-handler="PreVisualizar" formtarget="_blank">
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="submit" class="btn btn-outline-secondary flex-fill text-nowrap" asp-page-handler="Guardar"><i class="ph ph-floppy-disk me-1"></i>Guardar rascunho</button>
+                        <button type="submit" class="btn btn-outline-secondary flex-fill text-nowrap" asp-page-handler="PreVisualizar" formtarget="_blank">
                             <i class="ph ph-eye me-1"></i>Pré-visualizar
                         </button>
                     </div>

@@ -164,7 +164,7 @@
                 </div>
                 <div class="col-sm-3">
                     <div class="text-body-secondary">Moeda</div>
-                    <div class="fw-semibold">@d.Moeda</div>
+                    <div class="fw-semibold">Meticais (MT)</div>
                     @if (d.EmMoedaEstrangeira) { <div class="tabular">1 @d.Moeda = @d.Cambio.ToString("#,##0.######", Formato.Cultura) MZN</div> }
                 </div>
                 @if (d.DocOrigem is { } origem)
@@ -290,7 +290,7 @@
                         <dt>Pago por</dt><dd>@MetodoPagamentoInfo.Nome(metodoRc)</dd>
                         @if (d.ReferenciaPagamento is not null) { <dt>Referência</dt><dd>@d.ReferenciaPagamento</dd> }
                     }
-                    <dt class="total">@(d.TipoDoc == TipoDocumento.RC ? "Recebido" : "Total")</dt><dd class="total">@Formato.Numero(d.Total) <small>@d.Moeda</small></dd>
+                    <dt class="total">@(d.TipoDoc == TipoDocumento.RC ? "Recebido" : "Total")</dt><dd class="total">@Formato.Numero(d.Total) <small>@Formato.Simbolo(d.Moeda)</small></dd>
                 </dl>
                 @if (d.EmMoedaEstrangeira)
                 {
@@ -298,7 +298,7 @@
                 }
                 @if (Model.PorCreditar is { } pc && pc != d.Total)
                 {
-                    <p class="small mt-2 mb-0">Ainda por creditar: <strong class="tabular">@Formato.Numero(pc) @d.Moeda</strong></p>
+                    <p class="small mt-2 mb-0">Ainda por creditar: <strong class="tabular">@Formato.Numero(pc) @Formato.Simbolo(d.Moeda)</strong></p>
                 }
             </div>
         </section>
@@ -309,10 +309,10 @@
                 <div class="painel-cabecalho"><h2>Pagamento</h2><span class="estado @classe">@texto</span></div>
                 <div class="painel-corpo">
                     <dl class="totais mb-0">
-                        <dt>Total (MZN)</dt><dd>@Formato.Numero(s.TotalMzn)</dd>
+                        <dt>Total</dt><dd>@Formato.Numero(s.TotalMzn)</dd>
                         @if (s.Creditado > 0) { <dt>Notas de crédito</dt><dd>−@Formato.Numero(s.Creditado)</dd> }
                         <dt>Pago</dt><dd>−@Formato.Numero(s.Pago)</dd>
-                        <dt class="total">Em aberto</dt><dd class="total @(s.Estado == Bezix.Facturacao.Domain.Recebimentos.EstadoPagamento.Vencido ? "text-danger" : "")">@Formato.Numero(s.EmAberto) <small>MZN</small></dd>
+                        <dt class="total">Em aberto</dt><dd class="total @(s.Estado == Bezix.Facturacao.Domain.Recebimentos.EstadoPagamento.Vencido ? "text-danger" : "")">@Formato.Numero(s.EmAberto) <small>MT</small></dd>
                     </dl>
                     @if (s.DiasAtraso > 0) { <p class="small text-danger mt-2 mb-0">Vencido há @s.DiasAtraso dias.</p> }
                     @if (Model.Lembretes.Count > 0)

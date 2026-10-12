@@ -22,11 +22,11 @@
             <label class="visually-hidden" for="Q">Pesquisar recibos</label>
             <input class="form-control" type="search" id="Q" name="Q" value="@Model.Q" placeholder="N.º do recibo, cliente ou NUIT" autocomplete="off" />
         </div>
-        <div class="d-flex align-items-center gap-1">
+        <div class="filtro-datas">
             <label class="small text-body-secondary" for="De">De</label>
-            <input class="form-control w-auto" type="date" id="De" name="De" value="@Model.De?.ToString("yyyy-MM-dd")" />
+            <input class="form-control" type="date" id="De" name="De" value="@Model.De?.ToString("yyyy-MM-dd")" />
             <label class="small text-body-secondary" for="Ate">a</label>
-            <input class="form-control w-auto" type="date" id="Ate" name="Ate" value="@Model.Ate?.ToString("yyyy-MM-dd")" />
+            <input class="form-control" type="date" id="Ate" name="Ate" value="@Model.Ate?.ToString("yyyy-MM-dd")" />
         </div>
     </form>
     <div id="listaRecibos">

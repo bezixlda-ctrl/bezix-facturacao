@@ -10,7 +10,7 @@
 else
 {
     <div class="table-responsive">
-        <table class="table table-hover">
+        <table class="table table-hover tabela-cartoes">
             <thead><tr><th>Recibo</th><th>Cliente</th><th>Data</th><th class="num">Recebido</th><th>Estado</th></tr></thead>
             <tbody>
                 @foreach (var r in Model.Resultado.Itens)
@@ -18,10 +18,10 @@ else
                     var (classe, texto) = Vista.Estado(r.Estado);
                     <tr>
                         <td><a asp-page="/Documentos/Detalhe" asp-route-id="@r.Id" class="doc-num text-decoration-none"><span class="tipo">RC</span> @r.NumeroFormatado?[3..]</a></td>
-                        <td><a class="text-reset text-decoration-none" asp-page="/ContaCorrente/Cliente" asp-route-id="@r.ClienteId">@r.ClienteNome</a></td>
+                        <td class="cartao-largo"><a class="text-reset text-decoration-none" asp-page="/ContaCorrente/Cliente" asp-route-id="@r.ClienteId">@r.ClienteNome</a></td>
                         <td class="tabular">@Formato.Data(r.Data)</td>
                         <td class="num">@Formato.Moeda(r.Total)</td>
-                        <td><span class="estado @classe">@texto</span></td>
+                        <td class="cartao-canto"><span class="estado @classe">@texto</span></td>
                     </tr>
                 }
             </tbody>

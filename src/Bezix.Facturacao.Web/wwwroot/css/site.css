@@ -574,3 +574,42 @@ details > summary.painel-cabecalho h2 { font-size: 1.125rem; }
 .codigo-qr { flex-shrink: 0; width: 180px; padding: .5rem; background: #fff; border-radius: 10px; }
 .codigo-qr svg { display: block; width: 100%; height: auto; }
 .chave-manual { font-size: .95rem; letter-spacing: .04em; color: var(--bz-texto); background: var(--bz-superficie-2); padding: .25rem .5rem; border-radius: 6px; word-break: break-all; }
+
+/* ---------- Janela de confirmação (substitui o confirm() do browser) ---------- */
+.modal { --bs-modal-bg: var(--bz-superficie); --bs-modal-border-color: var(--bz-borda); --bs-modal-border-radius: 14px; --bs-modal-box-shadow: var(--bz-sombra-alta); }
+.janela-confirmar .modal-body { padding: 1.5rem 1.5rem 1rem; }
+.janela-confirmar .modal-footer { border-top: 0; padding: 0 1.5rem 1.25rem; gap: .5rem; }
+.janela-confirmar p { color: var(--bz-texto-suave); }
+.janela-confirmar-icone {
+    flex-shrink: 0; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px;
+    font-size: 1.375rem; color: var(--bz-primaria-texto); background: var(--bz-primaria-suave);
+}
+.janela-confirmar-icone .ph { vertical-align: 0; }
+.janela-confirmar-icone.perigo { color: var(--bz-erro); background: var(--bz-erro-suave); }
+
+/* ---------- Filtro de datas ---------- */
+.filtro-datas { display: flex; align-items: center; gap: .25rem; }
+.filtro-datas .form-control { width: auto; }
+@media (max-width: 575.98px) {
+    .filtro-datas { flex: 1 1 100%; min-width: 0; }
+    .filtro-datas .form-control { flex: 1 1 0; min-width: 0; }
+}
+
+/* ---------- Listas em cartões no telemóvel ----------
+   Cada linha passa a um bloco de duas colunas: identificação e estado em cima,
+   .cartao-largo a toda a largura, o resto por baixo (números à direita). */
+@media (max-width: 575.98px) {
+    .tabela-cartoes thead { display: none; }
+    .tabela-cartoes, .tabela-cartoes tbody { display: block; }
+    .tabela-cartoes tr {
+        display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-auto-flow: row dense;
+        gap: .25rem .75rem; align-items: center; padding: .75rem 1rem;
+        border-bottom: 1px solid var(--bz-borda);
+    }
+    .tabela-cartoes > tbody > tr > td { display: block; padding: 0; border: 0; background: none; box-shadow: none; }
+    .tabela-cartoes > tbody > tr > td.d-none { display: none; }
+    .tabela-cartoes td.cartao-largo { grid-column: 1 / -1; }
+    .tabela-cartoes td.cartao-canto { grid-column: 2; grid-row: 1; justify-self: end; }
+    .tabela-cartoes td.num, .tabela-cartoes td.num-cartao { text-align: right; justify-self: end; }
+    .tabela-cartoes tr:hover { background: var(--bz-fundo); }
+}

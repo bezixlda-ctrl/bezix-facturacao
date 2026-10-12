@@ -25,7 +25,7 @@
 else
 {
     <div class="table-responsive">
-        <table class="table table-hover">
+        <table class="table table-hover tabela-cartoes">
             <thead>
                 <tr>
                     <th>Nome</th>
@@ -40,7 +40,7 @@ else
                 @foreach (var c in Model.Resultado.Itens)
                 {
                     <tr>
-                        <td>
+                        <td class="cartao-largo">
                             <a class="fw-semibold text-decoration-none" asp-page="Detalhe" asp-route-id="@c.Id">@c.Nome</a>
                             @if (!c.Activo) { <span class="estado estado-inactivo ms-1">Inactivo</span> }
                             @if (c.Tipo == TipoCliente.Particular) { <span class="small text-body-secondary ms-1">particular</span> }
@@ -51,7 +51,7 @@ else
                         </td>
                         <td class="d-none d-md-table-cell">@c.Cidade</td>
                         <td class="d-none d-lg-table-cell">@c.Contacto</td>
-                        <td class="tabular text-nowrap">@c.Telefone</td>
+                        <td class="tabular text-nowrap num-cartao">@c.Telefone</td>
                         <td class="d-none d-xl-table-cell">
                             @foreach (var e in Cliente.NormalizarEtiquetas(c.Etiquetas))
                             {
