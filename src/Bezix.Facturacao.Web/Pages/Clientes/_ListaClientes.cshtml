@@ -30,7 +30,7 @@ else
                 <tr>
                     <th>Nome</th>
                     <th>NUIT</th>
-                    <th class="d-none d-md-table-cell">Cidade</th>
+                    <th class="d-none d-lg-table-cell">Cidade</th>
                     <th class="d-none d-lg-table-cell">Contacto</th>
                     <th>Telefone</th>
                     <th class="d-none d-xl-table-cell">Etiquetas</th>
@@ -49,7 +49,7 @@ else
                             @if (c.Nuit is not null) { @c.Nuit }
                             else if (c.Tipo == TipoCliente.Empresa) { <span class="text-body-secondary small" title="Sem NUIT não é possível emitir facturas a esta empresa">sem NUIT</span> }
                         </td>
-                        <td class="d-none d-md-table-cell">@c.Cidade</td>
+                        <td class="d-none d-lg-table-cell">@c.Cidade</td>
                         <td class="d-none d-lg-table-cell">@c.Contacto</td>
                         <td class="tabular text-nowrap num-cartao">@c.Telefone</td>
                         <td class="d-none d-xl-table-cell">

@@ -18,6 +18,9 @@
         document.documentElement.setAttribute("data-bs-theme", window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     </script>
     <title>@(d is null ? "Link expirado" : $"{TipoDocumentoInfo.Nome(d.TipoDoc)} {d.NumeroFormatado} · {Model.Empresa.Nome}")</title>
+    <link rel="icon" href="~/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" href="~/favicon-32.png" sizes="32x32" />
+    <link rel="apple-touch-icon" href="~/apple-touch-icon.png" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/lib/phosphor/regular/style.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/lib/phosphor/fill/style.css" asp-append-version="true" />

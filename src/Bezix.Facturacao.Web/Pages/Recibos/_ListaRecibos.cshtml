@@ -17,7 +17,7 @@ else
                 {
                     var (classe, texto) = Vista.Estado(r.Estado);
                     <tr>
-                        <td><a asp-page="/Documentos/Detalhe" asp-route-id="@r.Id" class="doc-num text-decoration-none"><span class="tipo">RC</span> @r.NumeroFormatado?[3..]</a></td>
+                        <td class="text-nowrap"><a class="text-decoration-none" asp-page="/Documentos/Detalhe" asp-route-id="@r.Id"><span class="doc-num"><span class="tipo">RC</span> @r.NumeroFormatado?[3..]</span></a></td>
                         <td class="cartao-largo"><a class="text-reset text-decoration-none" asp-page="/ContaCorrente/Cliente" asp-route-id="@r.ClienteId">@r.ClienteNome</a></td>
                         <td class="tabular">@Formato.Data(r.Data)</td>
                         <td class="num">@Formato.Moeda(r.Total)</td>

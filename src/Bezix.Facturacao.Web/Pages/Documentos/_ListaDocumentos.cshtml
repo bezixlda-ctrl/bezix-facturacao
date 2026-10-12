@@ -29,7 +29,7 @@ else
                     <th>Documento</th>
                     <th>Cliente</th>
                     <th>Data</th>
-                    <th class="d-none d-md-table-cell">Vencimento</th>
+                    <th class="d-none d-lg-table-cell">Vencimento</th>
                     <th class="num">Total</th>
                     <th>Estado</th>
                 </tr>
@@ -53,7 +53,7 @@ else
                         </td>
                         <td class="cartao-largo"><a class="text-reset text-decoration-none" asp-page="/Clientes/Detalhe" asp-route-id="@d.ClienteId">@d.ClienteNome</a></td>
                         <td class="tabular">@Formato.Data(d.Data)</td>
-                        <td class="tabular d-none d-md-table-cell">@(d.Vencimento is { } v ? Formato.Data(v) : "")</td>
+                        <td class="tabular d-none d-lg-table-cell">@(d.Vencimento is { } v ? Formato.Data(v) : "")</td>
                         <td class="num">
                             @Formato.Numero(d.Total) <span class="text-body-secondary small">@Formato.Simbolo(d.Moeda)</span>
                             @if (Model.Situacao.GetValueOrDefault(d.Id) is { EmAberto: > 0 } s && s.EmAberto < s.TotalMzn)

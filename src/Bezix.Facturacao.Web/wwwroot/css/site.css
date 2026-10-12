@@ -595,10 +595,10 @@ details > summary.painel-cabecalho h2 { font-size: 1.125rem; }
     .filtro-datas .form-control { flex: 1 1 0; min-width: 0; }
 }
 
-/* ---------- Listas em cartões no telemóvel ----------
+/* ---------- Listas em cartões no telemóvel e tablet (sem barra lateral) ----------
    Cada linha passa a um bloco de duas colunas: identificação e estado em cima,
    .cartao-largo a toda a largura, o resto por baixo (números à direita). */
-@media (max-width: 575.98px) {
+@media (max-width: 991.98px) {
     .tabela-cartoes thead { display: none; }
     .tabela-cartoes, .tabela-cartoes tbody { display: block; }
     .tabela-cartoes tr {
