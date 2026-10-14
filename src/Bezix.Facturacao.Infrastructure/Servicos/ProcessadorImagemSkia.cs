@@ -59,7 +59,8 @@ public sealed class ProcessadorImagemSkia : IProcessadorImagem
         using (var tela = new SKCanvas(destino))
         {
             tela.Clear(SKColors.Transparent);
-            tela.DrawBitmap(origem, 0, 0);
+            using var imagem = SKImage.FromBitmap(origem);
+            tela.DrawImage(imagem, 0, 0, new SKSamplingOptions(SKFilterMode.Linear), null);
         }
         const int Papel = 235, Tinta = 185;
         var pixels = destino.Pixels;
