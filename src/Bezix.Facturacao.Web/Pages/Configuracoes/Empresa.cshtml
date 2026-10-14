@@ -197,16 +197,16 @@
                         </form>
                     }
                 }
-                <div class="form-text mb-3">PNG ou JPG até 2 MB. Pode ser uma fotografia ou digitalização em papel branco: o fundo claro é retirado automaticamente. Para um bom resultado, carimbe ou assine em papel branco liso, com boa luz e sem sombras.</div>
+                <div class="form-text mb-3">PNG ou JPG até 8 MB. Pode ser uma fotografia ou digitalização em papel branco: o fundo claro é retirado automaticamente. Para um bom resultado, carimbe ou assine em papel branco liso, com boa luz e sem sombras.</div>
 
                 <form method="post" asp-page-handler="Signatario" class="row g-2">
                     <div class="col-sm-6">
                         <label class="form-label" for="SignatarioNome">Nome de quem assina</label>
-                        <input class="form-control" id="SignatarioNome" name="SignatarioNome" value="@Model.SignatarioNome" maxlength="120" placeholder="Ex.: Maria Cossa" />
+                        <input class="form-control" id="SignatarioNome" name="SignatarioNome" value="@Model.SignatarioNome" maxlength="120" />
                     </div>
                     <div class="col-sm-6">
                         <label class="form-label" for="SignatarioCargo">Cargo</label>
-                        <input class="form-control" id="SignatarioCargo" name="SignatarioCargo" value="@Model.SignatarioCargo" maxlength="120" placeholder="Ex.: Directora Financeira" />
+                        <input class="form-control" id="SignatarioCargo" name="SignatarioCargo" value="@Model.SignatarioCargo" maxlength="120" />
                     </div>
                     <div class="col-12"><button type="submit" class="btn btn-primary">Guardar nome e cargo</button></div>
                 </form>

@@ -103,6 +103,8 @@ public sealed partial class ServicoEmpresa(
     }
 
     public const int LarguraCarimbo = 500;
+    /// <summary>Fotografias de telemóvel: aceita-se mais do que no logótipo, porque a imagem é reduzida para 500 px.</summary>
+    public const int TamanhoMaximoCarimbo = 8 * 1024 * 1024;
 
     public enum ImagemDocumento { Carimbo, Assinatura }
 
@@ -114,7 +116,7 @@ public sealed partial class ServicoEmpresa(
     {
         var nome = tipo == ImagemDocumento.Carimbo ? "O carimbo" : "A assinatura";
         if (conteudo.Length == 0) return Resultado.Falha("Escolha um ficheiro de imagem.");
-        if (conteudo.Length > TamanhoMaximoLogotipo) return Resultado.Falha($"{nome} tem mais de 2 MB. Reduza a imagem e tente outra vez.");
+        if (conteudo.Length > TamanhoMaximoCarimbo) return Resultado.Falha($"{nome} tem mais de 8 MB. Reduza a imagem e tente outra vez.");
 
         var imagem = imagens.ProcessarCarimbo(conteudo, LarguraCarimbo);
         if (!imagem.Valida || imagem.Png is null) return Resultado.Falha(imagem.Erro ?? "Imagem inválida.");

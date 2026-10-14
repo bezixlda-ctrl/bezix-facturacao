@@ -9,7 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 namespace Bezix.Facturacao.Web.Pages.Configuracoes;
 
 [Authorize(Policy = Permissoes.Configuracoes.Gerir)]
-[RequestSizeLimit(3 * 1024 * 1024)]
+// Fotografias de telemóvel do carimbo e da assinatura chegam a vários MB (o web.config aceita até 10 MB).
+[RequestSizeLimit(10 * 1024 * 1024)]
 public class EmpresaModel(ServicoEmpresa empresas) : PaginaBase
 {
     public sealed class Formulario
@@ -119,9 +120,9 @@ public class EmpresaModel(ServicoEmpresa empresas) : PaginaBase
             Erro("Escolha um ficheiro PNG ou JPG antes de carregar.");
             return RedirectToPage(null, null, "carimbo");
         }
-        if (Imagem.Length > ServicoEmpresa.TamanhoMaximoLogotipo)
+        if (Imagem.Length > ServicoEmpresa.TamanhoMaximoCarimbo)
         {
-            Erro("A imagem tem mais de 2 MB. Reduza-a e tente outra vez.");
+            Erro("A imagem tem mais de 8 MB. Reduza-a e tente outra vez.");
             return RedirectToPage(null, null, "carimbo");
         }
         using var memoria = new MemoryStream();
