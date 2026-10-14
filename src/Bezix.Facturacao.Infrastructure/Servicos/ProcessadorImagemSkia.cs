@@ -8,7 +8,11 @@ public sealed class ProcessadorImagemSkia : IProcessadorImagem
     private static readonly byte[] AssinaturaPng = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
     private static readonly byte[] AssinaturaJpeg = [0xFF, 0xD8, 0xFF];
 
-    public ResultadoImagem ProcessarLogotipo(byte[] conteudo, int larguraMaxima)
+    public ResultadoImagem ProcessarLogotipo(byte[] conteudo, int larguraMaxima) => Processar(conteudo, larguraMaxima, removerFundo: false);
+
+    public ResultadoImagem ProcessarCarimbo(byte[] conteudo, int larguraMaxima) => Processar(conteudo, larguraMaxima, removerFundo: true);
+
+    private static ResultadoImagem Processar(byte[] conteudo, int larguraMaxima, bool removerFundo)
     {
         // Tipo real pelo conteúdo do ficheiro: a extensão e o Content-Type enviados pelo browser não contam.
         var png = conteudo.AsSpan().StartsWith(AssinaturaPng);
@@ -34,7 +38,8 @@ public sealed class ProcessadorImagemSkia : IProcessadorImagem
                 final = redimensionada;
             }
 
-            using var imagem = SKImage.FromBitmap(final);
+            using var semFundo = removerFundo ? RemoverFundoClaro(final) : null;
+            using var imagem = SKImage.FromBitmap(semFundo ?? final);
             using var dados = imagem.Encode(SKEncodedImageFormat.Png, 100);
             return new ResultadoImagem(true, dados.ToArray(), null);
         }
@@ -42,5 +47,31 @@ public sealed class ProcessadorImagemSkia : IProcessadorImagem
         {
             redimensionada?.Dispose();
         }
+    }
+
+    /// <summary>
+    /// Torna transparente o papel à volta de um carimbo ou assinatura: os pixels quase brancos ficam transparentes
+    /// e os claros ficam meio transparentes, para a tinta assentar sobre o documento sem um rectângulo branco.
+    /// </summary>
+    private static SKBitmap RemoverFundoClaro(SKBitmap origem)
+    {
+        var destino = new SKBitmap(new SKImageInfo(origem.Width, origem.Height, SKColorType.Rgba8888, SKAlphaType.Unpremul));
+        using (var tela = new SKCanvas(destino))
+        {
+            tela.Clear(SKColors.Transparent);
+            tela.DrawBitmap(origem, 0, 0);
+        }
+        const int Papel = 235, Tinta = 185;
+        var pixels = destino.Pixels;
+        for (var i = 0; i < pixels.Length; i++)
+        {
+            var c = pixels[i];
+            var claro = Math.Min(c.Red, Math.Min(c.Green, c.Blue));
+            if (claro >= Papel) pixels[i] = SKColors.Transparent;
+            else if (claro > Tinta)
+                pixels[i] = c.WithAlpha((byte)(c.Alpha * (Papel - claro) / (Papel - Tinta)));
+        }
+        destino.Pixels = pixels;
+        return destino;
     }
 }

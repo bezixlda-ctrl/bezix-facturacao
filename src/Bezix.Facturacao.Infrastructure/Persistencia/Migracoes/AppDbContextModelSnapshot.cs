@@ -841,6 +841,14 @@ namespace Bezix.Facturacao.Infrastructure.Persistencia.Migracoes
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
+                    b.Property<string>("AssinaturaPath")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("CarimboPath")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
                     b.Property<string>("Cidade")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -911,6 +919,14 @@ namespace Bezix.Facturacao.Infrastructure.Persistencia.Migracoes
                         .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("SignatarioCargo")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("SignatarioNome")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("Site")
                         .HasMaxLength(256)

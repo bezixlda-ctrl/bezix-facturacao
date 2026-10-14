@@ -573,7 +573,12 @@ details > summary.painel-cabecalho h2 { font-size: 1.125rem; }
 /* O SVG do QR vem com largura fixa: ajusta-se à caixa (fundo branco também no tema escuro, para ser lido pela câmara). */
 .codigo-qr { flex-shrink: 0; width: 180px; padding: .5rem; background: #fff; border-radius: 10px; }
 .codigo-qr svg { display: block; width: 100%; height: auto; }
-.chave-manual { font-size: .95rem; letter-spacing: .04em; color: var(--bz-texto); background: var(--bz-superficie-2); padding: .25rem .5rem; border-radius: 6px; word-break: break-all; }
+.dois-passos-codigo { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem 1.5rem; }
+.dois-passos-chave { flex: 1 1 220px; min-width: 0; }
+.codigo-qr { overflow: hidden; line-height: 0; }
+/* Grupos de 4 caracteres que nunca se partem a meio. */
+.chave-manual { display: flex; flex-wrap: wrap; gap: .25rem .6rem; font: 500 1rem/1.4 var(--bs-font-monospace); letter-spacing: .06em; color: var(--bz-texto); background: var(--bz-superficie-2); padding: .4rem .6rem; border-radius: 6px; }
+.chave-manual span { white-space: nowrap; }
 
 /* ---------- Janela de confirmação (substitui o confirm() do browser) ---------- */
 .modal { --bs-modal-bg: var(--bz-superficie); --bs-modal-border-color: var(--bz-borda); --bs-modal-border-radius: 14px; --bs-modal-box-shadow: var(--bz-sombra-alta); }
@@ -613,3 +618,14 @@ details > summary.painel-cabecalho h2 { font-size: 1.125rem; }
     .tabela-cartoes td.num, .tabela-cartoes td.num-cartao { text-align: right; justify-self: end; }
     .tabela-cartoes tr:hover { background: var(--bz-fundo); }
 }
+
+/* ---------- Pré-visualização do carimbo e assinatura (Configurações → Empresa) ---------- */
+.selo-previa { position: relative; display: grid; grid-template-columns: 110px minmax(0, 1fr); align-items: center; min-height: 112px; padding: .75rem; border: 1px dashed var(--bz-borda-forte); border-radius: 10px; background: #fff; color: #1b2430; }
+.selo-carimbo { position: relative; z-index: 1; display: grid; place-items: center; height: 96px; margin-right: -40px; }
+.selo-carimbo img { max-width: 104px; max-height: 96px; }
+.selo-carimbo span { font-size: .75rem; color: #8a94a3; border: 1px dashed #c5ccd6; border-radius: 50%; width: 84px; height: 84px; display: grid; place-items: center; }
+.selo-assinatura { display: grid; justify-items: center; padding-left: 40px; text-align: center; }
+.selo-assinatura small { color: #5b6676; font-size: .72rem; }
+.selo-traco { height: 50px; width: 100%; display: grid; place-items: end center; border-bottom: 1px solid #1b2430; }
+.selo-traco img { max-height: 48px; max-width: 100%; }
+.selo-assinatura strong { font-size: .8rem; margin-top: 2px; }

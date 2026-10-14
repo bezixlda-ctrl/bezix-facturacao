@@ -182,6 +182,16 @@ Decisão do utilizador (09/10/2026): o sistema fica numa pasta do domínio `bezi
 - O HSTS deixou de incluir os subdomínios e passou para 180 dias (`Seguranca:HstsSubdominios`, `Seguranca:HstsDias`): como o domínio é partilhado, a facturação não deve impor HTTPS a subdomínios que não controla.
 - Um subdomínio (`facturacao.bezixcenter.net`) continua a ser possível sem alterar a aplicação.
 
+## D27. Carimbo e assinatura nos documentos emitidos
+
+Pedido do utilizador (14/10/2026): todos os documentos emitidos e enviados por email levam carimbo e assinatura.
+
+- Em Configurações → Empresa: imagem do carimbo, imagem da assinatura, nome e cargo de quem assina. PNG ou JPG até 2 MB; o fundo claro (papel fotografado ou digitalizado) fica transparente.
+- Aparecem no fim de todos os documentos **emitidos** (e anulados) e dos extractos, à direita: assinatura sobre a linha, nome e cargo por baixo, carimbo sobre o lado esquerdo. Rascunhos e pré-visualizações não os levam, para não circularem como válidos.
+- Ficam **congelados na emissão**, como o logótipo: o documento guarda no `EmitenteJson` o caminho das imagens, o nome e o cargo; os ficheiros antigos nunca se apagam. Mudar ou remover o carimbo não altera documentos já emitidos nem as suas 2.ª vias. Documentos emitidos antes desta versão ficam sem carimbo.
+- As imagens só são servidas a quem gere as configurações (`/marca/carimbo`, `/marca/assinatura`); fora disso só aparecem dentro dos PDFs.
+- É uma validação visual. A integridade do documento continua garantida pelo hash encadeado e pela imutabilidade; a assinatura digital com certificado, se a AT a exigir, é outro passo (ver [certificacao.md](certificacao.md)).
+
 ## Pendentes de confirmação
 
 - ~~QuestPDF~~: confirmado em 09/10/2026 que a receita anual é inferior a 1 M USD; usa-se a licença Community. Rever se a receita passar esse valor.

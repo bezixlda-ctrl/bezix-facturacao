@@ -87,11 +87,15 @@ else if (Model.Obrigatorio && !Model.DoisPassosActivo)
                         <li class="mb-2">Leia este código QR com a aplicação, ou escreva a chave manualmente.</li>
                         <li>Escreva abaixo o código de 6 algarismos que a aplicação mostra.</li>
                     </ol>
-                    <div class="d-flex flex-wrap align-items-center gap-4 my-3">
+                    <div class="dois-passos-codigo my-3">
                         <div class="codigo-qr" role="img" aria-label="Código QR para a aplicação de autenticação">@Html.Raw(Model.QrSvg)</div>
-                        <div>
-                            <div class="small text-body-secondary">Chave manual</div>
-                            <code class="chave-manual">@Model.ChaveManual</code>
+                        <div class="dois-passos-chave">
+                            <div class="small text-body-secondary mb-1">Se não conseguir ler o código, escreva esta chave na aplicação:</div>
+                            <div class="chave-manual" aria-label="Chave manual">
+                                @foreach (var g in Model.GruposChave) { <span>@g</span> }
+                            </div>
+                            <input class="visually-hidden" id="chaveManualCopia" value="@Model.ChaveManual?.Replace(" ", "")" readonly tabindex="-1" aria-hidden="true" />
+                            <button class="btn btn-sm btn-outline-secondary mt-2" type="button" data-copiar="#chaveManualCopia"><i class="ph ph-copy-simple me-1"></i>Copiar chave</button>
                         </div>
                     </div>
                     <form method="post" asp-page-handler="Activar" class="row g-2 align-items-end">

@@ -375,4 +375,90 @@ public class DocumentosTests(AplicacaoFactory app)
             Assert.False((await docs.ApagarRascunhoAsync(emitido)).Sucesso);
         });
     }
+    // ------------------------------------------------------------------ Carimbo e assinatura
+
+    private static byte[] CarimboEmPapel()
+    {
+        // Círculo azul em papel branco, como uma fotografia de um carimbo.
+        using var bitmap = new SkiaSharp.SKBitmap(300, 300);
+        using (var tela = new SkiaSharp.SKCanvas(bitmap))
+        {
+            tela.Clear(SkiaSharp.SKColors.White);
+            using var tinta = new SkiaSharp.SKPaint { Color = new SkiaSharp.SKColor(20, 40, 160), IsAntialias = true };
+            tela.DrawCircle(150, 150, 110, tinta);
+        }
+        using var imagem = SkiaSharp.SKImage.FromBitmap(bitmap);
+        return imagem.Encode(SkiaSharp.SKEncodedImageFormat.Jpeg, 92).ToArray();
+    }
+
+    private static int ImagensNoPdf(byte[] pdf) =>
+        System.Text.RegularExpressions.Regex.Matches(System.Text.Encoding.Latin1.GetString(pdf), @"/Subtype\s*/Image").Count;
+
+    [Fact]
+    public async Task Carimbo_perde_o_fundo_branco_fica_congelado_na_emissao_e_nao_aparece_em_rascunhos()
+    {
+        var (cliente, serie) = await PrepararAsync();
+        await ComoAsync(PerfisPadrao.Administrador, async sp =>
+        {
+            var empresas = sp.GetRequiredService<ServicoEmpresa>();
+            Assert.True((await empresas.ActualizarImagemDocumentoAsync(ServicoEmpresa.ImagemDocumento.Carimbo, CarimboEmPapel())).Sucesso);
+            Assert.True((await empresas.ActualizarImagemDocumentoAsync(ServicoEmpresa.ImagemDocumento.Assinatura, CarimboEmPapel())).Sucesso);
+            Assert.True((await empresas.ActualizarSignatarioAsync("Maria Cossa", "Directora Financeira")).Sucesso);
+
+            // O papel branco à volta fica transparente; a tinta mantém-se opaca.
+            var e = await empresas.ObterAsync();
+            await using var guardado = sp.GetRequiredService<Application.Abstracoes.IArmazenamentoFicheiros>().Abrir(e.CarimboPath!);
+            using var png = SkiaSharp.SKBitmap.Decode(guardado);
+            Assert.Equal(0, png.GetPixel(2, 2).Alpha);
+            Assert.Equal(255, png.GetPixel(png.Width / 2, png.Height / 2).Alpha);
+        });
+
+        try
+        {
+            var emitido = await CriarRascunhoAsync(PerfisPadrao.Gestor, Rascunho(TipoDocumento.FT, serie, cliente, Linha(1, 1000)));
+            var rascunho = await CriarRascunhoAsync(PerfisPadrao.Gestor, Rascunho(TipoDocumento.FT, serie, cliente, Linha(1, 1000)));
+            Assert.Equal(ResultadoEmissaoTipo.Emitido, (await EmitirAsync(PerfisPadrao.Gestor, emitido)).Tipo);
+
+            var doc = await LerAsync(emitido);
+            var congelado = DadosEmitente.DeJson(doc.EmitenteJson)!;
+            Assert.NotNull(congelado.CarimboPath);
+            Assert.Equal(("Maria Cossa", "Directora Financeira"), (congelado.SignatarioNome, congelado.SignatarioCargo));
+
+            await ComoAsync(PerfisPadrao.Administrador, async sp =>
+            {
+                var pdfs = sp.GetRequiredService<ServicoPdfDocumentos>();
+                var comSelo = (await pdfs.ObterAsync(emitido))!.Conteudo;
+                var semSelo = (await pdfs.ObterAsync(rascunho))!.Conteudo;
+                // O emitido leva carimbo e assinatura (2 imagens, cada uma com a sua máscara de transparência); o rascunho não.
+                Assert.Equal(ImagensNoPdf(semSelo) + 4, ImagensNoPdf(comSelo));
+
+                // Um carimbo novo não muda documentos já emitidos: a 2.ª via usa o da emissão.
+                var empresas = sp.GetRequiredService<ServicoEmpresa>();
+                Assert.True((await empresas.ActualizarImagemDocumentoAsync(ServicoEmpresa.ImagemDocumento.Carimbo, CarimboEmPapel())).Sucesso);
+                Assert.NotEqual((await empresas.ObterAsync()).CarimboPath, congelado.CarimboPath);
+                var segundaVia = (await pdfs.ObterAsync(emitido, segundaVia: true))!.Conteudo;
+                Assert.Equal(ImagensNoPdf(comSelo), ImagensNoPdf(segundaVia));
+            });
+            Assert.Equal(congelado.CarimboPath, DadosEmitente.DeJson((await LerAsync(emitido)).EmitenteJson)!.CarimboPath);
+        }
+        finally
+        {
+            await ComoAsync(PerfisPadrao.Administrador, async sp =>
+            {
+                var empresas = sp.GetRequiredService<ServicoEmpresa>();
+                await empresas.RemoverImagemDocumentoAsync(ServicoEmpresa.ImagemDocumento.Carimbo);
+                await empresas.RemoverImagemDocumentoAsync(ServicoEmpresa.ImagemDocumento.Assinatura);
+                await empresas.ActualizarSignatarioAsync(null, null);
+            });
+        }
+    }
+
+    [Fact]
+    public void Dados_do_emitente_de_documentos_antigos_leem_se_sem_carimbo()
+    {
+        const string antigo = """{"Nome":"Bezix","Nuit":"400901074","Slogan":null,"Endereco":"Maputo","Cidade":null,"Provincia":null,"Telefones":null,"Email":null,"Site":null,"LogoPath":null,"CorPrimaria":"#0F5C8C","RodapeTexto":"Processado por computador","Contas":[]}""";
+        var e = DadosEmitente.DeJson(antigo)!;
+        Assert.Equal("Bezix", e.Nome);
+        Assert.False(e.TemCarimboOuAssinatura);
+    }
 }

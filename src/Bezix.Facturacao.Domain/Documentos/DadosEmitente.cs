@@ -19,15 +19,23 @@ public sealed record DadosEmitente(
     string? LogoPath,
     string CorPrimaria,
     string RodapeTexto,
-    IReadOnlyList<ContaEmitente> Contas)
+    IReadOnlyList<ContaEmitente> Contas,
+    string? CarimboPath = null,
+    string? AssinaturaPath = null,
+    string? SignatarioNome = null,
+    string? SignatarioCargo = null)
 {
+    /// <summary>Há carimbo ou assinatura para imprimir (congelados na emissão, como o logótipo).</summary>
+    public bool TemCarimboOuAssinatura => CarimboPath is not null || AssinaturaPath is not null;
+
     private static readonly JsonSerializerOptions Json = new() { WriteIndented = false };
 
     public static DadosEmitente De(Empresa e, IEnumerable<ContaBancaria> contas) => new(
         e.Nome, e.Nuit, e.Slogan, e.Endereco, e.Cidade, e.Provincia, e.Telefones, e.Email, e.Site, e.LogoPath,
         e.CorPrimaria, e.RodapeTexto,
         contas.Where(c => c.MostrarNoDocumento).OrderBy(c => c.Ordem).ThenBy(c => c.Banco)
-            .Select(c => new ContaEmitente(c.Banco, c.NumeroConta, c.Nib, c.Iban, c.Swift)).ToList());
+            .Select(c => new ContaEmitente(c.Banco, c.NumeroConta, c.Nib, c.Iban, c.Swift)).ToList(),
+        e.CarimboPath, e.AssinaturaPath, e.SignatarioNome, e.SignatarioCargo);
 
     public string ParaJson() => JsonSerializer.Serialize(this, Json);
 

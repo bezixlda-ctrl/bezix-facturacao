@@ -48,6 +48,16 @@ public class Empresa : Entidade
 
     /// <summary>Dias de validade dos links seguros enviados aos clientes.</summary>
     public int DiasValidadeLink { get; set; } = 90;
+
+    /// <summary>Imagem do carimbo (PNG sem fundo, em App_Data/uploads). Aparece nos documentos emitidos.</summary>
+    public string? CarimboPath { get; set; }
+
+    /// <summary>Imagem da assinatura de quem assina pela empresa (PNG sem fundo).</summary>
+    public string? AssinaturaPath { get; set; }
+
+    /// <summary>Nome e cargo impressos por baixo da assinatura.</summary>
+    public string? SignatarioNome { get; set; }
+    public string? SignatarioCargo { get; set; }
 }
 
 public enum ModoArredondamentoIva

@@ -36,6 +36,12 @@ public class EmpresaModel(ServicoEmpresa empresas) : PaginaBase
 
     [BindProperty] public Formulario Dados { get; set; } = new();
     [BindProperty] public IFormFile? Logotipo { get; set; }
+    [BindProperty] public IFormFile? Imagem { get; set; }
+    [BindProperty] public string? SignatarioNome { get; set; }
+    [BindProperty] public string? SignatarioCargo { get; set; }
+
+    public bool TemCarimbo { get; private set; }
+    public bool TemAssinatura { get; private set; }
 
     public bool TemLogotipo { get; private set; }
     public long VersaoLogotipo { get; private set; }
@@ -105,6 +111,41 @@ public class EmpresaModel(ServicoEmpresa empresas) : PaginaBase
         return RedirectToPage();
     }
 
+    public async Task<IActionResult> OnPostImagemDocumentoAsync(ServicoEmpresa.ImagemDocumento tipo)
+    {
+        var nome = tipo == ServicoEmpresa.ImagemDocumento.Carimbo ? "Carimbo" : "Assinatura";
+        if (Imagem is null || Imagem.Length == 0)
+        {
+            Erro("Escolha um ficheiro PNG ou JPG antes de carregar.");
+            return RedirectToPage(null, null, "carimbo");
+        }
+        if (Imagem.Length > ServicoEmpresa.TamanhoMaximoLogotipo)
+        {
+            Erro("A imagem tem mais de 2 MB. Reduza-a e tente outra vez.");
+            return RedirectToPage(null, null, "carimbo");
+        }
+        using var memoria = new MemoryStream();
+        await Imagem.CopyToAsync(memoria);
+        var r = await empresas.ActualizarImagemDocumentoAsync(tipo, memoria.ToArray());
+        if (r.Sucesso) return RedirecionarComSucesso($"{nome} {(tipo == ServicoEmpresa.ImagemDocumento.Carimbo ? "actualizado" : "actualizada")}. Aparece nos documentos emitidos a partir de agora.");
+        Erro(r.Erros[0]);
+        return RedirectToPage(null, null, "carimbo");
+    }
+
+    public async Task<IActionResult> OnPostRemoverImagemDocumentoAsync(ServicoEmpresa.ImagemDocumento tipo)
+    {
+        await empresas.RemoverImagemDocumentoAsync(tipo);
+        return RedirecionarComSucesso(tipo == ServicoEmpresa.ImagemDocumento.Carimbo ? "Carimbo removido." : "Assinatura removida.");
+    }
+
+    public async Task<IActionResult> OnPostSignatarioAsync()
+    {
+        var r = await empresas.ActualizarSignatarioAsync(SignatarioNome, SignatarioCargo);
+        if (r.Sucesso) return RedirecionarComSucesso("Nome e cargo de quem assina guardados.");
+        Erro(r.Erros[0]);
+        return RedirectToPage(null, null, "carimbo");
+    }
+
     public async Task<IActionResult> OnPostRemoverLogotipoAsync()
     {
         await empresas.RemoverLogotipoAsync();
@@ -115,6 +156,10 @@ public class EmpresaModel(ServicoEmpresa empresas) : PaginaBase
     {
         var e = await empresas.ObterAsync();
         TemLogotipo = e.LogoPath is not null;
+        TemCarimbo = e.CarimboPath is not null;
+        TemAssinatura = e.AssinaturaPath is not null;
+        SignatarioNome = e.SignatarioNome;
+        SignatarioCargo = e.SignatarioCargo;
         VersaoLogotipo = e.UpdatedAt?.Ticks ?? 0;
         NuitPorPreencher = e.Nuit == InicializadorBaseDados.NuitPorPreencher;
     }

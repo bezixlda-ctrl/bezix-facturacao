@@ -1,4 +1,5 @@
 using System.Text.Encodings.Web;
+using System.Text.RegularExpressions;
 using Bezix.Facturacao.Application.Abstracoes;
 using Bezix.Facturacao.Infrastructure.Identidade;
 using Bezix.Facturacao.Infrastructure.Persistencia;
@@ -17,6 +18,7 @@ public class SegurancaModel(
 {
     public bool DoisPassosActivo { get; private set; }
     public string? ChaveManual { get; private set; }
+    public string[] GruposChave => ChaveManual?.Split(' ') ?? [];
     public string? QrSvg { get; private set; }
     public int CodigosRecuperacaoRestantes { get; private set; }
 
@@ -172,6 +174,8 @@ public class SegurancaModel(
         var uri = $"otpauth://totp/{emissor}:{UrlEncoder.Default.Encode(u.Email!)}?secret={chave}&issuer={emissor}&digits=6";
         using var gerador = new QRCodeGenerator();
         using var dados = gerador.CreateQrCode(uri, QRCodeGenerator.ECCLevel.Q);
-        QrSvg = new SvgQRCode(dados).GetGraphic(4);
+        // Sem largura e altura fixas (o QRCoder põe 276 px): o SVG ajusta-se ao quadro pelo viewBox,
+        // mesmo que o CSS ainda esteja em cache antiga, e não fica por cima da chave.
+        QrSvg = Regex.Replace(new SvgQRCode(dados).GetGraphic(4), @"^(<svg[^>]*?)\s(width|height)=""[^""]*""(\s(width|height)=""[^""]*"")?", "$1");
     }
 }

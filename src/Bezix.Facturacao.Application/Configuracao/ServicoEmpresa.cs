@@ -102,6 +102,62 @@ public sealed partial class ServicoEmpresa(
         return Resultado.Ok();
     }
 
+    public const int LarguraCarimbo = 500;
+
+    public enum ImagemDocumento { Carimbo, Assinatura }
+
+    /// <summary>
+    /// Carimbo ou assinatura: o fundo claro fica transparente. Como no logótipo, o ficheiro antigo é mantido,
+    /// porque os documentos já emitidos guardam o caminho da imagem da época e a 2.ª via tem de sair igual.
+    /// </summary>
+    public async Task<Resultado> ActualizarImagemDocumentoAsync(ImagemDocumento tipo, byte[] conteudo, CancellationToken ct = default)
+    {
+        var nome = tipo == ImagemDocumento.Carimbo ? "O carimbo" : "A assinatura";
+        if (conteudo.Length == 0) return Resultado.Falha("Escolha um ficheiro de imagem.");
+        if (conteudo.Length > TamanhoMaximoLogotipo) return Resultado.Falha($"{nome} tem mais de 2 MB. Reduza a imagem e tente outra vez.");
+
+        var imagem = imagens.ProcessarCarimbo(conteudo, LarguraCarimbo);
+        if (!imagem.Valida || imagem.Png is null) return Resultado.Falha(imagem.Erro ?? "Imagem inválida.");
+
+        var empresa = await db.Empresas.SingleAsync(e => e.Id == Empresa.IdUnico, ct);
+        var caminho = await ficheiros.GuardarAsync(tipo == ImagemDocumento.Carimbo ? "carimbos" : "assinaturas", ".png", imagem.Png, ct);
+        string? anterior;
+        if (tipo == ImagemDocumento.Carimbo) { anterior = empresa.CarimboPath; empresa.CarimboPath = caminho; }
+        else { anterior = empresa.AssinaturaPath; empresa.AssinaturaPath = caminho; }
+
+        auditoria.Registar(nameof(Empresa), empresa.Id.ToString(), $"Configuracao.{tipo}", anterior, caminho);
+        await db.SaveChangesAsync(ct);
+        cache.Remove(ChaveCache);
+        return Resultado.Ok();
+    }
+
+    public async Task RemoverImagemDocumentoAsync(ImagemDocumento tipo, CancellationToken ct = default)
+    {
+        var empresa = await db.Empresas.SingleAsync(e => e.Id == Empresa.IdUnico, ct);
+        var anterior = tipo == ImagemDocumento.Carimbo ? empresa.CarimboPath : empresa.AssinaturaPath;
+        if (anterior is null) return;
+        if (tipo == ImagemDocumento.Carimbo) empresa.CarimboPath = null; else empresa.AssinaturaPath = null;
+        auditoria.Registar(nameof(Empresa), empresa.Id.ToString(), $"Configuracao.{tipo}", anterior, null);
+        await db.SaveChangesAsync(ct);
+        cache.Remove(ChaveCache);
+    }
+
+    public async Task<Resultado> ActualizarSignatarioAsync(string? nome, string? cargo, CancellationToken ct = default)
+    {
+        nome = string.IsNullOrWhiteSpace(nome) ? null : nome.Trim();
+        cargo = string.IsNullOrWhiteSpace(cargo) ? null : cargo.Trim();
+        if (nome?.Length > 120 || cargo?.Length > 120) return Resultado.Falha("O nome e o cargo têm no máximo 120 caracteres.");
+
+        var empresa = await db.Empresas.SingleAsync(e => e.Id == Empresa.IdUnico, ct);
+        var antes = new { empresa.SignatarioNome, empresa.SignatarioCargo };
+        empresa.SignatarioNome = nome;
+        empresa.SignatarioCargo = cargo;
+        auditoria.Registar(nameof(Empresa), empresa.Id.ToString(), "Configuracao.Signatario", antes, new { nome, cargo });
+        await db.SaveChangesAsync(ct);
+        cache.Remove(ChaveCache);
+        return Resultado.Ok();
+    }
+
     public async Task RemoverLogotipoAsync(CancellationToken ct = default)
     {
         var empresa = await db.Empresas.SingleAsync(e => e.Id == Empresa.IdUnico, ct);

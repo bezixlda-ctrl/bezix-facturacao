@@ -33,6 +33,10 @@ public sealed class GeradorPdfQuestPdf(IArmazenamentoFicheiros ficheiros, Micros
     {
         var cor = Color.FromHex(emitente.CorPrimaria);
         var logo = CarregarLogotipo(emitente.LogoPath);
+        // Carimbo e assinatura só em documentos emitidos: um rascunho ou pré-visualização não pode parecer válido.
+        var selo = doc.Emitido && opcoes.Marca != MarcaPdf.Rascunho && emitente.TemCarimboOuAssinatura
+            ? (Carimbo: CarregarLogotipo(emitente.CarimboPath), Assinatura: CarregarLogotipo(emitente.AssinaturaPath))
+            : (Carimbo: null, Assinatura: null);
 
         return Document.Create(container =>
         {
@@ -44,10 +48,15 @@ public sealed class GeradorPdfQuestPdf(IArmazenamentoFicheiros ficheiros, Micros
                 page.DefaultTextStyle(t => t.FontSize(9).FontColor("#1B2430"));
 
                 page.Header().Element(c => Cabecalho(c, doc, emitente, logo, cor));
-                page.Content().PaddingTop(14).Element(c =>
+                page.Content().PaddingTop(14).Column(col =>
                 {
-                    if (doc.TipoDoc == TipoDocumento.RC) ConteudoRecibo(c, doc, emitente, moeda, opcoes, cor);
-                    else Conteudo(c, doc, emitente, moeda, opcoes, cor);
+                    col.Item().Element(c =>
+                    {
+                        if (doc.TipoDoc == TipoDocumento.RC) ConteudoRecibo(c, doc, emitente, moeda, opcoes, cor);
+                        else Conteudo(c, doc, emitente, moeda, opcoes, cor);
+                    });
+                    if (selo.Carimbo is not null || selo.Assinatura is not null)
+                        col.Item().Element(c => CarimboAssinatura(c, emitente, selo.Carimbo, selo.Assinatura));
                 });
                 page.Footer().Element(c => Rodape(c, doc, emitente, opcoes, certificacao.Value.TextoRodape));
 
@@ -66,6 +75,27 @@ public sealed class GeradorPdfQuestPdf(IArmazenamentoFicheiros ficheiros, Micros
                 }
             });
         }).GeneratePdf();
+    }
+
+    /// <summary>
+    /// Bloco de validação no fim do documento, à direita: assinatura sobre a linha, nome e cargo por baixo,
+    /// e o carimbo por cima do lado esquerdo da assinatura, como num documento carimbado à mão.
+    /// </summary>
+    private static void CarimboAssinatura(IContainer c, DadosEmitente e, byte[]? carimbo, byte[]? assinatura)
+    {
+        c.PaddingTop(18).ShowEntire().AlignRight().Width(250).Height(92).Layers(l =>
+        {
+            l.PrimaryLayer().PaddingLeft(78).Column(col =>
+            {
+                col.Item().Text(e.SignatarioCargo ?? "Pela empresa").FontSize(7.5f).FontColor("#5B6676");
+                var area = col.Item().Height(46).AlignCenter().AlignBottom();
+                if (assinatura is not null) area.Image(assinatura).FitArea();
+                col.Item().BorderTop(0.6f).BorderColor("#1B2430").PaddingTop(2).AlignCenter()
+                    .Text(e.SignatarioNome ?? e.Nome).SemiBold().FontSize(8);
+            });
+            if (carimbo is not null)
+                l.Layer().AlignLeft().AlignMiddle().Width(104).Height(92).Image(carimbo).FitArea();
+        });
     }
 
     private byte[]? CarregarLogotipo(string? caminho)
@@ -343,6 +373,8 @@ public sealed class GeradorPdfQuestPdf(IArmazenamentoFicheiros ficheiros, Micros
         {
             TipoDoc = TipoDocumento.FT, ClienteId = x.ClienteId, ClienteNome = x.ClienteNome, ClienteNuit = x.ClienteNuit,
         };
+        var carimboExtracto = CarregarLogotipo(emitente.CarimboPath);
+        var assinaturaExtracto = CarregarLogotipo(emitente.AssinaturaPath);
 
         return Document.Create(container =>
         {
@@ -407,6 +439,9 @@ public sealed class GeradorPdfQuestPdf(IArmazenamentoFicheiros ficheiros, Micros
                             foreach (var conta in emitente.Contas)
                                 c.Item().Text(string.Join("   ", new[] { conta.Banco, $"Conta {conta.NumeroConta}", conta.Nib is null ? null : $"NIB {conta.Nib}" }.Where(v => v is not null))).FontSize(8.5f);
                         });
+
+                    if (carimboExtracto is not null || assinaturaExtracto is not null)
+                        col.Item().Element(c => CarimboAssinatura(c, emitente, carimboExtracto, assinaturaExtracto));
                 });
                 page.Footer().Element(c => Rodape(c, new Documento(), emitente, new OpcoesPdf(MarcaPdf.Nenhuma, utilizador), certificacao.Value.TextoRodape));
             });

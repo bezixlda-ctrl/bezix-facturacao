@@ -61,6 +61,17 @@ public static class EndpointsSistema
             http.Response.Headers.CacheControl = "public, max-age=3600";
             return Results.Stream(stream, "image/png");
         }).AllowAnonymous();
+
+        // Carimbo e assinatura: nunca públicos (só quem gere as configurações os vê fora dos PDFs).
+        app.MapGet("/marca/{tipo:regex(^(carimbo|assinatura)$)}", async (string tipo, ServicoEmpresa empresas, IArmazenamentoFicheiros ficheiros, HttpContext http) =>
+        {
+            var empresa = await empresas.ObterAsync();
+            var caminho = tipo == "carimbo" ? empresa.CarimboPath : empresa.AssinaturaPath;
+            var stream = caminho is null ? null : ficheiros.Abrir(caminho);
+            if (stream is null) return Results.NotFound();
+            http.Response.Headers.CacheControl = "private, no-store";
+            return Results.Stream(stream, "image/png");
+        }).RequireAuthorization(Domain.Seguranca.Permissoes.Configuracoes.Gerir);
     }
 
     private static bool TokenValido(HttpContext http, string? esperado)

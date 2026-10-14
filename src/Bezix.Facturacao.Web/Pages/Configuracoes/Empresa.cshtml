@@ -1,5 +1,6 @@
 @page
 @model Bezix.Facturacao.Web.Pages.Configuracoes.EmpresaModel
+@using Bezix.Facturacao.Application.Configuracao
 @using Bezix.Facturacao.Domain.Configuracao
 @{
     ViewData["Title"] = "Empresa e documentos";
@@ -103,7 +104,7 @@
                     <div class="col-12">
                         <label class="form-label" asp-for="Dados.RodapeTexto">Texto do rodapé</label>
                         <textarea class="form-control" asp-for="Dados.RodapeTexto" rows="2"></textarea>
-                        <div class="form-text">Deve incluir "Processado por computador". A identificação do software certificado é acrescentada automaticamente.</div>
+                        <div class="form-text">Deve incluir "Processado por computador". A identificação do software é acrescentada automaticamente.</div>
                     </div>
                     <div class="col-12"><hr class="my-1" /><h3 class="h6 mt-3 mb-0">Emails e links para clientes</h3></div>
                     <div class="col-12">
@@ -158,6 +159,57 @@
                         <button type="submit" class="btn btn-link text-danger px-0">Remover logótipo</button>
                     </form>
                 }
+            </div>
+        </section>
+
+        <section class="painel mt-4" id="carimbo">
+            <div class="painel-cabecalho"><h2>Carimbo e assinatura</h2></div>
+            <div class="painel-corpo">
+                <p class="small text-body-secondary">Aparecem no fim de todos os documentos <strong>emitidos</strong> (facturas, recibos, notas, cotações, guias) e dos extractos. Rascunhos e pré-visualizações não os levam. Cada documento guarda o carimbo e a assinatura do momento em que foi emitido: mudá-los depois não altera documentos já emitidos.</p>
+
+                <div class="selo-previa mb-3" aria-label="Como fica no documento">
+                    <div class="selo-carimbo">
+                        @if (Model.TemCarimbo) { <img src="@Url.Content("~/marca/carimbo")?v=@Model.VersaoLogotipo" alt="Carimbo actual" /> }
+                        else { <span>Carimbo</span> }
+                    </div>
+                    <div class="selo-assinatura">
+                        <small>@(Model.SignatarioCargo ?? "Pela empresa")</small>
+                        <div class="selo-traco">
+                            @if (Model.TemAssinatura) { <img src="@Url.Content("~/marca/assinatura")?v=@Model.VersaoLogotipo" alt="Assinatura actual" /> }
+                        </div>
+                        <strong>@(Model.SignatarioNome ?? "Nome de quem assina")</strong>
+                    </div>
+                </div>
+
+                @foreach (var (tipo, rotulo, tem) in new[] { (ServicoEmpresa.ImagemDocumento.Carimbo, "carimbo", Model.TemCarimbo), (ServicoEmpresa.ImagemDocumento.Assinatura, "assinatura", Model.TemAssinatura) })
+                {
+                    <form method="post" asp-page-handler="ImagemDocumento" asp-route-tipo="@tipo" enctype="multipart/form-data" class="mb-2">
+                        <label class="form-label" for="Imagem@(tipo)">@(rotulo == "carimbo" ? "Imagem do carimbo" : "Imagem da assinatura")</label>
+                        <div class="input-group">
+                            <input class="form-control" type="file" id="Imagem@(tipo)" name="Imagem" accept="image/png,image/jpeg" />
+                            <button type="submit" class="btn btn-outline-primary">Carregar</button>
+                        </div>
+                    </form>
+                    @if (tem)
+                    {
+                        <form method="post" asp-page-handler="RemoverImagemDocumento" asp-route-tipo="@tipo" class="mb-2" data-confirmar="Remover @(rotulo == "carimbo" ? "o carimbo" : "a assinatura")? Os documentos já emitidos mantêm-no.">
+                            <button type="submit" class="btn btn-link text-danger px-0 btn-sm">Remover @(rotulo)</button>
+                        </form>
+                    }
+                }
+                <div class="form-text mb-3">PNG ou JPG até 2 MB. Pode ser uma fotografia ou digitalização em papel branco: o fundo claro é retirado automaticamente. Para um bom resultado, carimbe ou assine em papel branco liso, com boa luz e sem sombras.</div>
+
+                <form method="post" asp-page-handler="Signatario" class="row g-2">
+                    <div class="col-sm-6">
+                        <label class="form-label" for="SignatarioNome">Nome de quem assina</label>
+                        <input class="form-control" id="SignatarioNome" name="SignatarioNome" value="@Model.SignatarioNome" maxlength="120" placeholder="Ex.: Maria Cossa" />
+                    </div>
+                    <div class="col-sm-6">
+                        <label class="form-label" for="SignatarioCargo">Cargo</label>
+                        <input class="form-control" id="SignatarioCargo" name="SignatarioCargo" value="@Model.SignatarioCargo" maxlength="120" placeholder="Ex.: Directora Financeira" />
+                    </div>
+                    <div class="col-12"><button type="submit" class="btn btn-primary">Guardar nome e cargo</button></div>
+                </form>
             </div>
         </section>
     </div>

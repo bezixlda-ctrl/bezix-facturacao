@@ -29,6 +29,9 @@ public interface IProcessadorImagem
 {
     /// <summary>Valida o tipo real pelo conteúdo (não pela extensão) e redimensiona para a largura máxima.</summary>
     ResultadoImagem ProcessarLogotipo(byte[] conteudo, int larguraMaxima);
+
+    /// <summary>Como o logótipo, mas torna transparente o fundo claro (carimbo ou assinatura digitalizados ou fotografados).</summary>
+    ResultadoImagem ProcessarCarimbo(byte[] conteudo, int larguraMaxima);
 }
 
 public sealed record ResultadoImagem(bool Valida, byte[]? Png, string? Erro)
