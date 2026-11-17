@@ -36,9 +36,24 @@ public sealed class OpcoesCertificacao
     /// <summary>N.º do certificado atribuído pela AT. Vazio enquanto a certificação não estiver concluída.</summary>
     public string? NumeroCertificado { get; set; }
 
+    /// <summary>
+    /// true só no site de teste: faixa no ecrã, marca "SEM VALOR FISCAL" em todos os PDFs e aviso no rodapé.
+    /// Nunca activar em produção.
+    /// </summary>
+    public bool AmbienteTeste { get; set; }
+
+    public const string AvisoTeste = "AMBIENTE DE TESTE — SEM VALOR FISCAL";
+
     public string Identificacao => $"{Software} v{Versao}";
 
-    public string TextoRodape => string.IsNullOrWhiteSpace(NumeroCertificado)
-        ? $"Software: {Identificacao}"
-        : $"Programa certificado n.º {NumeroCertificado}/AT · {Identificacao}";
+    public string TextoRodape
+    {
+        get
+        {
+            var texto = string.IsNullOrWhiteSpace(NumeroCertificado)
+                ? $"Software: {Identificacao}"
+                : $"Programa certificado n.º {NumeroCertificado}/AT · {Identificacao}";
+            return AmbienteTeste ? $"{AvisoTeste} · {texto}" : texto;
+        }
+    }
 }

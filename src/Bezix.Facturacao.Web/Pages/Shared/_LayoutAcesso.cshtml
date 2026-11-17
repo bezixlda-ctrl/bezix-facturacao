@@ -1,3 +1,4 @@
+@inject Microsoft.Extensions.Options.IOptions<Bezix.Facturacao.Application.Abstracoes.OpcoesCertificacao> Certificacao
 @inject Bezix.Facturacao.Application.Configuracao.ServicoEmpresa Empresas
 @{
     var empresa = await Empresas.ObterAsync();
@@ -7,7 +8,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] · @empresa.Nome</title>
+    <title>@(Certificacao.Value.AmbienteTeste ? "[TESTE] " : "")@ViewData["Title"] · @empresa.Nome</title>
     <script>
         (function () {
             var escolha = null;
@@ -25,6 +26,10 @@
     <link rel="apple-touch-icon" href="~/apple-touch-icon.png" />
 </head>
 <body>
+    @if (Certificacao.Value.AmbienteTeste)
+    {
+        <div class="faixa-teste" role="status"><strong>AMBIENTE DE TESTE</strong> · sem valor fiscal. Documentos emitidos aqui não são válidos.</div>
+    }
     <main class="acesso">
         <div class="acesso-cartao">
             <div class="text-center mb-4">

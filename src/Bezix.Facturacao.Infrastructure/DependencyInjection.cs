@@ -70,7 +70,10 @@ public static class DependencyInjection
         services.AddSingleton<IEnviadorEmail>(sp =>
         {
             var opcoes = sp.GetRequiredService<IOptions<OpcoesEmail>>();
-            return string.IsNullOrWhiteSpace(opcoes.Value.Servidor)
+            // Ambiente de teste sem Email:RedireccionarPara: os emails ficam em App_Data/emails e nunca chegam a clientes reais.
+            var testeSemRedireccionamento = sp.GetRequiredService<IOptions<OpcoesCertificacao>>().Value.AmbienteTeste
+                && string.IsNullOrWhiteSpace(opcoes.Value.RedireccionarPara);
+            return string.IsNullOrWhiteSpace(opcoes.Value.Servidor) || testeSemRedireccionamento
                 ? new EnviadorPastaLocal(opcoes, contentRoot)
                 : new EnviadorSmtp(opcoes);
         });

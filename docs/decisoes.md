@@ -192,6 +192,21 @@ Pedido do utilizador (14/10/2026): todos os documentos emitidos e enviados por e
 - As imagens só são servidas a quem gere as configurações (`/marca/carimbo`, `/marca/assinatura`); fora disso só aparecem dentro dos PDFs.
 - É uma validação visual. A integridade do documento continua garantida pelo hash encadeado e pela imutabilidade; a assinatura digital com certificado, se a AT a exigir, é outro passo (ver [certificacao.md](certificacao.md)).
 
+## D28. Separação entre teste e produção — 17/11/2026
+
+**Situação:** a primeira instalação em `bezixcenter.net/facturacao` foi usada para testes e tem documentos de teste emitidos. Como os documentos emitidos não se apagam (D14), ficariam na numeração, na conta corrente e na exportação AT.
+
+**Decisão do utilizador:** a produção arranca com **base de dados nova**; a base de dados actual passa a ser o ambiente de teste em `/facturacao-teste`. Clientes e artigos passam por CSV ([scripts/sql/exportar-dados-mestre.sql](../scripts/sql/exportar-dados-mestre.sql)). Passos em [arranque-producao.md](arranque-producao.md).
+
+**Implementado:**
+
+- `Certificacao:AmbienteTeste` (por omissão `false`): faixa "AMBIENTE DE TESTE" em todas as páginas (incluindo o link público do cliente), `[TESTE]` no título do separador, marca "SEM VALOR FISCAL" em todos os PDFs e aviso no início do rodapé.
+- `Email:RedireccionarPara` e `Email:PrefixoAssunto`: no teste, todos os emails (incluindo lembretes automáticos) vão só para endereços internos, com os destinatários originais indicados no topo da mensagem.
+- Salvaguarda: com `AmbienteTeste = true` e sem `RedireccionarPara`, o sistema **não envia por SMTP**: grava os emails em `App_Data/emails`. Um site de teste com clientes reais na BD nunca escreve a um cliente.
+- Testes automáticos em `tests/.../AmbienteTeste`.
+
+**Não implementado (configuração):** os webhooks do site de teste desactivam-se à mão (passo 2.5 do guia).
+
 ## Pendentes de confirmação
 
 - ~~QuestPDF~~: confirmado em 09/10/2026 que a receita anual é inferior a 1 M USD; usa-se a licença Community. Rever se a receita passar esse valor.

@@ -491,3 +491,9 @@ $RECYCLE.BIN/
 **/appsettings.Production.json
 **/appsettings.*.local.json
 *.pubxml.user
+
+# Bezix: ficheiros locais que nunca vão para o repositório
+/Claude outputs/
+/*.zip
+# Credenciais e notas soltas na raiz (ex.: listas de utilizadores e palavras-passe)
+/*.txt

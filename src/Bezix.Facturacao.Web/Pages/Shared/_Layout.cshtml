@@ -1,3 +1,4 @@
+@inject Microsoft.Extensions.Options.IOptions<Bezix.Facturacao.Application.Abstracoes.OpcoesCertificacao> Certificacao
 @inject Bezix.Facturacao.Application.Configuracao.ServicoEmpresa Empresas
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @{
@@ -9,7 +10,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@(ViewData["Title"] is string t ? $"{t} · " : "")@empresa.Nome</title>
+    <title>@(Certificacao.Value.AmbienteTeste ? "[TESTE] " : "")@(ViewData["Title"] is string t ? $"{t} · " : "")@empresa.Nome</title>
     <script>
         // Aplica o tema antes de desenhar a página, para não piscar.
         (function () {
@@ -30,6 +31,10 @@
     <link rel="apple-touch-icon" href="~/apple-touch-icon.png" />
 </head>
 <body hx-headers='{"RequestVerificationToken": "@tokenHtmx"}'>
+    @if (Certificacao.Value.AmbienteTeste)
+    {
+        <div class="faixa-teste" role="status"><strong>AMBIENTE DE TESTE</strong> · sem valor fiscal. Documentos emitidos aqui não são válidos.</div>
+    }
     <a class="visually-hidden-focusable position-absolute m-2 btn btn-primary" href="#conteudo">Saltar para o conteúdo</a>
     <div class="app">
         <aside class="app-menu offcanvas-lg offcanvas-start" tabindex="-1" id="menuLateral" aria-label="Menu principal">

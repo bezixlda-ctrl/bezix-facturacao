@@ -629,3 +629,12 @@ details > summary.painel-cabecalho h2 { font-size: 1.125rem; }
 .selo-traco { height: 50px; width: 100%; display: grid; place-items: end center; border-bottom: 1px solid #1b2430; }
 .selo-traco img { max-height: 48px; max-width: 100%; }
 .selo-assinatura strong { font-size: .8rem; margin-top: 2px; }
+
+/* Ambiente de teste (Certificacao:AmbienteTeste): faixa sempre visível no topo. */
+.faixa-teste {
+    position: sticky; top: 0; z-index: 1080;
+    padding: .5rem 1rem; text-align: center; font-size: .875rem;
+    color: #3D2E00;
+    background: repeating-linear-gradient(-45deg, #FFD166 0 14px, #FFC233 14px 28px);
+    border-bottom: 1px solid #C99400;
+}

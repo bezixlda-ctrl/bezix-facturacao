@@ -6,6 +6,7 @@ Sistema interno de facturação para a Bezix (Moçambique): documentos fiscais c
 - Decisões que alteram a especificação: [docs/decisoes.md](docs/decisoes.md)
 - Regras de cálculo: [docs/regras-calculo.md](docs/regras-calculo.md)
 - Instalação no Winhost: [docs/instalacao-winhost.md](docs/instalacao-winhost.md)
+- Arranque em produção (BD nova, site de teste separado): [docs/arranque-producao.md](docs/arranque-producao.md)
 - Ofício à AT: [docs/oficio-AT.md](docs/oficio-AT.md)
 - Manual do utilizador: [docs/manual-utilizador.md](docs/manual-utilizador.md)
 - API v1 e webhooks: [docs/api.md](docs/api.md) · colecção de pedidos: [docs/api.http](docs/api.http)

@@ -67,12 +67,7 @@ public sealed class GeradorPdfQuestPdf(IArmazenamentoFicheiros ficheiros, Micros
                     MarcaPdf.Rascunho => "RASCUNHO",
                     _ => null,
                 };
-                if (marca is not null)
-                {
-                    page.Foreground().AlignCenter().AlignMiddle().Rotate(-30)
-                        .Text(marca).FontSize(marca.Length > 6 ? 90 : 110).Bold()
-                        .FontColor(opcoes.Marca == MarcaPdf.Anulado ? "#40C8372D" : "#300F172A");
-                }
+                MarcaDagua(page, marca, opcoes.Marca == MarcaPdf.Anulado, certificacao.Value.AmbienteTeste);
             });
         }).GeneratePdf();
     }
@@ -444,8 +439,23 @@ public sealed class GeradorPdfQuestPdf(IArmazenamentoFicheiros ficheiros, Micros
                         col.Item().Element(c => CarimboAssinatura(c, emitente, carimboExtracto, assinaturaExtracto));
                 });
                 page.Footer().Element(c => Rodape(c, new Documento(), emitente, new OpcoesPdf(MarcaPdf.Nenhuma, utilizador), certificacao.Value.TextoRodape));
+                MarcaDagua(page, null, false, certificacao.Value.AmbienteTeste);
             });
         }).GeneratePdf();
+    }
+
+    /// <summary>Marca diagonal: ANULADO / 2ª VIA / RASCUNHO e, no ambiente de teste, "SEM VALOR FISCAL" em todas as páginas.</summary>
+    private static void MarcaDagua(PageDescriptor page, string? marca, bool anulado, bool ambienteTeste)
+    {
+        if (marca is null && !ambienteTeste) return;
+        page.Foreground().AlignCenter().AlignMiddle().Rotate(-30).Column(col =>
+        {
+            if (marca is not null)
+                col.Item().AlignCenter().Text(marca).FontSize(marca.Length > 6 ? 90 : 110).Bold()
+                    .FontColor(anulado ? "#40C8372D" : "#300F172A");
+            if (ambienteTeste)
+                col.Item().AlignCenter().Text("SEM VALOR FISCAL").FontSize(56).Bold().FontColor("#40C8372D");
+        });
     }
 
     private static void Rodape(IContainer c, Documento doc, DadosEmitente e, OpcoesPdf opcoes, string software)

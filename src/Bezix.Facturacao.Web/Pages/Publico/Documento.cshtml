@@ -1,4 +1,5 @@
 @page "/p/{token}"
+@inject Microsoft.Extensions.Options.IOptions<Bezix.Facturacao.Application.Abstracoes.OpcoesCertificacao> Certificacao
 @model Bezix.Facturacao.Web.Pages.Publico.DocumentoModel
 @using Bezix.Facturacao.Domain.Documentos
 @{
@@ -27,6 +28,10 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
 <body>
+    @if (Certificacao.Value.AmbienteTeste)
+    {
+        <div class="faixa-teste" role="status"><strong>AMBIENTE DE TESTE</strong> · este documento não tem valor fiscal.</div>
+    }
     <main class="publico">
         @if (d is null)
         {
