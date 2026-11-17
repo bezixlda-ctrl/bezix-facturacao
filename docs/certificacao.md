@@ -30,6 +30,9 @@ Documento de apoio ao pedido de certificação do programa de facturação (Avis
 
 ## A aguardar a AT
 
+A emissão de facturas não depende destes itens: segundo a Bezix, a AT atribui a licença com base na memória descritiva e a licença apenas confirma o programa como autorizado (decisão [D29](decisoes.md#d29-emissão-antes-da-licença-at)). Quando chegar, registar o n.º em `Certificacao:NumeroCertificado`.
+
+
 | Item | Estado | Impacto quando chegar |
 |---|---|---|
 | Estrutura oficial do ficheiro mensal | Formato provisório `csv-provisorio-v1` | Nova implementação de `IExportadorAT`; sem mudanças no modelo de dados |

@@ -15,7 +15,7 @@ Clientes e artigos passam para a produção por CSV. Utilizadores, empresa, cont
 
 ## 0. Antes de começar
 
-- [ ] Contabilista confirmou se se pode facturar antes da certificação AT (ver [certificacao.md](certificacao.md)).
+- [x] Facturar antes da licença AT: permitido (decisão [D29](decisoes.md#d29-emissão-antes-da-licença-at)). A memória descritiva foi submetida; a licença confirma depois o programa como autorizado.
 - [ ] Código-fonte num repositório remoto privado (`git push`), não só no PC.
 - [ ] Fornecedor de backups externos escolhido e configurado ([backups-restauro.md](backups-restauro.md)).
 - [ ] Pacote da versão a instalar gerado com `scripts\publicar-winhost.ps1` (o mesmo pacote serve para os dois sites).

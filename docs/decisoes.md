@@ -207,10 +207,21 @@ Pedido do utilizador (14/10/2026): todos os documentos emitidos e enviados por e
 
 **Não implementado (configuração):** os webhooks do site de teste desactivam-se à mão (passo 2.5 do guia).
 
+## D29. Emissão antes da licença AT — 17/11/2026
+
+**Decisão do utilizador:** as facturas podem ser emitidas antes de a AT atribuir a licença. A AT avalia o programa pela memória descritiva (`docs/memoria-descritiva.docx`) e a licença apenas o confirma como autorizado.
+
+**Implica:**
+
+- A produção pode arrancar já ([arranque-producao.md](arranque-producao.md)).
+- Até à licença, o rodapé dos PDFs mostra "Software: Bezix Facturação v1.0", sem n.º de certificado. Quando a licença chegar: preencher `Certificacao:NumeroCertificado` no `appsettings.Production.json` do servidor e reiniciar a aplicação (sem novo pacote). Os documentos emitidos antes mantêm o rodapé com que foram emitidos.
+- Se a AT exigir alterações (formato oficial da exportação, assinatura digital), entram como nova versão; o modelo de dados já guarda o necessário ([certificacao.md](certificacao.md)).
+- Guardar a prova da submissão da memória descritiva e do ofício (data, referência) junto da documentação fiscal.
+
 ## Pendentes de confirmação
 
 - ~~QuestPDF~~: confirmado em 09/10/2026 que a receita anual é inferior a 1 M USD; usa-se a licença Community. Rever se a receita passar esse valor.
 - **Motivo de isenção por omissão:** o texto "Isento nos termos do artigo 9 do Código do IVA" é provisório. Confirmar com o contabilista.
 - **NUIT de particulares:** com o limite a 0 (valor por omissão), o NUIT só é exigido a empresas. Definir o limite em Configurações → Empresa quando a AT o indicar.
-- **Limite do NUIT obrigatório**, regras da factura global, **formato oficial da exportação mensal** e requisitos de certificação (assinatura digital, n.º de certificado): aguardam resposta da AT ([oficio-AT.md](oficio-AT.md), [certificacao.md](certificacao.md)).
+- **Limite do NUIT obrigatório**, regras da factura global, **formato oficial da exportação mensal** e requisitos de certificação (assinatura digital, n.º de certificado): aguardam resposta da AT; não impedem a emissão (D29) ([oficio-AT.md](oficio-AT.md), [certificacao.md](certificacao.md)).
 - **Fornecedor dos backups externos:** escolher (por exemplo Backblaze B2 ou Amazon S3), criar o bucket e as credenciais, e gerar a chave de cifra.
