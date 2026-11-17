@@ -34,7 +34,7 @@ Guardar os três com o nome `pre-producao-<data>`.
 1. Painel Winhost: criar a pasta `/facturacao-teste` e marcá-la como aplicação (Application Starter), com o mesmo app pool x86 da `/facturacao`.
 2. Copiar por FTP todo o conteúdo de `/facturacao` para `/facturacao-teste` (incluindo `App_Data`).
 3. Em `/facturacao-teste/appsettings.Production.json`:
-   - manter a `ConnectionStrings:Default` actual (BD com os documentos de teste);
+   - manter a `ConnectionStrings:BaseDados` actual (BD com os documentos de teste);
    - acrescentar ou mudar:
 
    ```json
@@ -63,7 +63,7 @@ No SSMS, ligado à BD actual (a de teste), correr [scripts/sql/exportar-dados-me
 3. Por FTP, mudar o nome de `/facturacao/App_Data` para `/facturacao/App_Data-teste-<data>` (os PDFs de teste não ficam na produção; a cópia já está no site de teste e no backup do passo 1).
 4. Enviar o conteúdo do pacote para `/facturacao` (como em [instalacao-winhost.md](instalacao-winhost.md), "Actualizações").
 5. Em `/facturacao/appsettings.Production.json`:
-   - `ConnectionStrings:Default` → **BD nova**;
+   - `ConnectionStrings:BaseDados` → **BD nova**;
    - bloco `Inicializacao` com o primeiro administrador (como numa primeira instalação);
    - `Certificacao:AmbienteTeste` **ausente ou `false`**; `Email:RedireccionarPara` e `Email:PrefixoAssunto` **ausentes**;
    - restantes secções (Email SMTP, Jobs, Backups) como estavam.
@@ -95,4 +95,4 @@ Seguir a lista "Preparar o sistema para facturar" no painel:
 
 ## Se correr mal
 
-Enquanto não houver documentos reais na produção, nada se perde: voltar a pôr `app_offline.htm`, corrigir a configuração (ou repor a `ConnectionStrings:Default` antiga e o nome original de `App_Data`) e repetir. Depois do primeiro documento real, a BD de produção só se restaura a partir dos backups dela.
+Enquanto não houver documentos reais na produção, nada se perde: voltar a pôr `app_offline.htm`, corrigir a configuração (ou repor a `ConnectionStrings:BaseDados` antiga e o nome original de `App_Data`) e repetir. Depois do primeiro documento real, a BD de produção só se restaura a partir dos backups dela.
