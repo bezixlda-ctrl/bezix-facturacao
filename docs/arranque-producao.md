@@ -17,7 +17,7 @@ Clientes e artigos passam para a produção por CSV. Utilizadores, empresa, cont
 
 - [x] Facturar antes da licença AT: permitido (decisão [D29](decisoes.md#d29-emissão-antes-da-licença-at)). A memória descritiva foi submetida; a licença confirma depois o programa como autorizado.
 - [ ] Código-fonte num repositório remoto privado (`git push`), não só no PC.
-- [ ] Fornecedor de backups externos escolhido e configurado ([backups-restauro.md](backups-restauro.md)).
+- [ ] Backups: chave de cifra gerada e guardada fora do servidor; `Backups:Destino = Pasta` e tarefa `jobs/backup` configuradas; HD externo disponível ([backups-restauro.md](backups-restauro.md#pasta-no-winhost-e-cópia-para-hd), decisão D30).
 - [ ] Pacote da versão a instalar gerado com `scripts\publicar-winhost.ps1` (o mesmo pacote serve para os dois sites).
 - [ ] Hora combinada com os utilizadores: a facturação fica parada ~1 hora.
 

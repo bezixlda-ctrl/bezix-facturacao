@@ -16,6 +16,8 @@ Guardar a chave em **dois sítios fora do servidor** (gestor de passwords da emp
 
 ### Destino
 
+**Configuração em uso (decisão [D30](decisoes.md#d30-backups-numa-pasta-do-winhost-com-cópia-para-hd)): pasta no Winhost + cópia semanal para HD externo.** Ver a secção "Pasta no Winhost e cópia para HD" abaixo. A opção S3 que se segue fica disponível para mais tarde, sem alterar código.
+
 Criar um bucket privado num armazenamento compatível com S3 (Backblaze B2, Amazon S3, Wasabi, Cloudflare R2…) e uma chave de acesso **só para esse bucket**, com permissão para ler, escrever, listar e apagar. Activar o bloqueio de objectos (*object lock*) ou o versionamento, se o fornecedor o permitir, para que um atacante com acesso ao servidor não consiga apagar os backups antigos.
 
 No `appsettings.Production.json` (fora do repositório):
@@ -36,6 +38,38 @@ No `appsettings.Production.json` (fora do repositório):
 ```
 
 Para Amazon S3, deixar `Endpoint` vazio e indicar a região (ex.: `eu-west-1`). Para copiar para outro disco ou partilha de rede: `"Destino": "Pasta", "Pasta": "D:\\Backups\\Bezix"`.
+
+### Pasta no Winhost e cópia para HD
+
+No `appsettings.Production.json` do servidor:
+
+```json
+"Backups": {
+  "Destino": "Pasta",
+  "Pasta": "App_Data/backups",
+  "Chave": "<chave Base64 gerada acima>"
+}
+```
+
+- A pasta é relativa à pasta da aplicação: fica em `/facturacao/App_Data/backups`. O `App_Data` não é servido pela web: os backups só se descarregam por FTP.
+- Os ficheiros saem **cifrados** (`.bzx`): quem os copiar sem a chave não os consegue ler. Por isso o HD pode ficar no escritório, mas a **chave nunca vai no mesmo HD**.
+- Retenção (7 diários, 4 semanais, 12 mensais) aplica-se à pasta no servidor; o HD guarda o que lá copiar. Conferir no painel do Winhost que o espaço em disco chega (cada backup = BACPAC + ZIP dos ficheiros; ver o tamanho em **Administração → Backups** depois do primeiro).
+
+**Limite desta opção:** enquanto a cópia não chega ao HD, o backup está no mesmo servidor que a aplicação. Se o Winhost perder o servidor ou a conta, perdem-se os dados desde a última cópia para o HD. Daí a cópia **semanal** (ou mais frequente em meses de muita facturação, e sempre no fecho do mês, antes da exportação AT).
+
+#### Rotina semanal (5 minutos)
+
+1. Na aplicação: **Administração → Backups**. Confirmar que o último backup tem menos de 24 horas e carregar em **Verificar** nos dois ficheiros mais recentes.
+2. Abrir o **FileZilla** com a ligação FTP do Winhost e ir a `/facturacao/App_Data/backups`.
+3. No lado do PC, abrir a pasta do HD externo, por exemplo `E:\Backups-Bezix-Facturacao\`.
+4. Arrastar para o HD os ficheiros `bezix-*.bzx` que ainda não estão lá (o FileZilla pergunta se já existirem: escolher **Ignorar**).
+5. Confirmar no HD que o tamanho dos ficheiros copiados é igual ao do servidor.
+6. Ejectar o HD e guardá-lo fora do PC (de preferência noutro local que não o escritório, pelo menos uma cópia mensal).
+7. Registar a data na folha de controlo (ou no calendário): "Backup facturação copiado para HD".
+
+**Não apagar** ficheiros na pasta do servidor à mão: a aplicação gere a retenção.
+
+Para restaurar a partir do HD: usar os ficheiros do HD no passo 1 da secção 3 (em vez de os descarregar do bucket).
 
 ### Tarefa agendada
 
@@ -65,7 +99,7 @@ Cada backup tem dois ficheiros com a mesma data e hora:
 
 ### Passo 1: descarregar e decifrar
 
-Descarregar os dois ficheiros do bucket (consola do fornecedor ou `aws s3 cp`). Decifrar com a própria aplicação (pasta publicada; não precisa de base de dados):
+Ir buscar os dois ficheiros: ao HD externo, à pasta `/facturacao/App_Data/backups` por FTP (destino Pasta) ou ao bucket (destino S3, consola do fornecedor ou `aws s3 cp`). Decifrar com a própria aplicação (pasta publicada; não precisa de base de dados):
 
 ```powershell
 $env:BEZIX_BACKUP_CHAVE = "<chave Base64>"

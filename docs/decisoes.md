@@ -218,10 +218,22 @@ Pedido do utilizador (14/10/2026): todos os documentos emitidos e enviados por e
 - Se a AT exigir alterações (formato oficial da exportação, assinatura digital), entram como nova versão; o modelo de dados já guarda o necessário ([certificacao.md](certificacao.md)).
 - Guardar a prova da submissão da memória descritiva e do ofício (data, referência) junto da documentação fiscal.
 
+## D30. Backups numa pasta do Winhost com cópia para HD — 18/11/2026
+
+**Decisão do utilizador:** sem fornecedor externo (S3/B2) por agora. Os backups diários cifrados ficam em `/facturacao/App_Data/backups` (`Backups:Destino = Pasta`) e são copiados por FTP para um HD externo, pelo menos uma vez por semana. Rotina em [backups-restauro.md](backups-restauro.md#rotina-semanal-5-minutos).
+
+**Implica:**
+
+- Sem alteração de código: o destino `Pasta` já existia (D23).
+- **Risco aceite:** entre cópias, o backup está no mesmo servidor que a aplicação; uma perda do servidor ou da conta Winhost perde os dados desde a última cópia para o HD. A frequência da cópia define quanto se pode perder.
+- A chave de cifra fica guardada fora do servidor e **fora do HD dos backups**.
+- O `/health` deixa de avisar "backups não configurados" logo que o primeiro backup corre; não verifica se a cópia para o HD foi feita: isso depende da rotina semanal.
+- Passar para S3 mais tarde é só configuração (`Backups:Destino = S3`).
+
 ## Pendentes de confirmação
 
 - ~~QuestPDF~~: confirmado em 09/10/2026 que a receita anual é inferior a 1 M USD; usa-se a licença Community. Rever se a receita passar esse valor.
 - **Motivo de isenção por omissão:** o texto "Isento nos termos do artigo 9 do Código do IVA" é provisório. Confirmar com o contabilista.
 - **NUIT de particulares:** com o limite a 0 (valor por omissão), o NUIT só é exigido a empresas. Definir o limite em Configurações → Empresa quando a AT o indicar.
 - **Limite do NUIT obrigatório**, regras da factura global, **formato oficial da exportação mensal** e requisitos de certificação (assinatura digital, n.º de certificado): aguardam resposta da AT; não impedem a emissão (D29) ([oficio-AT.md](oficio-AT.md), [certificacao.md](certificacao.md)).
-- **Fornecedor dos backups externos:** escolher (por exemplo Backblaze B2 ou Amazon S3), criar o bucket e as credenciais, e gerar a chave de cifra.
+- ~~Fornecedor dos backups externos~~: decidido em D30 (pasta no Winhost + HD). Falta gerar a chave de cifra e configurar no servidor.
